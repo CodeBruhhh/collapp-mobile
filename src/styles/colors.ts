@@ -23,7 +23,7 @@ export const lightColors: ThemeColors = {
   border: '#E3E5EA',
   text: '#11131A',
   textMuted: '#5B6070',
-  primary: '#4F46E5',
+  primary: '#000000',
   onPrimary: '#FFFFFF',
   danger: '#C62828',
   status: {
@@ -41,7 +41,7 @@ export const darkColors: ThemeColors = {
   border: '#2A3040',
   text: '#F2F4F8',
   textMuted: '#A3AAB8',
-  primary: '#818CF8',
+  primary: '#ffffff',
   onPrimary: '#0E1117',
   danger: '#F87171',
   status: {

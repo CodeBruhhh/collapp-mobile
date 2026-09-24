@@ -1,0 +1,1 @@
+export { CollegeCard } from './CollegeCard';
