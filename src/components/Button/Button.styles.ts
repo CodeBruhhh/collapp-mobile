@@ -17,8 +17,11 @@ export const createStyles = (c: ThemeColors) =>
       borderWidth: 1,
       borderColor: c.border,
     },
+    link: { backgroundColor: 'transparent', paddingHorizontal: spacing.sm },
     pressed: { opacity: 0.8 },
+    inactive: { opacity: 0.5 },
     label: { fontSize: fontSize.md, fontWeight: fontWeight.semibold },
     labelPrimary: { color: c.onPrimary },
     labelSecondary: { color: c.text },
+    labelLink: { color: c.primary },
   });
