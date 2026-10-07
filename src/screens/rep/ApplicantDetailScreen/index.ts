@@ -1,0 +1,1 @@
+export { ApplicantDetailScreen } from './ApplicantDetailScreen';

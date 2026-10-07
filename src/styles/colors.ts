@@ -14,6 +14,7 @@ export interface ThemeColors {
     underReview: string;
     accepted: string;
     actionRequired: string;
+    rejected: string;
   };
 }
 
@@ -32,6 +33,7 @@ export const lightColors: ThemeColors = {
     underReview: '#B45309',
     accepted: '#15803D',
     actionRequired: '#B91C1C',
+    rejected: '#4B5563',
   },
 };
 
@@ -50,5 +52,6 @@ export const darkColors: ThemeColors = {
     underReview: '#FBBF24',
     accepted: '#4ADE80',
     actionRequired: '#F87171',
+    rejected: '#D1D5DB',
   },
 };

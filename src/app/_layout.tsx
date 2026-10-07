@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -5,6 +6,7 @@ import { useEffect } from 'react';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
+import { queryClient } from '@/lib/queryClient';
 import { BiometricLockScreen } from '@/screens/auth/BiometricLockScreen';
 
 // Keep the splash screen up until the stored session has been restored.
@@ -47,11 +49,13 @@ export default function RootLayout() {
   const { isDark } = useTheme();
 
   return (
-    <AuthProvider>
-      <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-        <StatusBar style="auto" />
-        <RootNavigator />
-      </ThemeProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+          <StatusBar style="auto" />
+          <RootNavigator />
+        </ThemeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

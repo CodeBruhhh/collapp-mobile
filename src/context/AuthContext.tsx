@@ -6,6 +6,7 @@ import {
   isBiometricEnabled,
   offerBiometricUnlock,
 } from '@/lib/biometrics';
+import { queryClient } from '@/lib/queryClient';
 import { supabase } from '@/lib/supabase';
 import type { Tables } from '@/types/database';
 import type { Role } from '@/types/roles';
@@ -165,6 +166,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signOut() {
     setIsLocked(false);
     await supabase.auth.signOut();
+    // Never show one account's cached data to the next.
+    queryClient.clear();
   }
 
   const role = session && profile ? profile.role : null;

@@ -1,15 +1,5 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { DashboardScreen } from '@/screens/rep/DashboardScreen';
 
 export default function RepDashboard() {
-  return (
-    <PlaceholderScreen
-      title="Dashboard"
-      description="What needs your attention today."
-      features={[
-        'Applicant and inquiry summary',
-        'Pending document verifications',
-        'Upcoming deadlines for your institution',
-      ]}
-    />
-  );
+  return <DashboardScreen />;
 }

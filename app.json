@@ -45,7 +45,16 @@
         {
           "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID to unlock your account."
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to attach photos of your documents to applications.",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to take photos of your documents for applications.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
