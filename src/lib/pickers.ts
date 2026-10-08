@@ -3,7 +3,12 @@ import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 
-import { DOCUMENT_MIME_TYPES, MAX_UPLOAD_BYTES, type LocalFile } from '@/lib/storage';
+import {
+  ATTACHMENT_MIME_TYPES,
+  DOCUMENT_MIME_TYPES,
+  MAX_UPLOAD_BYTES,
+  type LocalFile,
+} from '@/lib/storage';
 
 /** Scans and photos are shrunk to stay under the 2 MB upload target (SRS 3.4). */
 const TARGET_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -47,6 +52,24 @@ export async function pickDocumentFile(): Promise<LocalFile | null> {
   if (mimeType.startsWith('image/')) return compressImage(asset.uri, asset.name);
   const size = asset.size ?? new File(asset.uri).size;
   if (size > MAX_UPLOAD_BYTES) throw new Error('PDFs must be 5 MB or smaller.');
+  return { uri: asset.uri, name: asset.name, mimeType, size };
+}
+
+/** A chat attachment: PDF, Word or image (images are compressed). Null when cancelled. */
+export async function pickAttachmentFile(): Promise<LocalFile | null> {
+  const res = await DocumentPicker.getDocumentAsync({
+    type: [...ATTACHMENT_MIME_TYPES],
+    copyToCacheDirectory: true,
+  });
+  if (res.canceled) return null;
+  const asset = res.assets[0];
+  const mimeType = asset.mimeType ?? 'application/octet-stream';
+  if (!(ATTACHMENT_MIME_TYPES as readonly string[]).includes(mimeType)) {
+    throw new Error('Attach a PDF, Word document or image.');
+  }
+  if (mimeType.startsWith('image/')) return compressImage(asset.uri, asset.name);
+  const size = asset.size ?? new File(asset.uri).size;
+  if (size > MAX_UPLOAD_BYTES) throw new Error('Attachments must be 5 MB or smaller.');
   return { uri: asset.uri, name: asset.name, mimeType, size };
 }
 

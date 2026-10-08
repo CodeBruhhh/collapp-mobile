@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
 
@@ -11,6 +11,7 @@ import { ErrorState, LoadingState } from '@/components/StateView';
 import { TextField } from '@/components/TextField';
 import { useScoreApplication } from '@/features/ai/hooks';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
+import { useStartThread } from '@/features/messaging/hooks';
 import { firstOf, studentName } from '@/features/rep/api';
 import { useApplicant, useRepActions } from '@/features/rep/hooks';
 import { useTheme } from '@/hooks/useTheme';
@@ -28,6 +29,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
   const applicant = useApplicant(id);
   const actions = useRepActions();
   const scoreApplication = useScoreApplication();
+  const startThread = useStartThread();
 
   const [decision, setDecision] = useState<Decision | null>(null);
   const [finalProgramId, setFinalProgramId] = useState<string | null>(null);
@@ -107,6 +109,19 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
       <StatusBadge
         label={APPLICATION_STATUS_LABELS[a.status]}
         color={applicationStatusColor(a.status, colors)}
+      />
+      <Button
+        variant="secondary"
+        label="Message student"
+        loading={startThread.isPending}
+        onPress={async () => {
+          try {
+            const thread = await startThread.mutateAsync({ studentId: a.student_id });
+            router.push({ pathname: '/rep/thread/[id]', params: { id: thread.id } });
+          } catch (e) {
+            Alert.alert('Could not open conversation', getErrorMessage(e));
+          }
+        }}
       />
 
       <Card>

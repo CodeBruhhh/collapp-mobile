@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { LiveUpdates } from '@/context/LiveUpdates';
 import { SyncProvider } from '@/context/SyncContext';
 import { useTheme } from '@/hooks/useTheme';
 import { PERSIST_MAX_AGE, queryClient, queryPersister } from '@/lib/queryClient';
@@ -26,23 +27,26 @@ function RootNavigator() {
   // Only the section matching the signed-in role is reachable. When `role`
   // changes (sign in / sign out) Expo Router redirects automatically.
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={role === null}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
-      <Stack.Protected guard={role === 'student' && needsOnboarding}>
-        <Stack.Screen name="onboarding" />
-      </Stack.Protected>
-      <Stack.Protected guard={role === 'student' && !needsOnboarding}>
-        <Stack.Screen name="student" />
-      </Stack.Protected>
-      <Stack.Protected guard={role === 'school_rep'}>
-        <Stack.Screen name="rep" />
-      </Stack.Protected>
-      <Stack.Protected guard={role === 'admin'}>
-        <Stack.Screen name="admin" />
-      </Stack.Protected>
-    </Stack>
+    <>
+      {role && !needsOnboarding ? <LiveUpdates /> : null}
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard={role === null}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
+        <Stack.Protected guard={role === 'student' && needsOnboarding}>
+          <Stack.Screen name="onboarding" />
+        </Stack.Protected>
+        <Stack.Protected guard={role === 'student' && !needsOnboarding}>
+          <Stack.Screen name="student" />
+        </Stack.Protected>
+        <Stack.Protected guard={role === 'school_rep'}>
+          <Stack.Screen name="rep" />
+        </Stack.Protected>
+        <Stack.Protected guard={role === 'admin'}>
+          <Stack.Screen name="admin" />
+        </Stack.Protected>
+      </Stack>
+    </>
   );
 }
 

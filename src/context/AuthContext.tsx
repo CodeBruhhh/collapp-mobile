@@ -7,6 +7,7 @@ import {
   isBiometricEnabled,
   offerBiometricUnlock,
 } from '@/lib/biometrics';
+import { unregisterPush } from '@/lib/push';
 import { queryClient } from '@/lib/queryClient';
 import { supabase } from '@/lib/supabase';
 import type { Tables } from '@/types/database';
@@ -180,6 +181,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signOut() {
     setIsLocked(false);
     if (session) await Storage.removeItem(profileCacheKey(session.user.id)).catch(() => {});
+    // While still signed in, so RLS lets us remove this device's token.
+    await unregisterPush().catch(() => {});
     await supabase.auth.signOut();
     // Never show one account's cached data to the next.
     queryClient.clear();

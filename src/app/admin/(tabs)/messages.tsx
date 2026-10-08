@@ -1,14 +1,5 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { InboxScreen } from '@/screens/messaging/InboxScreen';
 
 export default function AdminMessages() {
-  return (
-    <PlaceholderScreen
-      title="Messages"
-      description="Representative to Administrator channel."
-      features={[
-        'Threads with school representatives',
-        'No direct student messaging from this channel',
-      ]}
-    />
-  );
+  return <InboxScreen />;
 }

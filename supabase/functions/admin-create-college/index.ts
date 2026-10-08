@@ -25,7 +25,11 @@ const bodySchema = z.object({
   rep: z.object({
     fullName: z.string().trim().min(2).max(200),
     email: z.string().trim().toLowerCase().pipe(z.email()),
-    password: z.string().min(8).regex(/[A-Za-z]/).regex(/[0-9]/),
+    password: z
+      .string()
+      .min(8)
+      .regex(/[A-Za-z]/)
+      .regex(/[0-9]/),
   }),
 });
 

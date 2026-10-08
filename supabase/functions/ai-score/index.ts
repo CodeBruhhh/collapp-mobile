@@ -1,6 +1,14 @@
 // AI Applicant Scoring (SRS 3.1.2.2, SDD 5): institutional fit and predicted
 // enrollment likelihood for one application, saved to ai_scores. Advisory only:
 // students may trigger scoring of their own submission but never see the result.
+import {
+  cosine,
+  programEmbeddings,
+  programText,
+  semanticStrength,
+  studentEmbedding,
+  studentText,
+} from '../_shared/embeddings.ts';
 import { adminClient, corsHeaders, getCaller, json } from '../_shared/http.ts';
 import { applicantScore } from '../_shared/scoring.ts';
 
@@ -21,7 +29,7 @@ Deno.serve(async (req) => {
     .select(
       `id, status, student_id, college_id, program_id, second_program_id, essay,
        college:colleges(id, name, region),
-       program:programs!applications_program_id_fkey(id, name, description, strands, min_gpa, deadline, is_open),
+       program:programs!applications_program_id_fkey(id, name, description, prerequisites, strands, min_gpa, deadline, is_open),
        documents(review_status, requirement_id)`,
     )
     .eq('id', applicationId)
@@ -39,7 +47,7 @@ Deno.serve(async (req) => {
     await Promise.all([
       admin
         .from('students')
-        .select('strand, gpa, target_majors, preferred_locations, interests, address')
+        .select('strand, gpa, target_majors, preferred_locations, interests, career_goals, address')
         .eq('user_id', app.student_id)
         .single(),
       admin
@@ -60,13 +68,30 @@ Deno.serve(async (req) => {
         .neq('id', app.id)
         .in('status', ['submitted', 'under_review', 'action_required', 'accepted']),
     ]);
-  if (!s || !app.program || !app.college) return json({ error: 'Incomplete application data' }, 400);
+  if (!s || !app.program || !app.college)
+    return json({ error: 'Incomplete application data' }, 400);
 
   const required = (requirements ?? []).filter(
     (r) => r.program_id === null || r.program_id === app.program_id,
   );
   const requiredIds = new Set(required.map((r) => r.id));
-  const relevantDocs = app.documents.filter((d) => d.requirement_id && requiredIds.has(d.requirement_id));
+  const relevantDocs = app.documents.filter(
+    (d) => d.requirement_id && requiredIds.has(d.requirement_id),
+  );
+
+  // Semantic course match from the embedding model; rules only if it fails.
+  let semantic: number | undefined;
+  try {
+    const studentVector = await studentEmbedding(admin, app.student_id, studentText(s));
+    const programVector = (
+      await programEmbeddings(admin, [{ id: app.program.id, text: programText(app.program) }])
+    ).vectors.get(app.program.id);
+    if (studentVector && programVector) {
+      semantic = semanticStrength(cosine(studentVector.vector, programVector));
+    }
+  } catch (e) {
+    console.error('embedding failed, using rule-based score only', e);
+  }
 
   const result = applicantScore(
     {
@@ -89,6 +114,7 @@ Deno.serve(async (req) => {
       followsCollege: (follows ?? 0) > 0,
       otherActiveApplications: others ?? 0,
     },
+    semantic,
   );
 
   const { error: upsertError } = await admin.from('ai_scores').upsert(

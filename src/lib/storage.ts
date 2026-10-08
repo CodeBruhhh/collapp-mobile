@@ -20,11 +20,20 @@ export const DOCUMENT_MIME_TYPES = [
   'image/webp',
 ] as const;
 
+/** Message attachments also allow Word files (scanned server-side, SRS 3.1.4.3). */
+export const ATTACHMENT_MIME_TYPES = [
+  ...DOCUMENT_MIME_TYPES,
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+] as const;
+
 const EXTENSIONS: Record<string, string> = {
   'application/pdf': 'pdf',
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
 };
 
 /** Unique object path inside the owner's folder, e.g. `{uid}/{uuid}.pdf`. */

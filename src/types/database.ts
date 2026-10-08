@@ -889,6 +889,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      my_threads: {
+        Args: never
+        Returns: {
+          college_id: string
+          college_logo_path: string
+          college_name: string
+          id: string
+          kind: Database["public"]["Enums"]["thread_kind"]
+          last_message: string
+          last_message_at: string
+          last_sender_id: string
+          student_id: string
+          student_name: string
+          subject: string
+          unread_count: number
+        }[]
+      }
+      register_push_token: {
+        Args: {
+          p_platform: Database["public"]["Enums"]["device_platform"]
+          p_token: string
+        }
+        Returns: undefined
+      }
       start_thread: {
         Args: {
           p_admin_id?: string

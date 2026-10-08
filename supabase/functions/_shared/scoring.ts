@@ -26,8 +26,22 @@ export type CollegeInput = { id: string; name: string; region: string | null };
 export type Scored = { score: number; reasons: string[] };
 
 const STOPWORDS = new Set([
-  'bachelor', 'of', 'science', 'in', 'and', 'the', 'bs', 'ba', 'bsed', 'arts', 'major',
-  'program', 'degree', 'with', 'for', 'a',
+  'bachelor',
+  'of',
+  'science',
+  'in',
+  'and',
+  'the',
+  'bs',
+  'ba',
+  'bsed',
+  'arts',
+  'major',
+  'program',
+  'degree',
+  'with',
+  'for',
+  'a',
 ]);
 
 /** Lowercase content words, e.g. "BS Computer Science" -> ["computer"]. */
@@ -52,7 +66,16 @@ export function phraseMatch(wish: string, programText: string): number {
 
 const INTEREST_KEYWORDS: Record<string, string[]> = {
   Technology: ['computer', 'information', 'technology', 'software', 'data', 'computing', 'it'],
-  Business: ['business', 'accountancy', 'accounting', 'management', 'marketing', 'finance', 'economics', 'entrepreneurship'],
+  Business: [
+    'business',
+    'accountancy',
+    'accounting',
+    'management',
+    'marketing',
+    'finance',
+    'economics',
+    'entrepreneurship',
+  ],
   Arts: ['fine', 'multimedia', 'music', 'theater', 'film', 'creative'],
   Science: ['biology', 'chemistry', 'physics', 'mathematics', 'marine', 'environmental'],
   Engineering: ['engineering'],
@@ -67,9 +90,18 @@ const INTEREST_KEYWORDS: Record<string, string[]> = {
 
 /** Strands a program usually fits when the college didn't list any. */
 const STRAND_HINTS: [RegExp, string[]][] = [
-  [/engineer|computer|information tech|science|nursing|medical|pharmacy|architect|math|biology/i, ['STEM']],
-  [/business|account|management|marketing|finance|entrepreneur|economics|hospitality|tourism/i, ['ABM']],
-  [/education|communication|political|psychology|law|criminology|social|journalism|history/i, ['HUMSS']],
+  [
+    /engineer|computer|information tech|science|nursing|medical|pharmacy|architect|math|biology/i,
+    ['STEM'],
+  ],
+  [
+    /business|account|management|marketing|finance|entrepreneur|economics|hospitality|tourism/i,
+    ['ABM'],
+  ],
+  [
+    /education|communication|political|psychology|law|criminology|social|journalism|history/i,
+    ['HUMSS'],
+  ],
   [/fine arts|multimedia|design|architecture|music|film/i, ['Arts and Design']],
   [/information tech|computer/i, ['TVL - ICT']],
   [/hospitality|culinary|tourism/i, ['TVL - Home Economics']],
@@ -78,7 +110,10 @@ const STRAND_HINTS: [RegExp, string[]][] = [
 
 const pct = (x: number) => Math.round(Math.max(0, Math.min(1, x)) * 100);
 
-function strandFit(student: StudentInput, program: ProgramInput): { value: number; reason?: string } {
+function strandFit(
+  student: StudentInput,
+  program: ProgramInput,
+): { value: number; reason?: string } {
   if (!student.strand) return { value: 0.5 };
   const strand = student.strand.toLowerCase();
   if (program.strands.length) {
@@ -118,24 +153,42 @@ function interestFit(student: StudentInput, programText: string) {
   };
 }
 
-/** Recommendation match score, 0..100 (SRS 3.1.1.2). */
-export function matchScore(
-  student: StudentInput,
-  program: ProgramInput,
-  college: CollegeInput,
-): Scored {
-  const text = `${program.name} ${program.description}`;
-  const reasons: string[] = [];
-
-  // 35% — course/major preference
-  const majorBest = student.target_majors.reduce(
+/**
+ * Course fit, 0..1: the stronger of exact keyword overlap and semantic similarity
+ * from the gte-small embedding model (`semantic`, already scaled to 0..1). The
+ * model catches related wording, e.g. "Software Development" ~ "Information Technology".
+ */
+function courseFit(student: StudentInput, text: string, semantic?: number) {
+  const keyword = student.target_majors.reduce(
     (best, m) => {
       const v = phraseMatch(m, text);
       return v > best.v ? { v, m } : best;
     },
     { v: 0, m: '' },
   );
-  if (majorBest.v >= 0.5) reasons.push(`Matches your preferred course: ${majorBest.m}`);
+  const s = semantic ?? 0;
+  if (keyword.v >= 0.5 && keyword.v >= s) {
+    return { value: keyword.v, reason: `Matches your preferred course: ${keyword.m}` };
+  }
+  if (s >= 0.5) {
+    return { value: s, reason: 'Closely related to what you want to study (AI semantic match)' };
+  }
+  return { value: Math.max(keyword.v, s) };
+}
+
+/** Recommendation match score, 0..100 (SRS 3.1.1.2). `semantic` is the 0..1 model similarity. */
+export function matchScore(
+  student: StudentInput,
+  program: ProgramInput,
+  college: CollegeInput,
+  semantic?: number,
+): Scored {
+  const text = `${program.name} ${program.description}`;
+  const reasons: string[] = [];
+
+  // 35% — course/major preference (keywords + embeddings)
+  const course = courseFit(student, text, semantic);
+  if (course.reason) reasons.push(course.reason);
 
   // 20% — strand
   const strand = strandFit(student, program);
@@ -158,7 +211,11 @@ export function matchScore(
   if (interest.reason) reasons.push(interest.reason);
 
   const score =
-    0.35 * majorBest.v + 0.2 * strand.value + 0.2 * location + 0.15 * academic.value + 0.1 * interest.value;
+    0.35 * course.value +
+    0.2 * strand.value +
+    0.2 * location +
+    0.15 * academic.value +
+    0.1 * interest.value;
   return { score: pct(score), reasons };
 }
 
@@ -178,13 +235,14 @@ export function applicantScore(
   program: ProgramInput,
   college: CollegeInput,
   app: ApplicationInput,
+  semantic?: number,
 ): { fit: number; likelihood: number; breakdown: Record<string, number>; reasons: string[] } {
   const text = `${program.name} ${program.description}`;
   const reasons: string[] = [];
 
   const academic = academicFit(student, program);
   const strand = strandFit(student, program);
-  const major = Math.max(0, ...student.target_majors.map((m) => phraseMatch(m, text)));
+  const major = courseFit(student, text, semantic).value;
   const docs = app.requiredDocuments
     ? Math.min(1, (app.submittedDocuments + app.approvedDocuments) / (2 * app.requiredDocuments))
     : 1;
@@ -199,7 +257,9 @@ export function applicantScore(
 
   const fit = 0.35 * academic.value + 0.2 * strand.value + 0.2 * major + 0.15 * docs + 0.1 * essay;
 
-  const nearby = college.region && (student.region === college.region || student.preferred_locations.includes(college.region));
+  const nearby =
+    college.region &&
+    (student.region === college.region || student.preferred_locations.includes(college.region));
   if (app.isFirstChoice) reasons.push('Applied as first choice');
   if (nearby) reasons.push('Lives in or prefers this region');
   if (app.followsCollege) reasons.push('Follows the college');

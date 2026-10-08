@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, spacing, type ThemeColors } from '@/styles';
+import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -35,5 +35,13 @@ export const createStyles = (c: ThemeColors) =>
       backgroundColor: c.surface,
     },
     footerSave: { flex: 1 },
+    footerMessage: {
+      width: TOUCH_TARGET + spacing.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.primary,
+    },
     footerApply: { flex: 2 },
   });

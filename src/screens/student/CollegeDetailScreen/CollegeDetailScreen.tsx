@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
@@ -14,6 +14,7 @@ import { useApplicationsWithLocal } from '@/features/applications/offline';
 import { deadlineLabel } from '@/features/applications/status';
 import { collegeLocation, requirementsFor } from '@/features/colleges/api';
 import { useCollege, useFollowedColleges, useToggleFollow } from '@/features/colleges/hooks';
+import { useStartThread } from '@/features/messaging/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage } from '@/lib/validation';
 
@@ -36,6 +37,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
   const college = useCollege(id);
   const followed = useFollowedColleges();
   const toggleFollow = useToggleFollow();
+  const startThread = useStartThread();
   const applications = useApplicationsWithLocal();
 
   if (college.isPending) return <LoadingState />;
@@ -52,6 +54,16 @@ export function CollegeDetailScreen({ id }: { id: string }) {
       await toggleFollow.mutateAsync({ collegeId: c.id, following: !isSaved });
     } catch (e) {
       Alert.alert('Could not update', getErrorMessage(e));
+    }
+  }
+
+  // Formal inquiry to this college's representatives (SRS 3.6.5).
+  async function handleMessage() {
+    try {
+      const thread = await startThread.mutateAsync({ collegeId: c.id });
+      router.push({ pathname: '/student/thread/[id]', params: { id: thread.id } });
+    } catch (e) {
+      Alert.alert('Could not open conversation', getErrorMessage(e));
     }
   }
 
@@ -181,6 +193,15 @@ export function CollegeDetailScreen({ id }: { id: string }) {
             loading={toggleFollow.isPending}
           />
         </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Message admissions"
+          accessibilityState={{ busy: startThread.isPending }}
+          disabled={startThread.isPending}
+          onPress={handleMessage}
+          style={styles.footerMessage}>
+          <Ionicons name="chatbubble-ellipses-outline" size={22} color={colors.primary} />
+        </Pressable>
         <View style={styles.footerApply}>
           {existing && existing.status !== 'draft' ? (
             <Button

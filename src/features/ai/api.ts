@@ -15,9 +15,18 @@ async function invoke<T>(name: string, body?: Record<string, unknown>): Promise<
   return data as T;
 }
 
+type RecommendResult = { count: number; generated_at: string; pending: number };
+
+/** Each call embeds a few new programs (Edge CPU limit); these extra passes finish the rest. */
+const MAX_EMBED_PASSES = 5;
+
 /** Re-run the AI Exploration Engine for the signed-in student (SRS 3.1.1.2). */
-export function refreshRecommendations() {
-  return invoke<{ count: number; generated_at: string }>('ai-recommend');
+export async function refreshRecommendations() {
+  let result = await invoke<RecommendResult>('ai-recommend');
+  for (let pass = 1; pass < MAX_EMBED_PASSES && result.pending > 0; pass++) {
+    result = await invoke<RecommendResult>('ai-recommend');
+  }
+  return result;
 }
 
 export async function listRecommendations(userId: string) {
