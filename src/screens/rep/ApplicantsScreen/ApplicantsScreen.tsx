@@ -8,7 +8,7 @@ import { FilterTabs } from '@/components/FilterTabs';
 import { StatusBadge } from '@/components/StatusBadge';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
-import { APPLICANT_FILTERS, studentName, type ApplicantFilter } from '@/features/rep/api';
+import { APPLICANT_FILTERS, firstOf, studentName, type ApplicantFilter } from '@/features/rep/api';
 import { useApplicants } from '@/features/rep/hooks';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -29,13 +29,19 @@ export function ApplicantsScreen() {
   const styles = createRepStyles(colors);
   const [filter, setFilter] = useState<ApplicantFilter>('all');
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<'newest' | 'fit'>('newest');
   const applicants = useApplicants();
 
   const all = applicants.data ?? [];
   const term = search.trim().toLowerCase();
   const visible = all
     .filter(APPLICANT_FILTERS[filter])
-    .filter((a) => !term || studentName(a.student).toLowerCase().includes(term));
+    .filter((a) => !term || studentName(a.student).toLowerCase().includes(term))
+    .sort((a, b) =>
+      sort === 'fit'
+        ? (firstOf(b.ai_score)?.fit_score ?? -1) - (firstOf(a.ai_score)?.fit_score ?? -1)
+        : (b.submitted_at ?? '').localeCompare(a.submitted_at ?? ''),
+    );
 
   return (
     <FlatList
@@ -69,6 +75,14 @@ export function ApplicantsScreen() {
               count: all.filter(APPLICANT_FILTERS[f]).length,
             }))}
           />
+          <FilterTabs<'newest' | 'fit'>
+            value={sort}
+            onChange={setSort}
+            options={[
+              { value: 'newest', label: 'Newest' },
+              { value: 'fit', label: 'Best AI fit' },
+            ]}
+          />
         </View>
       }
       ListEmptyComponent={
@@ -86,6 +100,7 @@ export function ApplicantsScreen() {
       }
       renderItem={({ item }) => {
         const pending = item.documents.filter((d) => d.review_status === 'pending').length;
+        const fit = firstOf(item.ai_score)?.fit_score;
         return (
           <Card
             onPress={() =>
@@ -97,6 +112,13 @@ export function ApplicantsScreen() {
                 <Text style={styles.cardTitle}>{studentName(item.student)}</Text>
                 <Text style={styles.meta}>{item.program?.name}</Text>
               </View>
+              {fit !== undefined ? (
+                <Text
+                  style={styles.cardTitle}
+                  accessibilityLabel={`AI fit ${Math.round(fit)} percent`}>
+                  {Math.round(fit)}% fit
+                </Text>
+              ) : null}
               <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
             </View>
             <View style={styles.rowBetween}>

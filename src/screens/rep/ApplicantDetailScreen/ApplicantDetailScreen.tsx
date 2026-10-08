@@ -9,8 +9,9 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { TextField } from '@/components/TextField';
+import { useScoreApplication } from '@/features/ai/hooks';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
-import { studentName } from '@/features/rep/api';
+import { firstOf, studentName } from '@/features/rep/api';
 import { useApplicant, useRepActions } from '@/features/rep/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage } from '@/lib/validation';
@@ -26,6 +27,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
   const styles = createRepStyles(colors);
   const applicant = useApplicant(id);
   const actions = useRepActions();
+  const scoreApplication = useScoreApplication();
 
   const [decision, setDecision] = useState<Decision | null>(null);
   const [finalProgramId, setFinalProgramId] = useState<string | null>(null);
@@ -45,7 +47,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
   const choices = [a.program, a.second_program].filter((p): p is { id: string; name: string } =>
     Boolean(p),
   );
-  const score = Array.isArray(a.ai_score) ? a.ai_score[0] : a.ai_score;
+  const score = firstOf(a.ai_score);
 
   function confirmDecision() {
     if (!decision) return;
@@ -120,12 +122,32 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
               <Text style={styles.meta}>Enrollment likelihood</Text>
               <Text style={styles.cardTitle}>{Math.round(score.enrollment_likelihood)}%</Text>
             </View>
-            {score.explanation ? <Text style={styles.meta}>{score.explanation}</Text> : null}
+            <ProgressBar value={score.enrollment_likelihood / 100} />
+            {score.explanation
+              ? score.explanation.split(' · ').map((reason) => (
+                  <Text key={reason} style={styles.meta}>
+                    {'✓ '}
+                    {reason}
+                  </Text>
+                ))
+              : null}
           </>
         ) : (
           <Text style={styles.meta}>Not scored yet.</Text>
         )}
         <Text style={styles.meta}>Advisory only — every decision is made by a representative.</Text>
+        {!decided ? (
+          <Button
+            variant="secondary"
+            label={score ? 'Recalculate' : 'Calculate fit score'}
+            loading={scoreApplication.isPending}
+            onPress={() =>
+              scoreApplication
+                .mutateAsync(a.id)
+                .catch((e) => Alert.alert('Could not score', getErrorMessage(e)))
+            }
+          />
+        ) : null}
       </Card>
 
       <Card>

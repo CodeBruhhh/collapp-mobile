@@ -98,7 +98,8 @@ export async function uploadPostImage(collegeId: string, file: LocalFile): Promi
 const APPLICANT_SELECT = `id, status, submitted_at, decided_at, updated_at,
   student:students(user_id, first_name, last_name),
   program:programs!applications_program_id_fkey(id, name),
-  documents(id, review_status)` as const;
+  documents(id, review_status),
+  ai_score:ai_scores(fit_score)` as const;
 
 /** Submitted applications to the rep's college; drafts are never visible (RLS). */
 export async function listApplicants(collegeId: string) {
@@ -167,6 +168,11 @@ export const APPLICANT_FILTERS: Record<ApplicantFilter, (a: Applicant) => boolea
   accepted: (a) => a.status === 'accepted',
   rejected: (a) => a.status === 'rejected',
 };
+
+/** ai_scores is one-to-one; PostgREST may return it as an object or a one-item array. */
+export function firstOf<T>(value: T | T[] | null | undefined): T | null {
+  return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
+}
 
 export function studentName(s: { first_name: string; last_name: string } | null | undefined) {
   return [s?.first_name, s?.last_name].filter(Boolean).join(' ') || 'Student';

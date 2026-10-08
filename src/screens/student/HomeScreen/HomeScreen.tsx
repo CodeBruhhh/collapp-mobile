@@ -4,18 +4,22 @@ import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native'
 
 import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
+import { MatchCard } from '@/components/MatchCard';
+import { PostCard } from '@/components/PostCard';
 import { SyncBanner } from '@/components/SyncBanner';
 import { useAuth } from '@/context/AuthContext';
+import { useRecommendations } from '@/features/ai/hooks';
 import { useApplicationsWithLocal } from '@/features/applications/offline';
 import { collegeLocation } from '@/features/colleges/api';
 import { useColleges } from '@/features/colleges/hooks';
+import { useFeed } from '@/features/feed/hooks';
 import { useTheme } from '@/hooks/useTheme';
 
 import { createStyles } from './HomeScreen.styles';
 
 /**
- * SDD screen 6 — greeting, application summary (web dashboard stat cards) and
- * colleges to explore. AI recommendations and the institutional feed join in Phase 4.
+ * SDD screen 6 — greeting, application summary (web dashboard stat cards),
+ * AI-recommended programs and the algorithmic campus feed (SRS 3.1.1.2, 3.1.2.3).
  */
 export function HomeScreen() {
   const { colors } = useTheme();
@@ -23,6 +27,8 @@ export function HomeScreen() {
   const { profile } = useAuth();
   const applications = useApplicationsWithLocal();
   const colleges = useColleges({});
+  const recommendations = useRecommendations();
+  const feed = useFeed();
 
   const apps = applications.data ?? [];
   const stats = [
@@ -44,10 +50,12 @@ export function HomeScreen() {
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl
-          refreshing={applications.isRefetching || colleges.isRefetching}
+          refreshing={applications.isRefetching || colleges.isRefetching || feed.isRefetching}
           onRefresh={() => {
             applications.refetch();
             colleges.refetch();
+            recommendations.refetch();
+            feed.refetch();
           }}
         />
       }>
@@ -111,27 +119,49 @@ export function HomeScreen() {
 
       <View style={styles.section}>
         <View style={styles.rowBetween}>
-          <Text style={styles.sectionTitle}>Universities to explore</Text>
-          <Pressable accessibilityRole="link" onPress={() => router.push('/student/explore')}>
+          <Text style={styles.sectionTitle}>Recommended for you</Text>
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => router.push('/student/recommendations')}>
             <Text style={styles.link}>See all</Text>
           </Pressable>
         </View>
-        {(colleges.data ?? []).slice(0, 5).map((c) => (
-          <Card
-            key={c.id}
-            onPress={() =>
-              router.push({ pathname: '/student/college/[id]', params: { id: c.id } })
-            }>
-            <View style={styles.row}>
-              <CollegeLogo name={c.name} logoPath={c.logo_path} size={40} />
-              <View style={styles.flex}>
-                <Text style={styles.cardTitle}>{c.name}</Text>
-                <Text style={styles.meta}>{collegeLocation(c)}</Text>
+        {recommendations.isPending || recommendations.refresh.isPending ? (
+          <Text style={styles.meta}>Finding programs that match your profile…</Text>
+        ) : recommendations.data?.length ? (
+          recommendations.data.slice(0, 3).map((r) => <MatchCard key={r.id} recommendation={r} />)
+        ) : (
+          // No matches yet: fall back to browsing.
+          (colleges.data ?? []).slice(0, 3).map((c) => (
+            <Card
+              key={c.id}
+              onPress={() =>
+                router.push({ pathname: '/student/college/[id]', params: { id: c.id } })
+              }>
+              <View style={styles.row}>
+                <CollegeLogo name={c.name} logoPath={c.logo_path} size={40} />
+                <View style={styles.flex}>
+                  <Text style={styles.cardTitle}>{c.name}</Text>
+                  <Text style={styles.meta}>{collegeLocation(c)}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </View>
-          </Card>
-        ))}
+            </Card>
+          ))
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Campus updates</Text>
+        {feed.data?.length ? (
+          feed.data.slice(0, 15).map((post) => <PostCard key={post.id} post={post} />)
+        ) : (
+          <Text style={styles.meta}>
+            {feed.isPending
+              ? 'Loading updates…'
+              : 'News, events and scholarships from colleges will appear here.'}
+          </Text>
+        )}
       </View>
     </ScrollView>
   );
