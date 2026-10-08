@@ -7,9 +7,10 @@ import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
 import { ProgressBar } from '@/components/ProgressBar';
 import { StatusBadge } from '@/components/StatusBadge';
+import { SyncBanner } from '@/components/SyncBanner';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import type { MyApplication } from '@/features/applications/api';
-import { useMyApplications } from '@/features/applications/hooks';
+import { useApplicationsWithLocal } from '@/features/applications/offline';
 import {
   APPLICATION_STATUS_LABELS,
   applicationProgress,
@@ -43,7 +44,7 @@ export function ApplicationsScreen() {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const [filter, setFilter] = useState<Filter>('all');
-  const applications = useMyApplications();
+  const applications = useApplicationsWithLocal();
 
   const all = applications.data ?? [];
   const visible = all.filter(MATCHES[filter]);
@@ -62,6 +63,7 @@ export function ApplicationsScreen() {
       ListHeaderComponent={
         all.length ? (
           <View style={styles.header}>
+            <SyncBanner />
             <Card>
               <View style={styles.rowBetween}>
                 <Text style={styles.title}>Overall progress</Text>

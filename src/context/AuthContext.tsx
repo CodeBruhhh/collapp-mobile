@@ -1,4 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
+import Storage from 'expo-sqlite/kv-store';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 import {
@@ -54,10 +55,20 @@ async function loadProfile(userId: string) {
     supabase.from('students').select('profile_complete').eq('user_id', userId).maybeSingle(),
   ]);
   if (profileRes.error) throw profileRes.error;
-  return {
+  const loaded = {
     profile: profileRes.data,
     profileComplete: studentRes.data?.profile_complete ?? false,
   };
+  await Storage.setItem(profileCacheKey(userId), JSON.stringify(loaded));
+  return loaded;
+}
+
+const profileCacheKey = (userId: string) => `collapp-profile-${userId}`;
+
+/** Last profile seen on this device, so a signed-in student can keep drafting offline. */
+async function cachedProfile(userId: string) {
+  const raw = await Storage.getItem(profileCacheKey(userId));
+  return raw ? (JSON.parse(raw) as Awaited<ReturnType<typeof loadProfile>>) : null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -83,7 +94,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(loaded.profile);
       setProfileComplete(loaded.profileComplete);
     } catch {
-      setProfile(null);
+      // Offline or unreachable: fall back to the cached profile instead of signing out.
+      const cached = await cachedProfile(next.user.id).catch(() => null);
+      setProfile(cached?.profile ?? null);
+      setProfileComplete(cached?.profileComplete ?? false);
     }
   }
 
@@ -165,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signOut() {
     setIsLocked(false);
+    if (session) await Storage.removeItem(profileCacheKey(session.user.id)).catch(() => {});
     await supabase.auth.signOut();
     // Never show one account's cached data to the next.
     queryClient.clear();

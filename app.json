@@ -54,7 +54,13 @@
           "microphonePermission": false
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "react-native-document-scanner-plugin",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to scan your documents for applications."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -10,17 +10,12 @@ import { Select } from '@/components/Select';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
-import { applicationRequirements } from '@/features/applications/api';
-import {
-  useApplication,
-  useApplicationActions,
-  useMyApplications,
-} from '@/features/applications/hooks';
+import { useSync } from '@/context/SyncContext';
+import { useOfflineDraft } from '@/features/applications/offline';
 import { deadlineLabel } from '@/features/applications/status';
 import { requirementsFor } from '@/features/colleges/api';
 import { useCollege } from '@/features/colleges/hooks';
 import { fetchStudentProfile } from '@/features/profile/api';
-import { useIsOnline } from '@/hooks/useIsOnline';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage } from '@/lib/validation';
 
@@ -33,47 +28,41 @@ const NO_SECOND_CHOICE = 'No second choice';
 /**
  * SDD screen 8 — application form. Personal and academic details come from the
  * onboarding profile, so the wizard covers program choice, documents/essay and review.
+ * Everything saves on the device first and syncs automatically (SRS 3.1.1.4);
+ * only final submission needs a connection (SRS 3.6.3).
  */
 export function ApplyScreen({ collegeId }: { collegeId: string }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const { session } = useAuth();
   const userId = session?.user.id ?? '';
-  const isOnline = useIsOnline();
+  const sync = useSync();
 
   const college = useCollege(collegeId);
-  const myApplications = useMyApplications();
-  const actions = useApplicationActions();
+  const offline = useOfflineDraft(collegeId);
   const profile = useQuery({
     queryKey: ['students', userId],
     queryFn: () => fetchStudentProfile(userId),
     enabled: Boolean(userId),
   });
 
-  // Resume an existing draft for this college if there is one.
-  const existingDraft = myApplications.data?.find(
-    (a) => a.college_id === collegeId && a.status === 'draft',
-  );
-  const [createdId, setCreatedId] = useState<string | null>(null);
-  const draftId = createdId ?? existingDraft?.id ?? null;
-  const draft = useApplication(draftId ?? undefined);
-
   const [step, setStep] = useState(0);
   const [programName, setProgramName] = useState<string | null>(null);
   const [secondName, setSecondName] = useState<string | null>(null);
   const [essay, setEssay] = useState<string | null>(null);
-  const [busyRequirement, setBusyRequirement] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  if (college.isPending || myApplications.isPending) return <LoadingState />;
+  if (college.isPending || offline.isLoading) return <LoadingState />;
   if (college.isError) return <ErrorState error={college.error} onRetry={college.refetch} />;
 
   const c = college.data;
+  const { draft, documents } = offline;
   const openPrograms = c.programs.filter((p) => p.is_open);
   const byName = (name: string | null) => openPrograms.find((p) => p.name === name) ?? null;
 
   // Form values fall back to the saved draft until the student edits them.
-  const savedProgram = c.programs.find((p) => p.id === draft.data?.program_id) ?? null;
-  const savedSecond = c.programs.find((p) => p.id === draft.data?.second_program_id) ?? null;
+  const savedProgram = c.programs.find((p) => p.id === draft?.program_id) ?? null;
+  const savedSecond = c.programs.find((p) => p.id === draft?.second_program_id) ?? null;
   const program = programName !== null ? byName(programName) : savedProgram;
   const second =
     secondName !== null
@@ -81,14 +70,12 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
         ? null
         : byName(secondName)
       : savedSecond;
-  const essayValue = essay ?? draft.data?.essay ?? '';
+  const essayValue = essay ?? draft?.essay ?? '';
 
-  const requirements = draft.data
-    ? applicationRequirements(draft.data)
-    : requirementsFor(c, program?.id ?? null);
+  const requirements = requirementsFor(c, program?.id ?? null);
   const documentReqs = requirements.filter((r) => r.kind === 'document');
   const needsEssay = requirements.some((r) => r.kind === 'essay') || Boolean(program?.essay_prompt);
-  const docFor = (reqId: string) => draft.data?.documents.find((d) => d.requirement_id === reqId);
+  const docFor = (reqId: string) => documents.find((d) => d.requirement_id === reqId);
   const missing = [
     ...documentReqs.filter((r) => r.is_required && !docFor(r.id)).map((r) => r.label),
     ...(requirements.some((r) => r.kind === 'essay' && r.is_required) && !essayValue.trim()
@@ -96,61 +83,40 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
       : []),
   ];
 
-  async function saveProgramsAndContinue() {
+  async function saveDraft(next: number) {
     if (!program) {
       Alert.alert('Choose a program', 'Pick your first-choice program to continue.');
       return;
     }
+    setSaving(true);
     try {
-      if (!draftId) {
-        const created = await actions.createDraft.mutateAsync({
-          collegeId: c.id,
-          programId: program.id,
-          secondProgramId: second?.id ?? null,
-        });
-        setCreatedId(created.id);
-      } else if (
-        program.id !== draft.data?.program_id ||
-        (second?.id ?? null) !== draft.data?.second_program_id
-      ) {
-        await actions.updateDraft.mutateAsync({
-          id: draftId,
-          changes: { program_id: program.id, second_program_id: second?.id ?? null },
-        });
-      }
-      setStep(1);
+      await offline.save({
+        programId: program.id,
+        secondProgramId: second?.id ?? null,
+        essay: essayValue.trim() || null,
+      });
+      setStep(next);
     } catch (e) {
       Alert.alert('Could not save', getErrorMessage(e));
-    }
-  }
-
-  async function saveEssayAndContinue() {
-    try {
-      if (draftId && essay !== null && essay !== draft.data?.essay) {
-        await actions.updateDraft.mutateAsync({
-          id: draftId,
-          changes: { essay: essay.trim() || null },
-        });
-      }
-      setStep(2);
-    } catch (e) {
-      Alert.alert('Could not save', getErrorMessage(e));
+    } finally {
+      setSaving(false);
     }
   }
 
   async function handleSubmit() {
-    if (!draftId) return;
+    setSaving(true);
     try {
-      await actions.submit.mutateAsync(draftId);
-      router.replace({ pathname: '/student/application/[id]', params: { id: draftId } });
+      await offline.submit();
+      router.replace({ pathname: '/student/application/[id]', params: { id: draft!.id } });
       Alert.alert('Application submitted', `${c.name} will review your application.`);
     } catch (e) {
       Alert.alert('Not submitted yet', getErrorMessage(e));
+    } finally {
+      setSaving(false);
     }
   }
 
   function handleDelete() {
-    if (!draft.data) return;
     Alert.alert('Delete this draft?', 'Uploaded files will be removed too.', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -158,7 +124,7 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await actions.deleteDraft.mutateAsync(draft.data!);
+            await offline.deleteDraft();
             router.back();
           } catch (e) {
             Alert.alert('Could not delete', getErrorMessage(e));
@@ -168,8 +134,21 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
     ]);
   }
 
+  const syncLine = !draft
+    ? 'Start your application.'
+    : !draft.hasLocalChanges
+      ? 'Draft saved.'
+      : sync.status === 'offline'
+        ? 'Saved on this device. It will sync when you’re back online.'
+        : sync.status === 'syncing'
+          ? 'Saving to your account…'
+          : 'Saved on this device.';
+
   const s = profile.data;
   const address = (s?.address ?? {}) as Record<string, string | undefined>;
+  const conflictProgram = draft?.conflict
+    ? c.programs.find((p) => p.id === draft.conflict!.program_id)?.name
+    : null;
 
   return (
     <SafeAreaView style={styles.root} edges={['bottom']}>
@@ -190,10 +169,40 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
           <Text accessibilityRole="header" style={styles.title}>
             {c.name}
           </Text>
-          <Text style={styles.subtitle}>
-            {draftId ? 'Draft saved — you can finish later.' : 'Start your application.'}
+          <Text style={styles.subtitle} accessibilityLiveRegion="polite">
+            {syncLine}
           </Text>
         </View>
+
+        {draft?.conflict ? (
+          <View style={styles.warning} accessibilityLiveRegion="polite">
+            <Text style={styles.warningText}>
+              This draft was changed on another device while you were offline (saved version:{' '}
+              {conflictProgram ?? 'a different program'}). Which version should we keep?
+            </Text>
+            <View style={styles.footerRow}>
+              <View style={styles.flex}>
+                <Button label="Keep mine" onPress={() => offline.resolveConflict('mine')} />
+              </View>
+              <View style={styles.flex}>
+                <Button
+                  variant="secondary"
+                  label="Use saved version"
+                  onPress={() => {
+                    setProgramName(null);
+                    setSecondName(null);
+                    setEssay(null);
+                    offline.resolveConflict('server');
+                  }}
+                />
+              </View>
+            </View>
+          </View>
+        ) : draft?.syncError ? (
+          <View style={styles.warning}>
+            <Text style={styles.warningText}>Couldn&apos;t sync yet: {draft.syncError}</Text>
+          </View>
+        ) : null}
 
         {step === 0 ? (
           <View style={styles.section}>
@@ -227,31 +236,18 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Supporting documents</Text>
             <Text style={styles.meta}>
-              PDF or photos, up to 5 MB. Photos are compressed automatically.
+              Scan with your camera or attach a PDF/photo (up to 5 MB). Scans are compressed under 2
+              MB. You can do this offline.
             </Text>
             {documentReqs.map((req) => (
               <RequirementUpload
                 key={req.id}
                 requirement={req}
                 document={docFor(req.id)}
-                busy={busyRequirement === req.id}
-                onUpload={async (file) => {
-                  setBusyRequirement(req.id);
-                  try {
-                    await actions.attachDocument.mutateAsync({
-                      applicationId: draftId!,
-                      requirementId: req.id,
-                      label: req.label,
-                      file,
-                      existing: docFor(req.id),
-                    });
-                  } finally {
-                    setBusyRequirement(null);
-                  }
-                }}
+                onUpload={(file) => offline.attach(req, file, docFor(req.id))}
                 onRemove={async () => {
                   const doc = docFor(req.id);
-                  if (doc) await actions.removeDocument.mutateAsync(doc).catch(() => {});
+                  if (doc) await offline.removeDocument(doc);
                 }}
               />
             ))}
@@ -298,8 +294,7 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Documents</Text>
                 <Text style={styles.summaryValue}>
-                  {documentReqs.filter((r) => docFor(r.id)).length} of {documentReqs.length}{' '}
-                  uploaded
+                  {documentReqs.filter((r) => docFor(r.id)).length} of {documentReqs.length} added
                 </Text>
               </View>
             </Card>
@@ -308,10 +303,10 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
                 <Text style={styles.warningText}>Still needed: {missing.join(', ')}</Text>
               </View>
             ) : null}
-            {!isOnline ? (
+            {!sync.isOnline ? (
               <View style={styles.warning} accessibilityLiveRegion="polite">
                 <Text style={styles.warningText}>
-                  You&apos;re offline. Your draft is saved — reconnect to submit.
+                  You&apos;re offline. Everything is saved on this device — reconnect to submit.
                 </Text>
               </View>
             ) : null}
@@ -321,27 +316,17 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
 
       <View style={styles.footer}>
         {step === 0 ? (
-          <Button
-            label="Next"
-            onPress={saveProgramsAndContinue}
-            loading={actions.createDraft.isPending || actions.updateDraft.isPending}
-            disabled={!program}
-          />
+          <Button label="Next" onPress={() => saveDraft(1)} loading={saving} disabled={!program} />
         ) : null}
         {step === 1 ? (
-          <Button
-            label="Review"
-            onPress={saveEssayAndContinue}
-            loading={actions.updateDraft.isPending}
-            disabled={busyRequirement !== null}
-          />
+          <Button label="Review" onPress={() => saveDraft(2)} loading={saving} />
         ) : null}
         {step === 2 ? (
           <Button
             label="Submit application"
             onPress={handleSubmit}
-            loading={actions.submit.isPending}
-            disabled={missing.length > 0 || !isOnline}
+            loading={saving}
+            disabled={missing.length > 0 || !sync.isOnline || Boolean(draft?.conflict)}
           />
         ) : null}
         <View style={styles.footerRow}>
@@ -350,7 +335,7 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
               <Button variant="secondary" label="Back" onPress={() => setStep((v) => v - 1)} />
             </View>
           ) : null}
-          {draft.data ? (
+          {draft ? (
             <View style={styles.flex}>
               <Button variant="link" label="Delete draft" onPress={handleDelete} />
             </View>

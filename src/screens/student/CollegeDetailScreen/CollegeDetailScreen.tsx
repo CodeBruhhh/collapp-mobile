@@ -10,7 +10,7 @@ import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
 import { ErrorState, LoadingState } from '@/components/StateView';
-import { useMyApplications } from '@/features/applications/hooks';
+import { useApplicationsWithLocal } from '@/features/applications/offline';
 import { deadlineLabel } from '@/features/applications/status';
 import { collegeLocation, requirementsFor } from '@/features/colleges/api';
 import { useCollege, useFollowedColleges, useToggleFollow } from '@/features/colleges/hooks';
@@ -36,7 +36,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
   const college = useCollege(id);
   const followed = useFollowedColleges();
   const toggleFollow = useToggleFollow();
-  const applications = useMyApplications();
+  const applications = useApplicationsWithLocal();
 
   if (college.isPending) return <LoadingState />;
   if (college.isError) return <ErrorState error={college.error} onRetry={college.refetch} />;

@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import { useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Card } from '@/components/Card';
@@ -7,7 +6,8 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { applicationRequirements } from '@/features/applications/api';
-import { useApplication, useApplicationActions } from '@/features/applications/hooks';
+import { useApplication } from '@/features/applications/hooks';
+import { mergeDocuments, useDocumentQueue } from '@/features/applications/offline';
 import {
   APPLICATION_STATUS_LABELS,
   applicationProgress,
@@ -32,8 +32,7 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const application = useApplication(id);
-  const actions = useApplicationActions();
-  const [busyRequirement, setBusyRequirement] = useState<string | null>(null);
+  const queue = useDocumentQueue(id);
 
   if (application.isPending) return <LoadingState />;
   if (application.isError) {
@@ -44,7 +43,9 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
   const color = applicationStatusColor(app.status, colors);
   const decided = app.status === 'accepted' || app.status === 'rejected';
   const requirements = applicationRequirements(app).filter((r) => r.kind === 'document');
-  const docFor = (reqId: string) => app.documents.find((d) => d.requirement_id === reqId);
+  // Resubmissions queue on the device first, so they also work offline.
+  const documents = mergeDocuments(app.documents, queue.pending);
+  const docFor = (reqId: string) => documents.find((d) => d.requirement_id === reqId);
   const approved = app.documents.filter((d) => d.review_status === 'approved').length;
 
   return (
@@ -106,28 +107,15 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
           const doc = docFor(req.id);
           // Only flagged documents can be replaced once submitted.
           const canReplace =
-            !decided && (doc?.review_status === 'resubmit' || doc?.review_status === 'rejected');
+            !decided &&
+            (doc?.local || doc?.review_status === 'resubmit' || doc?.review_status === 'rejected');
           return (
             <RequirementUpload
               key={req.id}
               requirement={req}
               document={doc}
-              busy={busyRequirement === req.id}
               locked={!canReplace}
-              onUpload={async (file) => {
-                setBusyRequirement(req.id);
-                try {
-                  await actions.attachDocument.mutateAsync({
-                    applicationId: app.id,
-                    requirementId: req.id,
-                    label: req.label,
-                    file,
-                    existing: doc,
-                  });
-                } finally {
-                  setBusyRequirement(null);
-                }
-              }}
+              onUpload={(file) => queue.attach(req, file, doc)}
             />
           );
         })}

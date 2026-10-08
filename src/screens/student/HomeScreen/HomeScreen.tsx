@@ -4,8 +4,9 @@ import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native'
 
 import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
+import { SyncBanner } from '@/components/SyncBanner';
 import { useAuth } from '@/context/AuthContext';
-import { useMyApplications } from '@/features/applications/hooks';
+import { useApplicationsWithLocal } from '@/features/applications/offline';
 import { collegeLocation } from '@/features/colleges/api';
 import { useColleges } from '@/features/colleges/hooks';
 import { useTheme } from '@/hooks/useTheme';
@@ -20,7 +21,7 @@ export function HomeScreen() {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const { profile } = useAuth();
-  const applications = useMyApplications();
+  const applications = useApplicationsWithLocal();
   const colleges = useColleges({});
 
   const apps = applications.data ?? [];
@@ -56,6 +57,8 @@ export function HomeScreen() {
         </Text>
         <Text style={styles.meta}>Explore. Plan. Build your future.</Text>
       </View>
+
+      <SyncBanner />
 
       <Pressable
         accessibilityRole="search"
