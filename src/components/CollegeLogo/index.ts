@@ -1,0 +1,1 @@
+export { CollegeLogo } from './CollegeLogo';

@@ -5,10 +5,7 @@ export default function AdminBroadcast() {
     <PlaceholderScreen
       title="Broadcast"
       description="Send announcements to users."
-      features={[
-        'Push notification broadcast composer',
-        'Sent broadcast history',
-      ]}
+      features={['Push notification broadcast composer', 'Sent broadcast history']}
     />
   );
 }

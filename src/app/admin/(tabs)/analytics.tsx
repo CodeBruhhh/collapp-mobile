@@ -5,10 +5,7 @@ export default function AdminAnalytics() {
     <PlaceholderScreen
       title="Analytics"
       description="Platform-wide usage and performance."
-      features={[
-        'System-wide analytics and usage monitoring',
-        'Real-time platform performance',
-      ]}
+      features={['System-wide analytics and usage monitoring', 'Real-time platform performance']}
     />
   );
 }

@@ -1,0 +1,75 @@
+import { StyleSheet } from 'react-native';
+
+import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+
+/** Shared layout for the school-representative screens (SDD screens 19-26). */
+export const createRepStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: c.background },
+    content: { padding: spacing.md, gap: spacing.md },
+    flex: { flex: 1 },
+    title: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: c.text },
+    subtitle: { fontSize: fontSize.sm, color: c.textMuted },
+    section: { gap: spacing.sm },
+    sectionTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: c.text },
+    cardTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: c.text },
+    body: { fontSize: fontSize.md, color: c.text, lineHeight: 22 },
+    meta: { fontSize: fontSize.sm, color: c.textMuted },
+    row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    rowBetween: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    action: { flexGrow: 1, flexBasis: '45%' },
+    stats: { flexDirection: 'row', gap: spacing.sm },
+    stat: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    statValue: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: c.text },
+    statLabel: { fontSize: fontSize.xs, color: c.textMuted, textAlign: 'center' },
+    banner: {
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.status.underReview,
+      backgroundColor: c.surface,
+    },
+    footer: {
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
+      backgroundColor: c.surface,
+    },
+    kv: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
+    kvLabel: { fontSize: fontSize.sm, color: c.textMuted },
+    kvValue: {
+      flexShrink: 1,
+      fontSize: fontSize.sm,
+      fontWeight: fontWeight.medium,
+      color: c.text,
+      textAlign: 'right',
+    },
+    fab: { position: 'absolute', right: spacing.md, bottom: spacing.md },
+    searchBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    searchInput: { flex: 1, minHeight: TOUCH_TARGET, fontSize: fontSize.md, color: c.text },
+  });

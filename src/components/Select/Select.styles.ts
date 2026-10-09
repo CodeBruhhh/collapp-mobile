@@ -1,0 +1,66 @@
+import { StyleSheet } from 'react-native';
+
+import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+
+export const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    root: { gap: spacing.xs },
+    label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.text },
+    field: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+      minHeight: TOUCH_TARGET,
+      paddingHorizontal: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      backgroundColor: c.surface,
+    },
+    fieldError: { borderColor: c.danger },
+    disabled: { opacity: 0.5 },
+    value: { flex: 1, fontSize: fontSize.md, color: c.text },
+    placeholder: { color: c.textMuted },
+    error: { fontSize: fontSize.sm, color: c.danger },
+    modal: { flex: 1, backgroundColor: c.background },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    modalTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: c.text },
+    close: {
+      width: TOUCH_TARGET,
+      height: TOUCH_TARGET,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    search: {
+      margin: spacing.md,
+      minHeight: TOUCH_TARGET,
+      paddingHorizontal: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      backgroundColor: c.surface,
+      fontSize: fontSize.md,
+      color: c.text,
+    },
+    option: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      minHeight: TOUCH_TARGET,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    optionPressed: { backgroundColor: c.surface },
+    optionText: { flex: 1, fontSize: fontSize.md, color: c.text },
+    empty: { padding: spacing.md, fontSize: fontSize.md, color: c.textMuted },
+  });

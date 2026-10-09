@@ -1,14 +1,5 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { PostsScreen } from '@/screens/rep/PostsScreen';
 
 export default function RepPosts() {
-  return (
-    <PlaceholderScreen
-      title="Posts"
-      description="Publish updates to prospective students."
-      features={[
-        'Campus post composer: news, events, scholarship alerts, deadline notices',
-        'Published and draft posts',
-      ]}
-    />
-  );
+  return <PostsScreen />;
 }
