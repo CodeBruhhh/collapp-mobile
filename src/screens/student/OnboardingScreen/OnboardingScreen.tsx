@@ -1,3 +1,5 @@
+import { useQueryClient } from '@tanstack/react-query';
+import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 
@@ -8,7 +10,9 @@ import { Select } from '@/components/Select';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { getCities, getProvinces, PH_REGIONS } from '@/data/ph-address';
-import { fetchStudentProfile, saveStudentProfile } from '@/features/profile/api';
+import { refreshRecommendations } from '@/features/ai/api';
+import { aiKeys } from '@/features/ai/hooks';
+import { fetchStudentProfile, saveFullName, saveStudentProfile } from '@/features/profile/api';
 import { INTEREST_OPTIONS, MAJOR_OPTIONS, SHS_STRANDS } from '@/features/profile/constants';
 import { academicSchema, addressSchema, personalSchema } from '@/features/profile/schemas';
 import { useTheme } from '@/hooks/useTheme';
@@ -68,12 +72,22 @@ const EMPTY: Form = {
   careerGoals: '',
 };
 
+type OnboardingScreenProps = {
+  /**
+   * 'onboarding': first-time setup (SDD screen 5). 'edit': changing a finished
+   * profile from Profile & Settings (SDD screen 18); it stays complete throughout.
+   */
+  mode?: 'onboarding' | 'edit';
+};
+
 /** SDD screen 5 — academic profile collected once before students can apply (SRS 3.1.1.2). */
-export function OnboardingScreen() {
+export function OnboardingScreen({ mode = 'onboarding' }: OnboardingScreenProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const { session, profile, refreshProfile, signOut } = useAuth();
   const userId = session?.user.id;
+  const queryClient = useQueryClient();
+  const editing = mode === 'edit';
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Form>(EMPTY);
@@ -176,12 +190,34 @@ export function OnboardingScreen() {
     const isLast = step === STEPS.length - 1;
     setSaving(true);
     try {
-      await saveStudentProfile(userId, { ...changes, profile_complete: isLast });
-      if (isLast) {
+      // While editing, the profile is already complete; never mark it incomplete.
+      await saveStudentProfile(
+        userId,
+        editing ? changes : { ...changes, profile_complete: isLast },
+      );
+      if (step === 0) {
+        // Keep the account name (headers, inbox, applicant lists) in step.
+        await saveFullName(
+          userId,
+          [form.firstName, form.middleName, form.lastName]
+            .map((n) => n.trim())
+            .filter(Boolean)
+            .join(' '),
+        );
+      }
+      if (!isLast) {
+        setStep((s) => s + 1);
+      } else if (editing) {
+        await refreshProfile();
+        queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+        // Re-rank matches for the new preferences in the background.
+        refreshRecommendations()
+          .then(() => queryClient.invalidateQueries({ queryKey: aiKeys.recommendations(userId) }))
+          .catch(() => {});
+        router.back();
+      } else {
         // Flips needsOnboarding; the root navigator opens the student tabs.
         await refreshProfile();
-      } else {
-        setStep((s) => s + 1);
       }
     } catch (error) {
       Alert.alert('Could not save', getErrorMessage(error));
@@ -194,9 +230,10 @@ export function OnboardingScreen() {
 
   return (
     <FormScreen>
+      {editing ? <Stack.Screen options={{ title: 'Edit profile' }} /> : null}
       <View style={styles.header}>
         <Text accessibilityRole="header" style={styles.title}>
-          Academic profile
+          {editing ? 'Edit academic profile' : 'Academic profile'}
         </Text>
         <Text style={styles.step}>
           Step {step + 1} of {STEPS.length}: {STEPS[step]}
@@ -413,7 +450,7 @@ export function OnboardingScreen() {
 
       <View style={styles.actions}>
         <Button
-          label={step === STEPS.length - 1 ? 'Finish' : 'Next'}
+          label={step === STEPS.length - 1 ? (editing ? 'Save changes' : 'Finish') : 'Next'}
           onPress={handleNext}
           loading={saving}
         />
@@ -424,6 +461,8 @@ export function OnboardingScreen() {
             onPress={() => setStep((s) => s - 1)}
             disabled={saving}
           />
+        ) : editing ? (
+          <Button variant="link" label="Cancel" onPress={() => router.back()} disabled={saving} />
         ) : (
           <Button variant="link" label="Sign out" onPress={signOut} />
         )}

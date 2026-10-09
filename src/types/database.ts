@@ -574,6 +574,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          notification_prefs: Json
           push_enabled: boolean
           role: Database["public"]["Enums"]["user_role"]
           status: Database["public"]["Enums"]["account_status"]
@@ -586,6 +587,7 @@ export type Database = {
           email: string
           full_name?: string
           id: string
+          notification_prefs?: Json
           push_enabled?: boolean
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["account_status"]
@@ -598,6 +600,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          notification_prefs?: Json
           push_enabled?: boolean
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["account_status"]

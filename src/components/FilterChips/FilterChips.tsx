@@ -13,7 +13,11 @@ type FilterChipsProps<T extends string> = {
 };
 
 /** Single-select horizontal chip row. */
-export function FilterChips<T extends string>({ options, selected, onSelect }: FilterChipsProps<T>) {
+export function FilterChips<T extends string>({
+  options,
+  selected,
+  onSelect,
+}: FilterChipsProps<T>) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
