@@ -38,6 +38,16 @@ export const createStyles = (c: ThemeColors) =>
     cardTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: c.text },
     row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
     rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    featuredRow: { gap: spacing.sm, paddingRight: spacing.md },
+    featuredCard: {
+      width: 200,
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
     link: {
       fontSize: fontSize.sm,
       fontWeight: fontWeight.semibold,

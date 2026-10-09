@@ -1,5 +1,5 @@
 import { ChangePasswordScreen } from '@/screens/account/ChangePasswordScreen';
 
-export default function StudentChangePassword() {
+export default function RepChangePassword() {
   return <ChangePasswordScreen />;
 }

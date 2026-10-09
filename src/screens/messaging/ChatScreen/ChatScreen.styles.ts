@@ -85,6 +85,7 @@ export const createStyles = (c: ThemeColors) =>
       borderWidth: 1,
       borderColor: c.border,
     },
+    readOnlyNotice: { paddingVertical: spacing.md },
     notice: {
       fontSize: fontSize.xs,
       color: c.textMuted,

@@ -3,8 +3,8 @@ import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { AccountButton } from '@/components/AccountButton';
 import { NotificationBell } from '@/components/NotificationBell';
-import { SignOutButton } from '@/components/SignOutButton';
 import { useUnreadMessageCount } from '@/features/messaging/hooks';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -23,7 +23,7 @@ function HeaderActions() {
   return (
     <View style={styles.actions}>
       <NotificationBell />
-      <SignOutButton />
+      <AccountButton />
     </View>
   );
 }

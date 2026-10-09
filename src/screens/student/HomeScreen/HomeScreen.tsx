@@ -8,6 +8,7 @@ import { MatchCard } from '@/components/MatchCard';
 import { PostCard } from '@/components/PostCard';
 import { SyncBanner } from '@/components/SyncBanner';
 import { useAuth } from '@/context/AuthContext';
+import { usePlatformSettings } from '@/features/admin/hooks';
 import { useRecommendations } from '@/features/ai/hooks';
 import { useApplicationsWithLocal } from '@/features/applications/offline';
 import { collegeLocation } from '@/features/colleges/api';
@@ -29,6 +30,7 @@ export function HomeScreen() {
   const colleges = useColleges({});
   const recommendations = useRecommendations();
   const feed = useFeed();
+  const platform = usePlatformSettings();
 
   const apps = applications.data ?? [];
   const stats = [
@@ -43,6 +45,10 @@ export function HomeScreen() {
   const drafts = apps.filter((a) => a.status === 'draft');
   const actionRequired = apps.filter((a) => a.status === 'action_required');
   const firstName = profile?.full_name.split(' ')[0] ?? 'there';
+  // Admin-picked colleges (platform_settings), in the admin's order; published only.
+  const featured = (platform.data?.featured_college_ids ?? [])
+    .map((id) => colleges.data?.find((c) => c.id === id))
+    .filter((c) => c !== undefined);
 
   return (
     <ScrollView
@@ -85,6 +91,35 @@ export function HomeScreen() {
           </View>
         ))}
       </View>
+
+      {featured.length ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Featured universities</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.featuredRow}>
+            {featured.map((c) => (
+              <Pressable
+                key={c.id}
+                accessibilityRole="button"
+                accessibilityLabel={`${c.name}, ${collegeLocation(c)}`}
+                onPress={() =>
+                  router.push({ pathname: '/student/college/[id]', params: { id: c.id } })
+                }
+                style={styles.featuredCard}>
+                <CollegeLogo name={c.name} logoPath={c.logo_path} size={48} />
+                <Text style={styles.cardTitle} numberOfLines={2}>
+                  {c.name}
+                </Text>
+                <Text style={styles.meta} numberOfLines={1}>
+                  {collegeLocation(c)}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
 
       {actionRequired.map((a) => (
         <Card

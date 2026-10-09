@@ -1,11 +1,5 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { BroadcastScreen } from '@/screens/admin/BroadcastScreen';
 
 export default function AdminBroadcast() {
-  return (
-    <PlaceholderScreen
-      title="Broadcast"
-      description="Send announcements to users."
-      features={['Push notification broadcast composer', 'Sent broadcast history']}
-    />
-  );
+  return <BroadcastScreen />;
 }

@@ -1,11 +1,5 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { AnalyticsScreen } from '@/screens/admin/AnalyticsScreen';
 
 export default function AdminAnalytics() {
-  return (
-    <PlaceholderScreen
-      title="Analytics"
-      description="Platform-wide usage and performance."
-      features={['System-wide analytics and usage monitoring', 'Real-time platform performance']}
-    />
-  );
+  return <AnalyticsScreen />;
 }
