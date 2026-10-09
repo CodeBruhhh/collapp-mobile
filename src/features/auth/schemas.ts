@@ -38,6 +38,21 @@ export const verifySchema = z.object({
 
 export const forgotPasswordSchema = z.object({ email });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password'),
+    password,
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.password === v.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'Passwords do not match',
+  })
+  .refine((v) => v.password !== v.currentPassword, {
+    path: ['password'],
+    message: 'Choose a password different from your current one',
+  });
+
 export const resetPasswordSchema = z
   .object({
     code: otpCode,

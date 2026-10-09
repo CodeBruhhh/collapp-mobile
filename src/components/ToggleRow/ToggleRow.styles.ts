@@ -10,6 +10,7 @@ export const createStyles = (c: ThemeColors) =>
       gap: spacing.md,
       minHeight: TOUCH_TARGET,
     },
+    disabled: { opacity: 0.5 },
     text: { flex: 1, gap: 2 },
     label: { fontSize: fontSize.md, fontWeight: fontWeight.medium, color: c.text },
     description: { fontSize: fontSize.sm, color: c.textMuted },

@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { LiveUpdates } from '@/context/LiveUpdates';
+import { PreferencesProvider } from '@/context/PreferencesContext';
 import { SyncProvider } from '@/context/SyncContext';
 import { useTheme } from '@/hooks/useTheme';
 import { PERSIST_MAX_AGE, queryClient, queryPersister } from '@/lib/queryClient';
@@ -54,17 +55,19 @@ export default function RootLayout() {
   const { isDark } = useTheme();
 
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE }}>
-      <AuthProvider>
-        <SyncProvider>
-          <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-            <StatusBar style="auto" />
-            <RootNavigator />
-          </ThemeProvider>
-        </SyncProvider>
-      </AuthProvider>
-    </PersistQueryClientProvider>
+    <PreferencesProvider>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE }}>
+        <AuthProvider>
+          <SyncProvider>
+            <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+              <StatusBar style="auto" />
+              <RootNavigator />
+            </ThemeProvider>
+          </SyncProvider>
+        </AuthProvider>
+      </PersistQueryClientProvider>
+    </PreferencesProvider>
   );
 }

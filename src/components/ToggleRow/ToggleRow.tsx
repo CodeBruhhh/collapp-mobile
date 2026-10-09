@@ -18,7 +18,7 @@ export function ToggleRow({ label, description, value, onChange, disabled }: Tog
   const styles = createStyles(colors);
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, disabled && styles.disabled]}>
       <View style={styles.text}>
         <Text style={styles.label}>{label}</Text>
         {description ? <Text style={styles.description}>{description}</Text> : null}
