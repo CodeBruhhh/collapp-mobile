@@ -188,3 +188,12 @@ export async function setFileError(id: string, error: string | null) {
   const db = await getDb();
   await db.runAsync('UPDATE pending_files SET sync_error = ? WHERE id = ?', error, id);
 }
+
+/** Erase everything this user left on the device (account deletion). */
+export async function clearUserOutbox(userId: string) {
+  const files = await listPendingFiles(userId);
+  for (const file of files) deleteLocalFile(file.uri);
+  const db = await getDb();
+  await db.runAsync('DELETE FROM pending_files WHERE user_id = ?', userId);
+  await db.runAsync('DELETE FROM drafts WHERE user_id = ?', userId);
+}

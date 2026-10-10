@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { router, type Href } from 'expo-router';
+import { useState } from 'react';
 import { Alert, Text } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -9,6 +10,7 @@ import { ErrorState, LoadingState } from '@/components/StateView';
 import { ToggleRow } from '@/components/ToggleRow';
 import { useAuth } from '@/context/AuthContext';
 import { usePreferences, type ThemeMode } from '@/context/PreferencesContext';
+import { buildDataExport, saveDataExport } from '@/features/account/api';
 import type { AccountSettings, NotificationCategory } from '@/features/profile/api';
 import { useAccountSettings, useSaveAccountSettings } from '@/features/profile/hooks';
 import { useTheme } from '@/hooks/useTheme';
@@ -65,7 +67,7 @@ const CHANGE_PASSWORD_ROUTE: Record<Role, Href> = {
 
 /**
  * Settings shared by every role's Profile & Settings screen (SDD 18):
- * appearance, push preferences, security and sign-out.
+ * appearance, push preferences, security, data export/deletion and sign-out.
  */
 export function AccountSettingsSections({ role }: { role: Role }) {
   const { colors } = useTheme();
@@ -73,6 +75,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
   const { session, signOut } = useAuth();
   const userId = session?.user.id ?? '';
   const { themeMode, setThemeMode } = usePreferences();
+  const [exporting, setExporting] = useState(false);
 
   const settings = useAccountSettings();
   const saveSettings = useSaveAccountSettings();
@@ -108,7 +111,21 @@ export function AccountSettingsSections({ role }: { role: Role }) {
       { text: 'Sign out', style: 'destructive', onPress: signOut },
     ]);
 
+  async function downloadData() {
+    setExporting(true);
+    try {
+      const fileName = await saveDataExport(await buildDataExport(userId, role));
+      if (fileName) Alert.alert('Your data was saved', fileName);
+    } catch (e) {
+      Alert.alert('Could not export your data', getErrorMessage(e));
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const current = settings.data;
+  // Accounts created with Google have no password until one is set.
+  const hasPassword = session?.user.identities?.some((i) => i.provider === 'email') ?? true;
 
   return (
     <>
@@ -163,11 +180,41 @@ export function AccountSettingsSections({ role }: { role: Role }) {
           disabled={!biometrics.data?.available}
           onChange={toggleBiometrics}
         />
+        {hasPassword ? (
+          <Button
+            variant="secondary"
+            label="Change password"
+            onPress={() => router.push(CHANGE_PASSWORD_ROUTE[role])}
+          />
+        ) : (
+          <Text style={styles.hint}>
+            You sign in with Google, so there is no password to change.
+          </Text>
+        )}
+      </SettingsSection>
+
+      <SettingsSection title="Your data">
         <Button
           variant="secondary"
-          label="Change password"
-          onPress={() => router.push(CHANGE_PASSWORD_ROUTE[role])}
+          label="Download my data"
+          onPress={downloadData}
+          loading={exporting}
         />
+        <Text style={styles.hint}>
+          Saves everything CollApp stores about you as a JSON file in a folder you choose.
+        </Text>
+        {role === 'student' ? (
+          <Button
+            variant="link"
+            label="Delete my account"
+            onPress={() => router.push('/student/delete-account')}
+          />
+        ) : (
+          <Text style={styles.hint}>
+            To close a {role === 'admin' ? 'administrator' : 'representative'} account, contact
+            another CollApp administrator.
+          </Text>
+        )}
       </SettingsSection>
 
       <Button label="Sign out" variant="secondary" onPress={confirmSignOut} />

@@ -2,11 +2,15 @@ import type { Session } from '@supabase/supabase-js';
 import Storage from 'expo-sqlite/kv-store';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import { deleteMyAccount } from '@/features/account/api';
 import {
   authenticateWithBiometrics,
   isBiometricEnabled,
   offerBiometricUnlock,
+  setBiometricEnabled,
 } from '@/lib/biometrics';
+import { clearUserOutbox } from '@/lib/offline/outbox';
+import { signInWithGoogleOAuth } from '@/lib/oauth';
 import { unregisterPush } from '@/lib/push';
 import { queryClient } from '@/lib/queryClient';
 import { supabase } from '@/lib/supabase';
@@ -32,6 +36,8 @@ type AuthContextValue = {
   /** Prompt for biometrics; resolves `true` and unlocks on success. */
   unlock: () => Promise<boolean>;
   signIn: (email: string, password: string) => Promise<void>;
+  /** Google OAuth (students). Resolves `false` when the person cancels. */
+  signInWithGoogle: () => Promise<boolean>;
   /** Resolves `true` when Supabase asks for email verification first. */
   signUp: (fullName: string, email: string, password: string) => Promise<boolean>;
   verifyEmail: (email: string, code: string) => Promise<void>;
@@ -40,6 +46,8 @@ type AuthContextValue = {
   /** Completes the emailed-code reset and signs the user in. */
   resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Permanently delete the student's account and everything on this device. */
+  deleteAccount: () => Promise<void>;
   /** Re-read the profile, e.g. after onboarding completes. */
   refreshProfile: () => Promise<void>;
 };
@@ -138,6 +146,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     offerBiometricUnlock(data.user.id).catch(() => {});
   }
 
+  async function signInWithGoogle() {
+    const userId = await signInWithGoogleOAuth();
+    if (!userId) return false;
+    offerBiometricUnlock(userId).catch(() => {});
+    return true;
+  }
+
   async function signUp(fullName: string, email: string, password: string) {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -188,6 +203,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.clear();
   }
 
+  async function deleteAccount() {
+    const userId = session?.user.id;
+    if (!userId) return;
+    await deleteMyAccount();
+    // The server data is gone; remove what this user left on the phone too.
+    await clearUserOutbox(userId).catch(() => {});
+    await setBiometricEnabled(userId, false).catch(() => {});
+    await unregisterPush().catch(() => {});
+    await Storage.removeItem(profileCacheKey(userId)).catch(() => {});
+    // The user no longer exists on the server, so only clear the local session.
+    await supabase.auth.signOut({ scope: 'local' });
+    queryClient.clear();
+  }
+
   const role = session && profile ? profile.role : null;
 
   return (
@@ -201,12 +230,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLocked: isLocked && role !== null,
         unlock,
         signIn,
+        signInWithGoogle,
         signUp,
         verifyEmail,
         resendVerification,
         sendPasswordReset,
         resetPassword,
         signOut,
+        deleteAccount,
         refreshProfile: () => syncProfile(session),
       }}>
       {children}
