@@ -11,6 +11,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
 import { createAuthStyles } from '../authStyles';
+import { GoogleButton } from '../GoogleButton';
 
 /** SDD screen 1. Email/password sign-in; reps and admins use accounts issued by an admin. */
 export function LoginScreen() {
@@ -97,6 +98,7 @@ export function LoginScreen() {
 
         <View style={styles.actions}>
           <Button label="Sign in" onPress={handleSubmit} loading={submitting} />
+          <GoogleButton onError={setFormError} />
           <Button
             label="Create a student account"
             variant="secondary"

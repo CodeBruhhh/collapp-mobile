@@ -892,6 +892,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_broadcast: {
+        Args: { p_audience?: string; p_body: string; p_title: string }
+        Returns: number
+      }
+      admin_rls_overview: {
+        Args: never
+        Returns: {
+          policies: string[]
+          policy_count: number
+          rls_enabled: boolean
+          table_name: string
+        }[]
+      }
+      admin_stats: { Args: never; Returns: Json }
       my_threads: {
         Args: never
         Returns: {

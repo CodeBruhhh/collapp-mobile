@@ -12,6 +12,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
 import { createAuthStyles } from '../authStyles';
+import { GoogleButton } from '../GoogleButton';
 
 type Fields = {
   fullName: string;
@@ -142,6 +143,7 @@ export function RegisterScreen() {
 
         <View style={styles.actions}>
           <Button label="Continue" onPress={handleSubmit} loading={submitting} />
+          <GoogleButton onError={setFormError} />
           <View style={styles.row}>
             <Text style={styles.muted}>Already have an account?</Text>
             <Button variant="link" label="Sign in" onPress={() => router.back()} />

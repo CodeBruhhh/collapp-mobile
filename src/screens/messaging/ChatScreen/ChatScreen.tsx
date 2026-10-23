@@ -36,10 +36,13 @@ const MAX_LENGTH = 4000;
 
 function chatTitle(role: Role | null, thread: ThreadDetail | undefined): string {
   if (!thread) return 'Conversation';
+  const studentName =
+    [thread.student?.first_name, thread.student?.last_name].filter(Boolean).join(' ') || 'Student';
   if (role === 'school_rep') {
-    if (thread.kind === 'rep_admin') return 'CollApp Administrator';
-    const s = thread.student;
-    return [s?.first_name, s?.last_name].filter(Boolean).join(' ') || 'Student';
+    return thread.kind === 'rep_admin' ? 'CollApp Administrator' : studentName;
+  }
+  if (role === 'admin' && thread.kind === 'student_rep') {
+    return `${studentName} · ${thread.college?.name ?? 'College'}`;
   }
   return thread.college?.name ?? 'Conversation';
 }
@@ -65,8 +68,11 @@ export function ChatScreen({ id }: { id: string }) {
   // Kept so a failed bubble can be re-sent with the same id (no duplicates).
   const [sent, setSent] = useState<Record<string, Draft>>({});
 
+  // Admins may audit student<->rep conversations but never take part (SRS 3.6.5).
+  const readOnly = role === 'admin' && thread.data?.kind === 'student_rep';
   const list = messages.data ?? [];
-  const hasUnread = list.some((m) => m.sender_id !== userId && !m.read_at && !m.delivery);
+  const hasUnread =
+    !readOnly && list.some((m) => m.sender_id !== userId && !m.read_at && !m.delivery);
   const { mutate: markAsRead, isPending: marking, isError: markFailed } = markRead;
 
   useEffect(() => {
@@ -139,54 +145,62 @@ export function ChatScreen({ id }: { id: string }) {
         )}
       />
 
-      <SafeAreaView edges={['bottom']}>
-        {!online ? (
-          <Text style={styles.notice}>You&apos;re offline. Reconnect to send messages.</Text>
-        ) : null}
-        {attachment ? (
-          <View style={styles.pending}>
-            <Ionicons name="attach" size={20} color={colors.text} />
-            <Text style={styles.attachmentName} numberOfLines={1}>
-              {attachment.name}
-            </Text>
+      {readOnly ? (
+        <SafeAreaView edges={['bottom']}>
+          <Text style={[styles.notice, styles.readOnlyNotice]}>
+            Audit view: administrators can read student conversations but not reply.
+          </Text>
+        </SafeAreaView>
+      ) : (
+        <SafeAreaView edges={['bottom']}>
+          {!online ? (
+            <Text style={styles.notice}>You&apos;re offline. Reconnect to send messages.</Text>
+          ) : null}
+          {attachment ? (
+            <View style={styles.pending}>
+              <Ionicons name="attach" size={20} color={colors.text} />
+              <Text style={styles.attachmentName} numberOfLines={1}>
+                {attachment.name}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Remove attachment"
+                onPress={() => setAttachment(null)}
+                style={styles.iconButton}>
+                <Ionicons name="close" size={20} color={colors.textMuted} />
+              </Pressable>
+            </View>
+          ) : null}
+          <View style={styles.composer}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Remove attachment"
-              onPress={() => setAttachment(null)}
+              accessibilityLabel="Attach a file"
+              onPress={attach}
               style={styles.iconButton}>
-              <Ionicons name="close" size={20} color={colors.textMuted} />
+              <Ionicons name="attach" size={24} color={colors.text} />
+            </Pressable>
+            <TextInput
+              value={body}
+              onChangeText={setBody}
+              placeholder="Write a message"
+              placeholderTextColor={colors.textMuted}
+              accessibilityLabel="Message"
+              multiline
+              maxLength={MAX_LENGTH}
+              style={styles.input}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Send"
+              accessibilityState={{ disabled: !canSend }}
+              disabled={!canSend}
+              onPress={submit}
+              style={[styles.iconButton, styles.sendButton, !canSend && styles.disabled]}>
+              <Ionicons name="send" size={20} color={colors.onPrimary} />
             </Pressable>
           </View>
-        ) : null}
-        <View style={styles.composer}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Attach a file"
-            onPress={attach}
-            style={styles.iconButton}>
-            <Ionicons name="attach" size={24} color={colors.text} />
-          </Pressable>
-          <TextInput
-            value={body}
-            onChangeText={setBody}
-            placeholder="Write a message"
-            placeholderTextColor={colors.textMuted}
-            accessibilityLabel="Message"
-            multiline
-            maxLength={MAX_LENGTH}
-            style={styles.input}
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Send"
-            accessibilityState={{ disabled: !canSend }}
-            disabled={!canSend}
-            onPress={submit}
-            style={[styles.iconButton, styles.sendButton, !canSend && styles.disabled]}>
-            <Ionicons name="send" size={20} color={colors.onPrimary} />
-          </Pressable>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      )}
     </KeyboardAvoidingView>
   );
 }

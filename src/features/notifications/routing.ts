@@ -44,4 +44,5 @@ export const NOTIFICATION_ICONS: Record<string, string> = {
   document_review: 'document-attach-outline',
   deadline_reminder: 'alarm-outline',
   new_application: 'person-add-outline',
+  broadcast: 'megaphone-outline',
 };

@@ -1,0 +1,1 @@
+export { CreateCollegeScreen } from './CreateCollegeScreen';

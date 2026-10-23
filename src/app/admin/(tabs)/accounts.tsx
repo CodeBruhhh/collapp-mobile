@@ -1,14 +1,5 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { AccountsScreen } from '@/screens/admin/AccountsScreen';
 
 export default function AdminAccounts() {
-  return (
-    <PlaceholderScreen
-      title="Accounts"
-      description="Manage users and institutions (tenants)."
-      features={[
-        'Activate, suspend, or adjust permissions for users and tenants',
-        'Search and filter accounts',
-      ]}
-    />
-  );
+  return <AccountsScreen />;
 }

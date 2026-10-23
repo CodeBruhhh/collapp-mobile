@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "297801205045",
+    "project_id": "collapp-mobile",
+    "storage_bucket": "collapp-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:297801205045:android:97e2902eb66cfb6260b87c",
+        "android_client_info": {
+          "package_name": "com.aaronleem.collappmobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByXhnfNaDSqMcl3BxpofXA4uqzgPaQYsI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -8,15 +8,19 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { LiveUpdates } from '@/context/LiveUpdates';
 import { PreferencesProvider } from '@/context/PreferencesContext';
 import { SyncProvider } from '@/context/SyncContext';
+import { usePlatformSettings } from '@/features/admin/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { PERSIST_MAX_AGE, queryClient, queryPersister } from '@/lib/queryClient';
 import { BiometricLockScreen } from '@/screens/auth/BiometricLockScreen';
+import { MaintenanceScreen } from '@/screens/MaintenanceScreen';
 
 // Keep the splash screen up until the stored session has been restored.
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
   const { role, needsOnboarding, isLoading, isLocked } = useAuth();
+  // Administrators are never locked out by maintenance mode.
+  const platform = usePlatformSettings(role !== null && role !== 'admin');
 
   useEffect(() => {
     if (!isLoading) SplashScreen.hide();
@@ -24,6 +28,7 @@ function RootNavigator() {
 
   if (isLoading) return null;
   if (isLocked) return <BiometricLockScreen />;
+  if (role && role !== 'admin' && platform.data?.maintenance_mode) return <MaintenanceScreen />;
 
   // Only the section matching the signed-in role is reachable. When `role`
   // changes (sign in / sign out) Expo Router redirects automatically.
