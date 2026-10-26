@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import Storage from 'expo-sqlite/kv-store';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { AppState } from 'react-native';
 
 import { deleteMyAccount } from '@/features/account/api';
 import {
@@ -130,6 +131,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  // Re-check the account when the app returns to the foreground, so a suspension
+  // or role change by an administrator takes effect without a restart.
+  useEffect(() => {
+    if (!session) return;
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') syncProfile(session);
+    });
+    return () => subscription.remove();
+  }, [session]);
 
   async function unlock() {
     const ok = await authenticateWithBiometrics();

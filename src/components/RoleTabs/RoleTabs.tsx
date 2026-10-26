@@ -7,6 +7,7 @@ import { AccountButton } from '@/components/AccountButton';
 import { NotificationBell } from '@/components/NotificationBell';
 import { useUnreadMessageCount } from '@/features/messaging/hooks';
 import { useTheme } from '@/hooks/useTheme';
+import { fontSize, fontWeight } from '@/styles';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -38,11 +39,22 @@ export function RoleTabs({ tabs }: { tabs: TabConfig[] }) {
     <Tabs
       screenOptions={{
         headerStyle: { backgroundColor: colors.surface },
-        headerTitleStyle: { color: colors.text },
+        headerShadowVisible: false,
+        headerTitleStyle: {
+          color: colors.text,
+          fontSize: fontSize.lg,
+          fontWeight: fontWeight.semibold,
+        },
         headerRight: () => <HeaderActions />,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+        },
+        tabBarLabelStyle: { fontSize: fontSize.xs, fontWeight: fontWeight.medium },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
+        tabBarBadgeStyle: { backgroundColor: colors.danger, fontSize: 11 },
       }}>
       {tabs.map((tab) => (
         <Tabs.Screen
@@ -51,7 +63,14 @@ export function RoleTabs({ tabs }: { tabs: TabConfig[] }) {
           options={{
             title: tab.title,
             tabBarBadge: tab.name === 'messages' && unreadMessages ? unreadMessages : undefined,
-            tabBarIcon: ({ color, size }) => <Ionicons name={tab.icon} size={size} color={color} />,
+            // Filled glyph marks the current tab; outline for the rest.
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? (tab.icon.replace(/-outline$/, '') as IconName) : tab.icon}
+                size={size}
+                color={color}
+              />
+            ),
           }}
         />
       ))}

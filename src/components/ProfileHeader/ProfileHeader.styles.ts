@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { fontSize, fontWeight, radius, spacing, type ThemeColors } from '@/styles';
 
-const AVATAR_SIZE = 64;
+const AVATAR_SIZE = 56;
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -22,11 +22,10 @@ export const createStyles = (c: ThemeColors) =>
       borderRadius: AVATAR_SIZE / 2,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: c.background,
-      borderWidth: 1,
-      borderColor: c.border,
+      backgroundColor: c.primarySoft,
     },
+    initials: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: c.primary },
     text: { flex: 1, gap: 2 },
-    name: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: c.text },
+    name: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: c.text },
     email: { fontSize: fontSize.sm, color: c.textMuted },
   });

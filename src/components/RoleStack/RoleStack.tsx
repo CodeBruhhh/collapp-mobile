@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
 import { useTheme } from '@/hooks/useTheme';
+import { fontSize, fontWeight } from '@/styles';
 
 /**
  * Stack shared by the three role sections. Tabs live in (tabs) with their own
@@ -14,8 +15,13 @@ export function RoleStack() {
     <Stack
       screenOptions={{
         headerStyle: { backgroundColor: colors.surface },
+        headerShadowVisible: false,
         headerTintColor: colors.primary,
-        headerTitleStyle: { color: colors.text },
+        headerTitleStyle: {
+          color: colors.text,
+          fontSize: fontSize.lg,
+          fontWeight: fontWeight.semibold,
+        },
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: colors.background },
       }}>

@@ -32,7 +32,7 @@ export function ProfileScreen() {
 
       <SettingsSection title="Academic profile">
         {student.isPending ? (
-          <LoadingState />
+          <LoadingState variant="inline" />
         ) : student.isError ? (
           <ErrorState error={student.error} onRetry={student.refetch} />
         ) : (

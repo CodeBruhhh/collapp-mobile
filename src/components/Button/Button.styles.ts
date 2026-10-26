@@ -1,11 +1,19 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import {
+  CONTROL_HEIGHT,
+  fontSize,
+  fontWeight,
+  radius,
+  spacing,
+  TOUCH_TARGET,
+  type ThemeColors,
+} from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     base: {
-      minHeight: TOUCH_TARGET,
+      minHeight: CONTROL_HEIGHT,
       paddingHorizontal: spacing.lg,
       borderRadius: radius.md,
       alignItems: 'center',
@@ -17,11 +25,17 @@ export const createStyles = (c: ThemeColors) =>
       borderWidth: 1,
       borderColor: c.border,
     },
-    link: { backgroundColor: 'transparent', paddingHorizontal: spacing.sm },
-    pressed: { opacity: 0.8 },
-    inactive: { opacity: 0.5 },
+    danger: { backgroundColor: c.danger },
+    link: {
+      minHeight: TOUCH_TARGET,
+      backgroundColor: 'transparent',
+      paddingHorizontal: spacing.sm,
+    },
+    pressed: { opacity: 0.75 },
+    inactive: { opacity: 0.45 },
     label: { fontSize: fontSize.md, fontWeight: fontWeight.semibold },
     labelPrimary: { color: c.onPrimary },
     labelSecondary: { color: c.text },
+    labelDanger: { color: '#FFFFFF' },
     labelLink: { color: c.primary },
   });

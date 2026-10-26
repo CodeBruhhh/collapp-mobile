@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -9,12 +9,12 @@ export const createStyles = (c: ThemeColors) =>
       minHeight: TOUCH_TARGET,
       paddingHorizontal: spacing.md,
       justifyContent: 'center',
-      borderRadius: 999,
+      borderRadius: radius.pill,
       borderWidth: 1,
       borderColor: c.border,
       backgroundColor: c.surface,
     },
-    chipSelected: { backgroundColor: c.primary, borderColor: c.primary },
+    chipSelected: { backgroundColor: c.primarySoft, borderColor: c.primary },
     label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.text },
-    labelSelected: { color: c.onPrimary },
+    labelSelected: { color: c.primary, fontWeight: fontWeight.semibold },
   });

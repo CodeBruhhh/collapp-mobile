@@ -14,23 +14,45 @@ type TextFieldProps = Omit<TextInputProps, 'style'> & {
 };
 
 /** Labelled text input with inline error, screen-reader label and password reveal. */
-export function TextField({ label, error, hint, secureTextEntry, ...inputProps }: TextFieldProps) {
+export function TextField({
+  label,
+  error,
+  hint,
+  secureTextEntry,
+  onFocus,
+  onBlur,
+  ...inputProps
+}: TextFieldProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const [revealed, setRevealed] = useState(false);
+  const [focused, setFocused] = useState(false);
   const isSecret = Boolean(secureTextEntry);
 
   return (
     <View style={styles.root}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputRow, error ? styles.inputRowError : null]}>
+      <View
+        style={[
+          styles.inputRow,
+          focused && styles.inputRowFocused,
+          error ? styles.inputRowError : null,
+        ]}>
         <TextInput
           {...inputProps}
+          onFocus={(e) => {
+            setFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
           accessibilityLabel={label}
           accessibilityHint={error ?? hint}
           secureTextEntry={isSecret && !revealed}
           placeholderTextColor={colors.textMuted}
-          style={styles.input}
+          style={[styles.input, inputProps.multiline && styles.multiline]}
         />
         {isSecret ? (
           <Pressable

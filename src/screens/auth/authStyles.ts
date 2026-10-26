@@ -7,7 +7,7 @@ export const createAuthStyles = (c: ThemeColors) =>
   StyleSheet.create({
     header: { gap: spacing.xs, marginBottom: spacing.sm },
     brand: {
-      fontSize: fontSize.xl,
+      fontSize: fontSize.display,
       fontWeight: fontWeight.bold,
       color: c.primary,
       textAlign: 'center',

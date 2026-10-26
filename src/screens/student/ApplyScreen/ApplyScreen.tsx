@@ -52,7 +52,7 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
   const [essay, setEssay] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  if (college.isPending || offline.isLoading) return <LoadingState />;
+  if (college.isPending || offline.isLoading) return <LoadingState variant="detail" />;
   if (college.isError) return <ErrorState error={college.error} onRetry={college.refetch} />;
 
   const c = college.data;

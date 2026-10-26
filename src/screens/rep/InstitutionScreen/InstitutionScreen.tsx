@@ -26,7 +26,7 @@ const REGION_NAMES = PH_REGIONS.map((r) => r.region_name);
 /** SDD screen 23 — institution profile builder (web: rep onboarding form). */
 export function InstitutionScreen() {
   const college = useMyCollege();
-  if (college.isPending) return <LoadingState />;
+  if (college.isPending) return <LoadingState variant="detail" />;
   if (college.isError) return <ErrorState error={college.error} onRetry={college.refetch} />;
   // Re-mount the form when the saved record changes so fields start from fresh data.
   return <InstitutionForm key={college.data.updated_at} college={college.data} />;

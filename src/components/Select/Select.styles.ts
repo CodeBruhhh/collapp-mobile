@@ -1,6 +1,14 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import {
+  CONTROL_HEIGHT,
+  fontSize,
+  fontWeight,
+  radius,
+  spacing,
+  TOUCH_TARGET,
+  type ThemeColors,
+} from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -11,7 +19,7 @@ export const createStyles = (c: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: spacing.sm,
-      minHeight: TOUCH_TARGET,
+      minHeight: CONTROL_HEIGHT,
       paddingHorizontal: spacing.md,
       borderWidth: 1,
       borderColor: c.border,

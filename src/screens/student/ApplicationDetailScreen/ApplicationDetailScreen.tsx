@@ -34,7 +34,7 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
   const application = useApplication(id);
   const queue = useDocumentQueue(id);
 
-  if (application.isPending) return <LoadingState />;
+  if (application.isPending) return <LoadingState variant="detail" />;
   if (application.isError) {
     return <ErrorState error={application.error} onRetry={application.refetch} />;
   }

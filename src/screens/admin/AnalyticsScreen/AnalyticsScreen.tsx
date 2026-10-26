@@ -21,7 +21,7 @@ export function AnalyticsScreen() {
   const settings = usePlatformSettings();
   const { savePlatformSettings } = useAdminActions();
 
-  if (stats.isPending) return <LoadingState />;
+  if (stats.isPending) return <LoadingState variant="detail" />;
   if (stats.isError) return <ErrorState error={stats.error} onRetry={stats.refetch} />;
 
   const s = stats.data;
@@ -137,7 +137,7 @@ export function AnalyticsScreen() {
         <Text style={styles.sectionTitle}>Platform controls</Text>
         <Card>
           {settings.isPending ? (
-            <LoadingState />
+            <LoadingState variant="inline" />
           ) : settings.isError ? (
             <ErrorState error={settings.error} onRetry={settings.refetch} />
           ) : (

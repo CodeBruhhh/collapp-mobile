@@ -19,7 +19,7 @@ import { createRepStyles } from '../repStyles';
 /** Create or edit one program (SDD screen 23 "Programs", screen 24 deadline/prerequisites). */
 export function ProgramEditorScreen({ id }: { id: string }) {
   const college = useMyCollege();
-  if (college.isPending) return <LoadingState />;
+  if (college.isPending) return <LoadingState variant="detail" />;
   if (college.isError) return <ErrorState error={college.error} onRetry={college.refetch} />;
   const program = id === 'new' ? null : college.data.programs.find((p) => p.id === id);
   if (id !== 'new' && !program) return <ErrorState error={new Error('Program not found.')} />;

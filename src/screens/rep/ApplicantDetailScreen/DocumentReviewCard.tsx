@@ -1,9 +1,12 @@
+import { useQuery } from '@tanstack/react-query';
+import { Image } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { ImageViewer } from '@/components/ImageViewer';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TextField } from '@/components/TextField';
 import type { ApplicationDocument } from '@/features/applications/api';
@@ -18,6 +21,8 @@ import { getErrorMessage } from '@/lib/validation';
 
 import { createRepStyles } from '../repStyles';
 
+const SIGNED_URL_STALE_MS = 8 * 60 * 1000;
+
 type DocumentReviewCardProps = {
   document: ApplicationDocument;
   locked: boolean;
@@ -31,10 +36,28 @@ export function DocumentReviewCard({ document, locked, onReview }: DocumentRevie
   const [noteMode, setNoteMode] = useState<'resubmit' | 'rejected' | null>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [viewing, setViewing] = useState(false);
+  const isImage = document.mime_type.startsWith('image/');
+  // Short-lived link, fetched once per card and never written to disk.
+  const link = useQuery({
+    queryKey: ['signed-url', 'documents', document.storage_path],
+    queryFn: () => signedUrl('documents', document.storage_path, 600),
+    staleTime: SIGNED_URL_STALE_MS,
+    gcTime: SIGNED_URL_STALE_MS,
+    enabled: isImage,
+    meta: { persist: false },
+  });
 
+  /** Photos open in the in-app viewer; PDFs in an in-app browser sheet. */
   async function open() {
+    if (isImage) {
+      setViewing(true);
+      return;
+    }
     try {
-      await WebBrowser.openBrowserAsync(await signedUrl('documents', document.storage_path));
+      await WebBrowser.openBrowserAsync(await signedUrl('documents', document.storage_path), {
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+      });
     } catch (e) {
       Alert.alert('Could not open file', getErrorMessage(e));
     }
@@ -71,7 +94,26 @@ export function DocumentReviewCard({ document, locked, onReview }: DocumentRevie
         <Text style={styles.meta}>Note: {document.review_notes}</Text>
       ) : null}
 
-      <Button variant="secondary" label="Open file" onPress={open} />
+      {isImage ? (
+        <Pressable
+          accessibilityRole="imagebutton"
+          accessibilityLabel={`${document.label}. Tap to view full screen`}
+          onPress={open}
+          style={styles.docPreview}>
+          {link.data ? (
+            <Image source={{ uri: link.data }} style={styles.docPreviewImage} contentFit="cover" />
+          ) : (
+            <ActivityIndicator color={colors.textMuted} />
+          )}
+        </Pressable>
+      ) : (
+        <Button variant="secondary" label="Open PDF" onPress={open} />
+      )}
+      <ImageViewer
+        uri={viewing && link.data ? link.data : null}
+        title={document.label}
+        onClose={() => setViewing(false)}
+      />
 
       {!locked && noteMode === null ? (
         <View style={styles.actions}>
@@ -109,6 +151,7 @@ export function DocumentReviewCard({ document, locked, onReview }: DocumentRevie
           <View style={styles.actions}>
             <View style={styles.action}>
               <Button
+                variant={noteMode === 'rejected' ? 'danger' : 'primary'}
                 label={noteMode === 'resubmit' ? 'Send request' : 'Reject document'}
                 loading={busy}
                 disabled={noteMode === 'resubmit' && !note.trim()}

@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
 
+/** Selection chips: a soft accent tint for chosen options, never a heavy solid block. */
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { gap: spacing.xs },
@@ -12,13 +13,13 @@ export const createStyles = (c: ThemeColors) =>
       minHeight: TOUCH_TARGET,
       justifyContent: 'center',
       paddingHorizontal: spacing.md,
-      borderRadius: radius.lg,
+      borderRadius: radius.pill,
       borderWidth: 1,
       borderColor: c.border,
       backgroundColor: c.surface,
     },
-    chipActive: { backgroundColor: c.primary, borderColor: c.primary },
+    chipActive: { backgroundColor: c.primarySoft, borderColor: c.primary },
     chipText: { fontSize: fontSize.sm, color: c.text },
-    chipTextActive: { color: c.onPrimary, fontWeight: fontWeight.semibold },
+    chipTextActive: { color: c.primary, fontWeight: fontWeight.semibold },
     error: { fontSize: fontSize.sm, color: c.danger },
   });

@@ -10,7 +10,12 @@ import { PreferencesProvider } from '@/context/PreferencesContext';
 import { SyncProvider } from '@/context/SyncContext';
 import { usePlatformSettings } from '@/features/admin/hooks';
 import { useTheme } from '@/hooks/useTheme';
-import { PERSIST_MAX_AGE, queryClient, queryPersister } from '@/lib/queryClient';
+import {
+  PERSIST_MAX_AGE,
+  queryClient,
+  queryPersister,
+  shouldPersistQuery,
+} from '@/lib/queryClient';
 import { BiometricLockScreen } from '@/screens/auth/BiometricLockScreen';
 import { MaintenanceScreen } from '@/screens/MaintenanceScreen';
 
@@ -63,7 +68,11 @@ export default function RootLayout() {
     <PreferencesProvider>
       <PersistQueryClientProvider
         client={queryClient}
-        persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE }}>
+        persistOptions={{
+          persister: queryPersister,
+          maxAge: PERSIST_MAX_AGE,
+          dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
+        }}>
         <AuthProvider>
           <SyncProvider>
             <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>

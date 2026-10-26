@@ -24,7 +24,7 @@ const TYPES = Object.entries(POST_TYPE_LABELS) as [PostType, string][];
 /** SDD screen 25 — compose a campus post for student feeds (SRS 3.1.2.3). */
 export function PostEditorScreen({ id }: { id: string }) {
   const posts = usePosts();
-  if (posts.isPending) return <LoadingState />;
+  if (posts.isPending) return <LoadingState variant="detail" />;
   if (posts.isError) return <ErrorState error={posts.error} onRetry={posts.refetch} />;
   const post = id === 'new' ? null : posts.data.find((p) => p.id === id);
   if (id !== 'new' && !post) return <ErrorState error={new Error('Post not found.')} />;
@@ -156,7 +156,7 @@ function PostForm({ post }: { post: Post | null }) {
         {previewUri ? (
           <Image
             source={{ uri: previewUri }}
-            style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: 12 }}
+            style={styles.postImage}
             contentFit="cover"
             accessibilityLabel="Post image preview"
           />

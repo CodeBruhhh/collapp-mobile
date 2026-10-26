@@ -1,5 +1,5 @@
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { focusManager, onlineManager, QueryClient } from '@tanstack/react-query';
+import { focusManager, onlineManager, QueryClient, type Query } from '@tanstack/react-query';
 import { addNetworkStateListener } from 'expo-network';
 import Storage from 'expo-sqlite/kv-store';
 import { AppState, Platform } from 'react-native';
@@ -28,6 +28,14 @@ export const queryPersister = createAsyncStoragePersister({
 });
 
 export const PERSIST_MAX_AGE = ONE_DAY;
+
+/**
+ * Only finished queries are written to disk, and never ones marked
+ * `meta: { persist: false }` (short-lived signed file links).
+ */
+export function shouldPersistQuery(query: Query): boolean {
+  return query.state.status === 'success' && query.meta?.persist !== false;
+}
 
 // Tell React Query when the device goes on/offline so it pauses and resumes requests.
 onlineManager.setEventListener((setOnline) => {

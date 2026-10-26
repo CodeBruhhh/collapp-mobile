@@ -135,7 +135,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
 
       <SettingsSection title="Notifications">
         {settings.isPending ? (
-          <LoadingState />
+          <LoadingState variant="inline" />
         ) : settings.isError || !current ? (
           <ErrorState error={settings.error} onRetry={settings.refetch} />
         ) : (

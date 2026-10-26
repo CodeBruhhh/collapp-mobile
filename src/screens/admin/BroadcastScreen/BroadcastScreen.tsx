@@ -79,14 +79,9 @@ export function BroadcastScreen() {
 
   return (
     <FormScreen>
-      <View>
-        <Text accessibilityRole="header" style={styles.title}>
-          Broadcast
-        </Text>
-        <Text style={styles.subtitle}>
-          Platform announcements such as maintenance windows or application deadlines.
-        </Text>
-      </View>
+      <Text style={styles.subtitle}>
+        Platform announcements such as maintenance windows or application deadlines.
+      </Text>
 
       <ChipGroup
         label="Send to"
@@ -117,7 +112,7 @@ export function BroadcastScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Sent broadcasts</Text>
         {history.isPending ? (
-          <LoadingState />
+          <LoadingState variant="inline" />
         ) : history.data?.length ? (
           history.data.map((entry) => {
             const m = entry.meta as {

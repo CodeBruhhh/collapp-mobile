@@ -80,6 +80,7 @@ export function DeleteAccountScreen() {
           <Text style={styles.hint}>Connect to the internet to delete your account.</Text>
         ) : null}
         <Button
+          variant="danger"
           label="Delete my account"
           onPress={confirm}
           loading={deleting}

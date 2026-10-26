@@ -72,4 +72,14 @@ export const createRepStyles = (c: ThemeColors) =>
       backgroundColor: c.surface,
     },
     searchInput: { flex: 1, minHeight: TOUCH_TARGET, fontSize: fontSize.md, color: c.text },
+    docPreview: {
+      height: 180,
+      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: radius.md,
+      backgroundColor: c.surfaceMuted,
+    },
+    docPreviewImage: { width: '100%', height: '100%' },
+    postImage: { width: '100%', aspectRatio: 16 / 9, borderRadius: radius.md },
   });

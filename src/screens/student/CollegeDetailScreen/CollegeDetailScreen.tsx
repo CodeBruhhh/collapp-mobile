@@ -40,7 +40,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
   const startThread = useStartThread();
   const applications = useApplicationsWithLocal();
 
-  if (college.isPending) return <LoadingState />;
+  if (college.isPending) return <LoadingState variant="detail" />;
   if (college.isError) return <ErrorState error={college.error} onRetry={college.refetch} />;
 
   const c = college.data;

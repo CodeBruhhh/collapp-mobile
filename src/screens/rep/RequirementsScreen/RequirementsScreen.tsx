@@ -37,7 +37,7 @@ export function RequirementsScreen() {
   });
   const [errors, setErrors] = useState<FieldErrors<typeof form>>({});
 
-  if (college.isPending) return <LoadingState />;
+  if (college.isPending) return <LoadingState variant="detail" />;
   if (college.isError) return <ErrorState error={college.error} onRetry={college.refetch} />;
 
   const { programs, requirements } = college.data;

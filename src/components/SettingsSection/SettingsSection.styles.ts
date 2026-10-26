@@ -6,8 +6,10 @@ export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     section: { gap: spacing.sm },
     title: {
-      fontSize: fontSize.sm,
+      paddingHorizontal: spacing.xs,
+      fontSize: fontSize.xs,
       fontWeight: fontWeight.semibold,
+      letterSpacing: 0.6,
       color: c.textMuted,
       textTransform: 'uppercase',
     },

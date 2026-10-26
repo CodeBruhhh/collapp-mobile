@@ -35,7 +35,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
   const [finalProgramId, setFinalProgramId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
 
-  if (applicant.isPending) return <LoadingState />;
+  if (applicant.isPending) return <LoadingState variant="detail" />;
   if (applicant.isError) {
     return <ErrorState error={applicant.error} onRetry={applicant.refetch} />;
   }

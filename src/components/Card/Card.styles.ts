@@ -12,5 +12,6 @@ export const createStyles = (c: ThemeColors) =>
       borderColor: c.border,
       backgroundColor: c.surface,
     },
-    pressed: { opacity: 0.85 },
+    // A tint (not transparency) so pressed cards never look disabled.
+    pressed: { backgroundColor: c.surfaceMuted },
   });

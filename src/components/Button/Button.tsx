@@ -7,7 +7,8 @@ import { createStyles } from './Button.styles';
 type ButtonProps = {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'link';
+  /** primary: the one main action; secondary: alternatives; danger: destructive; link: inline. */
+  variant?: 'primary' | 'secondary' | 'danger' | 'link';
   disabled?: boolean;
   /** Shows a spinner and blocks presses (SDD 6.3 "action buttons with loading states"). */
   loading?: boolean;
@@ -17,10 +18,12 @@ export function Button({ label, onPress, variant = 'primary', disabled, loading 
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const inactive = disabled || loading;
+  const solid = variant === 'primary' || variant === 'danger';
 
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: inactive, busy: loading }}
       disabled={inactive}
       onPress={onPress}
@@ -31,13 +34,14 @@ export function Button({ label, onPress, variant = 'primary', disabled, loading 
         inactive && styles.inactive,
       ]}>
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? colors.onPrimary : colors.primary} />
+        <ActivityIndicator color={solid ? colors.onPrimary : colors.primary} />
       ) : (
         <Text
           style={[
             styles.label,
             variant === 'primary' && styles.labelPrimary,
             variant === 'secondary' && styles.labelSecondary,
+            variant === 'danger' && styles.labelDanger,
             variant === 'link' && styles.labelLink,
           ]}>
           {label}

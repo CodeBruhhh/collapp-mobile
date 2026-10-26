@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useAuth } from '@/context/AuthContext';
 
 import {
+  attachmentUrl,
   getThread,
   listMessages,
   listThreads,
@@ -13,8 +14,11 @@ import {
   type SendMessageInput,
 } from './api';
 
-/** A message as shown in the chat: saved, or still on its way. */
-export type ChatMessage = Message & { delivery?: 'sending' | 'failed' };
+/**
+ * A message as shown in the chat: saved, or still on its way. `localUri` is the
+ * sender's own copy of an attached file, shown instantly instead of downloading it.
+ */
+export type ChatMessage = Message & { delivery?: 'sending' | 'failed'; localUri?: string };
 
 export const messagingKeys = {
   all: (userId: string) => ['messaging', userId] as const,
@@ -46,6 +50,24 @@ export function applyRealtimeMessage(queryClient: QueryClient, userId: string, m
 function useUserId() {
   const { session } = useAuth();
   return session?.user.id ?? '';
+}
+
+/** Signed links last 10 minutes; refresh a little before that. */
+const SIGNED_URL_STALE_MS = 8 * 60 * 1000;
+
+/**
+ * Short-lived link to a message attachment (private bucket). Never persisted to
+ * disk: an expired link would fail to load after a restart.
+ */
+export function useAttachmentUrl(path: string | null, enabled = true) {
+  return useQuery({
+    queryKey: ['signed-url', 'attachments', path],
+    queryFn: () => attachmentUrl(path!),
+    enabled: Boolean(path) && enabled,
+    staleTime: SIGNED_URL_STALE_MS,
+    gcTime: SIGNED_URL_STALE_MS,
+    meta: { persist: false },
+  });
 }
 
 export function useThreads() {
@@ -107,6 +129,7 @@ export function useSendMessage(threadId: string) {
         read_at: null,
         created_at: new Date().toISOString(),
         delivery: 'sending',
+        localUri: input.attachment?.uri,
       };
       queryClient.setQueryData<ChatMessage[]>(key, (old) => upsertMessage(old ?? [], optimistic));
     },
