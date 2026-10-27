@@ -1,5 +1,4 @@
 import { router } from 'expo-router';
-import { Text } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { InfoRow } from '@/components/InfoRow';
@@ -9,17 +8,12 @@ import { SettingsSection } from '@/components/SettingsSection';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { useAuth } from '@/context/AuthContext';
 import { useStudentProfile } from '@/features/profile/hooks';
-import { useTheme } from '@/hooks/useTheme';
 import { AccountSettingsSections } from '@/screens/account/AccountSettingsSections';
-
-import { createStyles } from './ProfileScreen.styles';
 
 const list = (values: string[] | undefined) => values?.join(', ');
 
 /** SDD screen 18 — academic profile, appearance, notifications and security settings. */
 export function ProfileScreen() {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
   const { profile } = useAuth();
   const student = useStudentProfile();
 
@@ -60,9 +54,6 @@ export function ProfileScreen() {
               label="Edit academic profile"
               onPress={() => router.push('/student/edit-profile')}
             />
-            <Text style={styles.hint}>
-              Your matches are refreshed automatically after you save changes.
-            </Text>
           </>
         )}
       </SettingsSection>

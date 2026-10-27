@@ -65,12 +65,9 @@ export function HomeScreen() {
           }}
         />
       }>
-      <View>
-        <Text accessibilityRole="header" style={styles.greeting}>
-          Hello, {firstName}
-        </Text>
-        <Text style={styles.meta}>Explore. Plan. Build your future.</Text>
-      </View>
+      <Text accessibilityRole="header" style={styles.greeting}>
+        Hello, {firstName}
+      </Text>
 
       <SyncBanner />
 
@@ -80,7 +77,7 @@ export function HomeScreen() {
         onPress={() => router.push('/student/explore')}
         style={styles.search}>
         <Ionicons name="search" size={18} color={colors.textMuted} />
-        <Text style={styles.searchText}>Search universities, programs or locations</Text>
+        <Text style={styles.searchText}>Search universities</Text>
       </Pressable>
 
       <View style={styles.stats}>
@@ -128,8 +125,8 @@ export function HomeScreen() {
           onPress={() =>
             router.push({ pathname: '/student/application/[id]', params: { id: a.id } })
           }>
-          <Text style={styles.cardTitle}>Action required · {a.college?.name}</Text>
-          <Text style={styles.meta}>A document needs to be resubmitted.</Text>
+          <Text style={styles.cardTitle}>{a.college?.name}</Text>
+          <Text style={styles.meta}>A document needs your attention</Text>
         </Card>
       ))}
 

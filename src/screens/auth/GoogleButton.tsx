@@ -51,10 +51,6 @@ export function GoogleButton({ onError }: { onError: (message: string | null) =>
           </>
         )}
       </Pressable>
-      <Text style={[styles.muted, styles.centeredText]}>
-        New to CollApp? Continuing with Google creates a student account and means you accept the
-        Terms and Privacy Policy.
-      </Text>
     </>
   );
 }

@@ -15,6 +15,8 @@ type SelectProps = {
   placeholder?: string;
   error?: string;
   disabled?: boolean;
+  /** Hide the visible label when the value says enough (still read by screen readers). */
+  hideLabel?: boolean;
 };
 
 /** Dropdown-style field that opens a searchable full-screen list. */
@@ -26,6 +28,7 @@ export function Select({
   placeholder = 'Select…',
   error,
   disabled,
+  hideLabel,
 }: SelectProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
@@ -44,7 +47,7 @@ export function Select({
 
   return (
     <View style={styles.root}>
-      <Text style={styles.label}>{label}</Text>
+      {hideLabel ? null : <Text style={styles.label}>{label}</Text>}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${value ?? 'not selected'}`}

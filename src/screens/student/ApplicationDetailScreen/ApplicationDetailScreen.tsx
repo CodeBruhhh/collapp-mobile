@@ -19,12 +19,13 @@ import { RequirementUpload } from '@/screens/student/ApplyScreen/RequirementUplo
 
 import { createStyles } from './ApplicationDetailScreen.styles';
 
+/** One short line under the status badge; the badge already names the status. */
 const STATUS_HELP: Record<string, string> = {
-  submitted: 'Submitted. The admissions team will start reviewing it soon.',
-  under_review: 'The admissions team is reviewing your documents.',
-  action_required: 'Some documents need your attention. Replace them below.',
-  accepted: 'Congratulations! See the message from the college below.',
-  rejected: 'A decision has been made. See the message from the college below.',
+  submitted: 'Waiting for the admissions team.',
+  under_review: 'Your documents are being reviewed.',
+  action_required: 'Replace the flagged document below.',
+  accepted: 'Congratulations! Read the message below.',
+  rejected: 'Read the message from the college below.',
 };
 
 /** SDD screen 14 — status, decision, requirement checklist and resubmissions. */
@@ -70,15 +71,19 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
       <Card>
         <StatusBadge label={APPLICATION_STATUS_LABELS[app.status]} color={color} />
         <ProgressBar value={applicationProgress(app.status)} color={color} />
-        <Text style={styles.body}>{STATUS_HELP[app.status] ?? ''}</Text>
-        {app.submitted_at ? (
-          <Text style={styles.meta}>
-            Submitted {new Date(app.submitted_at).toLocaleDateString()}
-          </Text>
+        {STATUS_HELP[app.status] ? (
+          <Text style={styles.body}>{STATUS_HELP[app.status]}</Text>
         ) : null}
-        {!decided && app.program?.deadline ? (
+        {app.submitted_at || (!decided && app.program?.deadline) ? (
           <Text style={styles.meta}>
-            Program deadline {app.program.deadline} · {deadlineLabel(app.program.deadline)}
+            {[
+              app.submitted_at
+                ? `Submitted ${new Date(app.submitted_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
+                : null,
+              !decided && app.program?.deadline ? deadlineLabel(app.program.deadline) : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
           </Text>
         ) : null}
       </Card>

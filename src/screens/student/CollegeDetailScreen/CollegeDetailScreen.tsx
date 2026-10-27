@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,7 +9,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
-import { ErrorState, LoadingState } from '@/components/StateView';
+import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { useApplicationsWithLocal } from '@/features/applications/offline';
 import { deadlineLabel } from '@/features/applications/status';
 import { collegeLocation, requirementsFor } from '@/features/colleges/api';
@@ -21,12 +21,25 @@ import { getErrorMessage } from '@/lib/validation';
 import { createStyles } from './CollegeDetailScreen.styles';
 
 type Tab = 'about' | 'programs' | 'requirements';
+type IconName = ComponentProps<typeof Ionicons>['name'];
 
 const peso = new Intl.NumberFormat('en-PH', {
   style: 'currency',
   currency: 'PHP',
   maximumFractionDigits: 0,
 });
+
+/** One compact fact (icon + short value) for a program card. */
+function Fact({ icon, label }: { icon: IconName; label: string }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+  return (
+    <View style={styles.fact}>
+      <Ionicons name={icon} size={14} color={colors.textMuted} />
+      <Text style={styles.factText}>{label}</Text>
+    </View>
+  );
+}
 
 /** SDD screen 9 — college profile, programs and requirements, with Save and Apply. */
 export function CollegeDetailScreen({ id }: { id: string }) {
@@ -47,6 +60,10 @@ export function CollegeDetailScreen({ id }: { id: string }) {
   const isSaved = followed.data?.includes(c.id) ?? false;
   const existing = applications.data?.find((a) => a.college_id === c.id);
   const openPrograms = c.programs.filter((p) => p.is_open);
+  const upcoming = openPrograms
+    .filter((p) => p.deadline)
+    .sort((a, b) => a.deadline!.localeCompare(b.deadline!))
+    .slice(0, 3);
   const generalRequirements = requirementsFor(c, null).filter((r) => r.program_id === null);
 
   async function handleSave() {
@@ -67,20 +84,20 @@ export function CollegeDetailScreen({ id }: { id: string }) {
     }
   }
 
+  const apply = () =>
+    router.push({ pathname: '/student/apply/[collegeId]', params: { collegeId: c.id } });
+
   return (
     <SafeAreaView style={styles.root} edges={['bottom']}>
-      <Stack.Screen options={{ title: c.name }} />
+      <Stack.Screen options={{ title: '' }} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
-          <CollegeLogo name={c.name} logoPath={c.logo_path} size={72} />
+          <CollegeLogo name={c.name} logoPath={c.logo_path} size={64} />
           <View style={styles.heroText}>
             <Text accessibilityRole="header" style={styles.name}>
               {c.name}
             </Text>
-            <Text style={styles.meta}>
-              <Ionicons name="location-outline" size={14} /> {collegeLocation(c)}
-            </Text>
-            {c.region ? <Text style={styles.meta}>{c.region}</Text> : null}
+            <Text style={styles.meta}>{collegeLocation(c)}</Text>
           </View>
         </View>
 
@@ -97,31 +114,32 @@ export function CollegeDetailScreen({ id }: { id: string }) {
         {tab === 'about' ? (
           <View style={styles.section}>
             <Card>
-              <Text style={styles.cardTitle}>Overview</Text>
-              <Text style={styles.body}>
-                {c.description || 'This college has not added a description yet.'}
+              <Text style={c.description ? styles.body : styles.meta}>
+                {c.description || 'No description yet.'}
               </Text>
               {c.website ? (
-                <Button
-                  variant="link"
-                  label="Visit website"
+                <Pressable
+                  accessibilityRole="link"
                   onPress={() => WebBrowser.openBrowserAsync(c.website!)}
-                />
+                  style={styles.link}>
+                  <Ionicons name="globe-outline" size={16} color={colors.primary} />
+                  <Text style={styles.linkText}>Visit website</Text>
+                </Pressable>
               ) : null}
             </Card>
             <Card>
-              <Text style={styles.cardTitle}>Key details</Text>
-              <Text style={styles.body}>
-                {openPrograms.length} open program{openPrograms.length === 1 ? '' : 's'}
-              </Text>
-              {openPrograms
-                .filter((p) => p.deadline)
-                .slice(0, 3)
-                .map((p) => (
-                  <Text key={p.id} style={styles.meta}>
-                    {p.name}: {p.deadline} ({deadlineLabel(p.deadline)})
+              <View style={styles.kv}>
+                <Text style={styles.kvLabel}>Open programs</Text>
+                <Text style={styles.kvValue}>{openPrograms.length}</Text>
+              </View>
+              {upcoming.map((p) => (
+                <View key={p.id} style={styles.kv}>
+                  <Text style={styles.kvLabel} numberOfLines={1}>
+                    {p.name}
                   </Text>
-                ))}
+                  <Text style={styles.kvValue}>{deadlineLabel(p.deadline)}</Text>
+                </View>
+              ))}
             </Card>
           </View>
         ) : null}
@@ -129,7 +147,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
         {tab === 'programs' ? (
           <View style={styles.section}>
             {c.programs.length === 0 ? (
-              <Text style={styles.meta}>No programs listed yet.</Text>
+              <EmptyState icon="book-outline" title="No programs yet" />
             ) : (
               c.programs.map((p) => (
                 <Card key={p.id}>
@@ -137,25 +155,32 @@ export function CollegeDetailScreen({ id }: { id: string }) {
                     <Text style={styles.cardTitle}>{p.name}</Text>
                     {!p.is_open ? <Text style={styles.closed}>Closed</Text> : null}
                   </View>
-                  {p.description ? <Text style={styles.body}>{p.description}</Text> : null}
-                  {p.deadline ? (
-                    <Text style={styles.meta}>
-                      Deadline {p.deadline} · {deadlineLabel(p.deadline)}
+                  {p.description ? (
+                    <Text style={styles.body} numberOfLines={3}>
+                      {p.description}
                     </Text>
                   ) : null}
-                  {p.tuition_per_year !== null ? (
-                    <Text style={styles.meta}>
-                      Tuition {peso.format(p.tuition_per_year)} per year
-                    </Text>
-                  ) : null}
-                  {p.min_gpa !== null ? (
-                    <Text style={styles.meta}>Minimum average {p.min_gpa}</Text>
-                  ) : null}
-                  {p.strands.length ? (
-                    <Text style={styles.meta}>Preferred strands: {p.strands.join(', ')}</Text>
-                  ) : null}
+                  <View style={styles.facts}>
+                    {p.deadline ? (
+                      <Fact
+                        icon="calendar-outline"
+                        label={deadlineLabel(p.deadline) ?? p.deadline}
+                      />
+                    ) : null}
+                    {p.tuition_per_year !== null ? (
+                      <Fact icon="cash-outline" label={`${peso.format(p.tuition_per_year)}/yr`} />
+                    ) : null}
+                    {p.min_gpa !== null ? (
+                      <Fact icon="ribbon-outline" label={`Min. ${p.min_gpa}`} />
+                    ) : null}
+                    {p.strands.length ? (
+                      <Fact icon="school-outline" label={p.strands.join(', ')} />
+                    ) : null}
+                  </View>
                   {p.prerequisites ? (
-                    <Text style={styles.meta}>Prerequisites: {p.prerequisites}</Text>
+                    <Text style={styles.meta} numberOfLines={2}>
+                      {p.prerequisites}
+                    </Text>
                   ) : null}
                 </Card>
               ))
@@ -165,19 +190,25 @@ export function CollegeDetailScreen({ id }: { id: string }) {
 
         {tab === 'requirements' ? (
           <View style={styles.section}>
-            <Text style={styles.meta}>
-              Required for every program. Some programs add their own requirements.
-            </Text>
+            <Text style={styles.meta}>For every program</Text>
             {generalRequirements.map((r) => (
               <Card key={r.id}>
-                <View style={styles.rowBetween}>
-                  <Text style={styles.cardTitle}>{r.label}</Text>
-                  <Text style={r.is_required ? styles.required : styles.meta}>
-                    {r.is_required ? 'Required' : 'Optional'}
-                  </Text>
+                <View style={styles.reqRow}>
+                  <Ionicons
+                    name={r.kind === 'essay' ? 'create-outline' : 'document-text-outline'}
+                    size={20}
+                    color={colors.primary}
+                  />
+                  <View style={styles.flex}>
+                    <Text style={styles.cardTitle}>{r.label}</Text>
+                    {r.description ? (
+                      <Text style={styles.meta} numberOfLines={2}>
+                        {r.description}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {!r.is_required ? <Text style={styles.optional}>Optional</Text> : null}
                 </View>
-                {r.description ? <Text style={styles.body}>{r.description}</Text> : null}
-                <Text style={styles.meta}>{r.kind === 'essay' ? 'Essay' : 'Document upload'}</Text>
               </Card>
             ))}
           </View>
@@ -185,24 +216,29 @@ export function CollegeDetailScreen({ id }: { id: string }) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <View style={styles.footerSave}>
-          <Button
-            variant="secondary"
-            label={isSaved ? 'Saved' : 'Save'}
-            onPress={handleSave}
-            loading={toggleFollow.isPending}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={isSaved ? 'Remove from saved' : 'Save university'}
+          accessibilityState={{ selected: isSaved, busy: toggleFollow.isPending }}
+          disabled={toggleFollow.isPending}
+          onPress={handleSave}
+          style={[styles.iconAction, isSaved && styles.iconActionActive]}>
+          <Ionicons
+            name={isSaved ? 'bookmark' : 'bookmark-outline'}
+            size={22}
+            color={colors.primary}
           />
-        </View>
+        </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Message admissions"
           accessibilityState={{ busy: startThread.isPending }}
           disabled={startThread.isPending}
           onPress={handleMessage}
-          style={styles.footerMessage}>
+          style={styles.iconAction}>
           <Ionicons name="chatbubble-ellipses-outline" size={22} color={colors.primary} />
         </Pressable>
-        <View style={styles.footerApply}>
+        <View style={styles.flex}>
           {existing && existing.status !== 'draft' ? (
             <Button
               label="View application"
@@ -211,20 +247,9 @@ export function CollegeDetailScreen({ id }: { id: string }) {
               }
             />
           ) : existing ? (
-            <Button
-              label="Continue draft"
-              onPress={() =>
-                router.push({ pathname: '/student/apply/[collegeId]', params: { collegeId: c.id } })
-              }
-            />
+            <Button label="Continue draft" onPress={apply} />
           ) : (
-            <Button
-              label="Apply now"
-              disabled={openPrograms.length === 0}
-              onPress={() =>
-                router.push({ pathname: '/student/apply/[collegeId]', params: { collegeId: c.id } })
-              }
-            />
+            <Button label="Apply now" disabled={openPrograms.length === 0} onPress={apply} />
           )}
         </View>
       </View>

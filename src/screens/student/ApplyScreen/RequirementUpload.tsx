@@ -69,12 +69,20 @@ export function RequirementUpload({
     }
   }
 
-  function promptSource() {
-    Alert.alert(requirement.label, 'Scan it with your camera, or attach a photo or PDF.', [
-      { text: 'Scan document', onPress: startScan },
-      { text: 'Choose photo', onPress: () => choose('library') },
-      { text: 'Choose PDF or file', onPress: () => choose('file') },
+  // Android dialogs show at most three buttons, so each prompt offers three.
+  function promptReplace() {
+    Alert.alert(`Replace ${requirement.label}`, undefined, [
       { text: 'Cancel', style: 'cancel' },
+      { text: 'Choose file', onPress: () => choose('file') },
+      { text: 'Scan', onPress: startScan },
+    ]);
+  }
+
+  function promptAttach() {
+    Alert.alert(requirement.label, undefined, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'PDF', onPress: () => choose('file') },
+      { text: 'Photo', onPress: () => choose('library') },
     ]);
   }
 
@@ -111,19 +119,18 @@ export function RequirementUpload({
           {document.local && document.syncError ? (
             <Text style={styles.note}>Upload failed: {document.syncError}. Will retry.</Text>
           ) : document.local ? (
-            <Text style={styles.meta}>Uploads automatically when you&apos;re online.</Text>
+            <Text style={styles.meta}>Uploads when you&apos;re online</Text>
           ) : null}
-          {document.review_notes ? (
-            <Text style={styles.note}>Note from the college: {document.review_notes}</Text>
-          ) : null}
-          <Text style={styles.meta}>
-            {document.mime_type === 'application/pdf' ? 'PDF' : 'Image'} ·{' '}
-            {(document.size_bytes / 1024 / 1024).toFixed(2)} MB
-          </Text>
+          {document.review_notes ? <Text style={styles.note}>{document.review_notes}</Text> : null}
           {canChange ? (
             <View style={styles.reqActions}>
               <View style={styles.flex}>
-                <Button variant="secondary" label="Replace" onPress={promptSource} loading={busy} />
+                <Button
+                  variant="secondary"
+                  label="Replace"
+                  onPress={promptReplace}
+                  loading={busy}
+                />
               </View>
               {onRemove ? (
                 <View style={styles.flex}>
@@ -158,7 +165,7 @@ export function RequirementUpload({
             <Button label="Scan" onPress={startScan} loading={busy} />
           </View>
           <View style={styles.flex}>
-            <Button variant="secondary" label="Attach" onPress={promptSource} disabled={busy} />
+            <Button variant="secondary" label="Attach" onPress={promptAttach} disabled={busy} />
           </View>
         </View>
       )}

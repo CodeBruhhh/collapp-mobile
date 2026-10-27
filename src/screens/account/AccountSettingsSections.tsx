@@ -31,32 +31,20 @@ const THEME_OPTIONS: ChipOption<ThemeMode>[] = [
   { value: 'dark', label: 'Dark' },
 ];
 
-type NotificationRow = { key: NotificationCategory; label: string; description: string };
+type NotificationRow = { key: NotificationCategory; label: string };
 
 /** The push categories each role actually receives (SRS 3.1.4.4). */
 const NOTIFICATION_ROWS: Record<Role, NotificationRow[]> = {
   student: [
-    { key: 'messages', label: 'New messages', description: 'Replies from school representatives' },
-    {
-      key: 'application_updates',
-      label: 'Application updates',
-      description: 'When a status changes or action is needed',
-    },
-    { key: 'deadlines', label: 'Deadline reminders', description: 'Before an application is due' },
+    { key: 'messages', label: 'Messages' },
+    { key: 'application_updates', label: 'Application updates' },
+    { key: 'deadlines', label: 'Deadline reminders' },
   ],
   school_rep: [
-    {
-      key: 'messages',
-      label: 'New messages',
-      description: 'Inquiries from students and the administrator',
-    },
-    {
-      key: 'application_updates',
-      label: 'New applications',
-      description: 'When a student applies to your college',
-    },
+    { key: 'messages', label: 'Messages' },
+    { key: 'application_updates', label: 'New applications' },
   ],
-  admin: [{ key: 'messages', label: 'New messages', description: 'From school representatives' }],
+  admin: [{ key: 'messages', label: 'Messages' }],
 };
 
 const CHANGE_PASSWORD_ROUTE: Record<Role, Href> = {
@@ -142,7 +130,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
           <>
             <ToggleRow
               label="Push notifications"
-              description="Alerts on this phone when the app is closed"
+              description="Alerts when the app is closed"
               value={current.pushEnabled}
               onChange={(pushEnabled) => updateSettings({ ...current, pushEnabled })}
             />
@@ -150,7 +138,6 @@ export function AccountSettingsSections({ role }: { role: Role }) {
               <ToggleRow
                 key={row.key}
                 label={row.label}
-                description={row.description}
                 value={current.pushEnabled && current.notificationPrefs[row.key]}
                 disabled={!current.pushEnabled}
                 onChange={(enabled) =>
@@ -161,9 +148,6 @@ export function AccountSettingsSections({ role }: { role: Role }) {
                 }
               />
             ))}
-            <Text style={styles.hint}>
-              Everything still appears under the bell in the app, whatever you choose here.
-            </Text>
           </>
         )}
       </SettingsSection>
@@ -172,9 +156,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
         <ToggleRow
           label="Biometric unlock"
           description={
-            biometrics.data?.available === false
-              ? 'Set up Face ID or a fingerprint on this phone to use this.'
-              : 'Use Face ID or your fingerprint to open CollApp.'
+            biometrics.data?.available === false ? 'Not set up on this phone' : undefined
           }
           value={biometrics.data?.enabled ?? false}
           disabled={!biometrics.data?.available}
@@ -187,9 +169,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
             onPress={() => router.push(CHANGE_PASSWORD_ROUTE[role])}
           />
         ) : (
-          <Text style={styles.hint}>
-            You sign in with Google, so there is no password to change.
-          </Text>
+          <Text style={styles.hint}>Signed in with Google</Text>
         )}
       </SettingsSection>
 
@@ -200,9 +180,6 @@ export function AccountSettingsSections({ role }: { role: Role }) {
           onPress={downloadData}
           loading={exporting}
         />
-        <Text style={styles.hint}>
-          Saves everything CollApp stores about you as a JSON file in a folder you choose.
-        </Text>
         {role === 'student' ? (
           <Button
             variant="link"
@@ -210,10 +187,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
             onPress={() => router.push('/student/delete-account')}
           />
         ) : (
-          <Text style={styles.hint}>
-            To close a {role === 'admin' ? 'administrator' : 'representative'} account, contact
-            another CollApp administrator.
-          </Text>
+          <Text style={styles.hint}>To close this account, contact an administrator.</Text>
         )}
       </SettingsSection>
 

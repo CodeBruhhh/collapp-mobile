@@ -2,7 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/context/AuthContext';
 
-import { deleteNotification, listNotifications, markNotificationsRead } from './api';
+import {
+  clearNotifications,
+  deleteNotification,
+  listNotifications,
+  markNotificationsRead,
+} from './api';
 
 export const notificationKeys = {
   list: (userId: string) => ['notifications', userId] as const,
@@ -35,5 +40,9 @@ export function useNotificationActions() {
     onSuccess: invalidate,
   });
   const remove = useMutation({ mutationFn: deleteNotification, onSuccess: invalidate });
-  return { markRead, remove };
+  const clear = useMutation({
+    mutationFn: (onlyRead: boolean) => clearNotifications(userId, onlyRead),
+    onSuccess: invalidate,
+  });
+  return { markRead, remove, clear };
 }

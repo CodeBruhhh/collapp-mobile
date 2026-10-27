@@ -30,6 +30,14 @@ export async function markNotificationsRead(userId: string, ids?: string[]) {
   if (error) throw error;
 }
 
+/** Delete the user's notifications: all of them, or only those already read. */
+export async function clearNotifications(userId: string, onlyRead: boolean) {
+  let query = supabase.from('notifications').delete().eq('user_id', userId);
+  if (onlyRead) query = query.not('read_at', 'is', null);
+  const { error } = await query;
+  if (error) throw error;
+}
+
 export async function deleteNotification(id: string) {
   const { error } = await supabase.from('notifications').delete().eq('id', id);
   if (error) throw error;

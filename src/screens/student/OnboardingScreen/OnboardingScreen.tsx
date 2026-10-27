@@ -5,6 +5,7 @@ import { Alert, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { ChipGroup } from '@/components/ChipGroup';
+import { DateField } from '@/components/DateField';
 import { FormScreen } from '@/components/FormScreen';
 import { Select } from '@/components/Select';
 import { TextField } from '@/components/TextField';
@@ -21,6 +22,14 @@ import { getErrorMessage, validate } from '@/lib/validation';
 import { createStyles } from './OnboardingScreen.styles';
 
 const STEPS = ['Personal information', 'Permanent address', 'Academic background'] as const;
+
+/** Matches personalSchema (age 12-100); the calendar opens near a typical freshman's age. */
+function yearsAgo(years: number): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - years);
+  return d.toISOString().slice(0, 10);
+}
+const DOB_RANGE = { min: yearsAgo(100), max: yearsAgo(12), initial: yearsAgo(17) };
 const REGION_NAMES = PH_REGIONS.map((r) => r.region_name);
 const SEX_OPTIONS = { Male: 'male', Female: 'female', Other: 'other' } as const;
 
@@ -272,15 +281,14 @@ export function OnboardingScreen({ mode = 'onboarding' }: OnboardingScreenProps)
             error={errors.lastName}
             autoComplete="family-name"
           />
-          <TextField
+          <DateField
             label="Date of birth"
             value={form.dateOfBirth}
-            onChangeText={set('dateOfBirth')}
+            onChange={set('dateOfBirth')}
             error={errors.dateOfBirth}
-            placeholder="YYYY-MM-DD"
-            keyboardType="numbers-and-punctuation"
-            autoComplete="birthdate-full"
-            maxLength={10}
+            min={DOB_RANGE.min}
+            max={DOB_RANGE.max}
+            initialMonth={DOB_RANGE.initial}
           />
           <ChipGroup
             label="Sex"

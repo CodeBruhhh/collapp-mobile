@@ -1,11 +1,12 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import { CONTROL_HEIGHT, fontSize, fontWeight, radius, spacing, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.md, gap: spacing.md },
+    // Wider gaps between sections than inside them, so each group reads as one block.
+    content: { padding: spacing.md, paddingBottom: spacing.xl, gap: spacing.lg },
     flex: { flex: 1 },
     greeting: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: c.text },
     meta: { fontSize: fontSize.sm, color: c.textMuted },
@@ -13,7 +14,7 @@ export const createStyles = (c: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      minHeight: TOUCH_TARGET,
+      minHeight: CONTROL_HEIGHT,
       paddingHorizontal: spacing.md,
       borderRadius: radius.md,
       borderWidth: 1,
@@ -40,7 +41,7 @@ export const createStyles = (c: ThemeColors) =>
     rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     featuredRow: { gap: spacing.sm, paddingRight: spacing.md },
     featuredCard: {
-      width: 200,
+      width: 176,
       gap: spacing.sm,
       padding: spacing.md,
       borderRadius: radius.lg,

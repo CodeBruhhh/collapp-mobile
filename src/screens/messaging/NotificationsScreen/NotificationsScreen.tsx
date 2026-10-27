@@ -3,7 +3,6 @@ import { router, Stack } from 'expo-router';
 import { useState, type ComponentProps } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 
-import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { FilterTabs } from '@/components/FilterTabs';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
@@ -13,6 +12,7 @@ import { useNotificationActions, useNotifications } from '@/features/notificatio
 import { NOTIFICATION_ICONS, notificationTarget } from '@/features/notifications/routing';
 import { useTheme } from '@/hooks/useTheme';
 import { shortTime } from '@/lib/time';
+import { getErrorMessage } from '@/lib/validation';
 
 import { createStyles } from './NotificationsScreen.styles';
 
@@ -32,12 +32,15 @@ export function NotificationsScreen() {
   const styles = createStyles(colors);
   const { role } = useAuth();
   const notifications = useNotifications();
-  const { markRead, remove } = useNotificationActions();
+  const { markRead, remove, clear } = useNotificationActions();
   const [filter, setFilter] = useState<Filter>('all');
 
   const all = notifications.data ?? [];
   const visible = all.filter(MATCHES[filter]);
   const unread = all.filter(MATCHES.unread).length;
+  const read = all.length - unread;
+
+  const fail = (title: string) => (e: unknown) => Alert.alert(title, getErrorMessage(e));
 
   function open(n: AppNotification) {
     if (!n.read_at) markRead.mutate([n.id]);
@@ -45,10 +48,34 @@ export function NotificationsScreen() {
     if (target) router.push(target);
   }
 
-  function confirmDelete(n: AppNotification) {
-    Alert.alert('Delete notification?', n.title, [
+  function itemOptions(n: AppNotification) {
+    Alert.alert(n.title, undefined, [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => remove.mutate(n.id) },
+      ...(n.read_at ? [] : [{ text: 'Mark as read', onPress: () => markRead.mutate([n.id]) }]),
+      {
+        text: 'Delete',
+        style: 'destructive' as const,
+        onPress: () => remove.mutate(n.id, { onError: fail('Could not delete') }),
+      },
+    ]);
+  }
+
+  function confirmClear() {
+    Alert.alert('Clear notifications?', 'This removes them from this list.', [
+      { text: 'Cancel', style: 'cancel' },
+      ...(read && unread
+        ? [
+            {
+              text: `Clear read (${read})`,
+              onPress: () => clear.mutate(true, { onError: fail('Could not clear') }),
+            },
+          ]
+        : []),
+      {
+        text: 'Clear all',
+        style: 'destructive' as const,
+        onPress: () => clear.mutate(false, { onError: fail('Could not clear') }),
+      },
     ]);
   }
 
@@ -63,25 +90,44 @@ export function NotificationsScreen() {
       }
       ListHeaderComponent={
         <View style={styles.header}>
-          <Stack.Screen options={{ title: 'Notifications' }} />
+          <Stack.Screen
+            options={{
+              title: 'Notifications',
+              headerRight: () =>
+                all.length ? (
+                  <View style={styles.headerActions}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Mark all as read"
+                      accessibilityState={{ disabled: !unread }}
+                      disabled={!unread || markRead.isPending}
+                      onPress={() =>
+                        markRead.mutate(undefined, { onError: fail('Could not update') })
+                      }
+                      style={[styles.headerButton, !unread && styles.headerButtonDisabled]}>
+                      <Ionicons name="checkmark-done" size={22} color={colors.primary} />
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Clear notifications"
+                      onPress={confirmClear}
+                      style={styles.headerButton}>
+                      <Ionicons name="trash-outline" size={21} color={colors.text} />
+                    </Pressable>
+                  </View>
+                ) : null,
+            }}
+          />
           <FilterTabs<Filter>
             value={filter}
             onChange={setFilter}
             options={[
               { value: 'all', label: 'All' },
-              { value: 'unread', label: 'Unread', count: unread },
+              { value: 'unread', label: 'Unread', count: unread || undefined },
               { value: 'messages', label: 'Messages' },
               { value: 'updates', label: 'Updates' },
             ]}
           />
-          {unread ? (
-            <Button
-              variant="link"
-              label="Mark all as read"
-              loading={markRead.isPending}
-              onPress={() => markRead.mutate(undefined)}
-            />
-          ) : null}
         </View>
       }
       ListEmptyComponent={
@@ -89,15 +135,13 @@ export function NotificationsScreen() {
           <LoadingState />
         ) : notifications.isError ? (
           <ErrorState error={notifications.error} onRetry={notifications.refetch} />
+        ) : filter === 'unread' && all.length ? (
+          <EmptyState icon="checkmark-done-outline" title="You're all caught up" />
         ) : (
           <EmptyState
-            icon="notifications-off-outline"
-            title={filter === 'all' ? 'No notifications yet' : 'Nothing here'}
-            body={
-              filter === 'all'
-                ? 'Application updates, messages and deadline reminders will appear here.'
-                : undefined
-            }
+            icon="notifications-outline"
+            title={filter === 'all' ? 'No notifications' : 'Nothing here'}
+            body={filter === 'all' ? 'Updates and messages will show up here.' : undefined}
           />
         )
       }
@@ -106,39 +150,30 @@ export function NotificationsScreen() {
         return (
           <Card
             onPress={() => open(item)}
-            accessibilityLabel={`${isUnread ? 'Unread. ' : ''}${item.title}. ${item.body}`}
-            style={isUnread ? styles.unreadCard : undefined}>
+            onLongPress={() => itemOptions(item)}
+            accessibilityLabel={`${isUnread ? 'Unread. ' : ''}${item.title}. ${item.body}`}>
             <View style={styles.row}>
-              <View style={styles.icon}>
+              <View style={[styles.icon, isUnread && styles.iconUnread]}>
                 <Ionicons
                   name={(NOTIFICATION_ICONS[item.type] ?? 'notifications-outline') as IconName}
-                  size={20}
-                  color={colors.primary}
+                  size={18}
+                  color={isUnread ? colors.primary : colors.textMuted}
                 />
               </View>
               <View style={styles.info}>
                 <View style={styles.topLine}>
-                  <Text style={[styles.title, isUnread && styles.unreadTitle]} numberOfLines={2}>
+                  <Text style={[styles.title, isUnread && styles.unreadTitle]} numberOfLines={1}>
                     {item.title}
                   </Text>
-                  {isUnread ? <View style={styles.dot} /> : null}
+                  <Text style={styles.time}>{shortTime(item.created_at)}</Text>
                 </View>
                 {item.body ? (
-                  <Text style={styles.body} numberOfLines={3}>
+                  <Text style={styles.body} numberOfLines={2}>
                     {item.body}
                   </Text>
                 ) : null}
-                <View style={styles.topLine}>
-                  <Text style={styles.time}>{shortTime(item.created_at)}</Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Delete notification"
-                    onPress={() => confirmDelete(item)}
-                    style={styles.delete}>
-                    <Ionicons name="trash-outline" size={18} color={colors.textMuted} />
-                  </Pressable>
-                </View>
               </View>
+              {isUnread ? <View style={styles.dot} accessibilityElementsHidden /> : null}
             </View>
           </Card>
         );
