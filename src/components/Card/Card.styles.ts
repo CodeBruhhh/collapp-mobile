@@ -1,13 +1,13 @@
 import { StyleSheet } from 'react-native';
 
-import { radius, spacing, type ThemeColors } from '@/styles';
+import { spacing, type ThemeColors, type ThemeTokens } from '@/styles';
 
-export const createStyles = (c: ThemeColors) =>
+export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
   StyleSheet.create({
     card: {
       gap: spacing.sm,
       padding: spacing.md,
-      borderRadius: radius.lg,
+      borderRadius: t.radius.lg,
       borderWidth: 1,
       borderColor: c.border,
       backgroundColor: c.surface,

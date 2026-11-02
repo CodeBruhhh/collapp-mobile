@@ -1,9 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 
-import { Card } from '@/components/Card';
 import { FilterTabs } from '@/components/FilterTabs';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -67,8 +66,8 @@ function describe(entry: AuditEntry): string {
 
 /** SDD screens 29-30 — audit trail, flagged attachments and tenant/RLS oversight. */
 export function ComplianceScreen() {
-  const { colors } = useTheme();
-  const styles = createAdminStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createAdminStyles(colors, tokens);
   const [section, setSection] = useState<Section>('audit');
   const [auditFilter, setAuditFilter] = useState<AuditFilter>('all');
 
@@ -77,7 +76,13 @@ export function ComplianceScreen() {
   const rls = useRlsOverview();
 
   const header = (
-    <View style={styles.section}>
+    <View style={[styles.section, styles.listHeader]}>
+      <View style={styles.heading}>
+        <Text accessibilityRole="header" style={styles.title}>
+          Oversight
+        </Text>
+        <Text style={styles.subtitle}>Audit trail, blocked files and data-access policies.</Text>
+      </View>
       <FilterTabs<Section>
         value={section}
         onChange={setSection}
@@ -115,7 +120,7 @@ export function ComplianceScreen() {
     return (
       <FlatList
         style={styles.root}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.listContent}
         data={audit.data ?? []}
         keyExtractor={(e) => String(e.id)}
         ListHeaderComponent={header}
@@ -131,8 +136,8 @@ export function ComplianceScreen() {
             <EmptyState icon="document-text-outline" title="No audit entries" />
           )
         }
-        renderItem={({ item }) => (
-          <Card>
+        renderItem={({ item, index }) => (
+          <View style={[styles.ledgerRow, index === 0 && styles.ledgerTop]}>
             <View style={styles.rowBetween}>
               <Text style={[styles.cardTitle, styles.flex]}>
                 {ACTION_LABELS[item.action] ?? item.action}
@@ -143,7 +148,7 @@ export function ComplianceScreen() {
             <Text style={styles.meta}>
               By {item.actor ? item.actor.full_name || item.actor.email : 'the system'}
             </Text>
-          </Card>
+          </View>
         )}
       />
     );
@@ -153,7 +158,7 @@ export function ComplianceScreen() {
     return (
       <FlatList
         style={styles.root}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.listContent}
         data={blocked.data ?? []}
         keyExtractor={(m) => m.id}
         ListHeaderComponent={header}
@@ -169,14 +174,20 @@ export function ComplianceScreen() {
             <EmptyState icon="shield-checkmark-outline" title="No blocked attachments" />
           )
         }
-        renderItem={({ item }) => (
-          <Card
+        renderItem={({ item, index }) => (
+          <Pressable
+            accessibilityRole="button"
             onPress={() =>
               router.push({ pathname: '/admin/thread/[id]', params: { id: item.thread_id } })
             }
-            accessibilityLabel={`Blocked file ${item.attachment_name}. Open conversation`}>
+            accessibilityLabel={`Blocked file ${item.attachment_name}. Open conversation`}
+            style={({ pressed }) => [
+              styles.ledgerRow,
+              index === 0 && styles.ledgerTop,
+              pressed && styles.pressed,
+            ]}>
             <View style={styles.row}>
-              <Ionicons name="alert-circle-outline" size={22} color={colors.danger} />
+              <Ionicons name="alert-circle-outline" size={20} color={colors.danger} />
               <View style={styles.flex}>
                 <Text style={styles.cardTitle} numberOfLines={1}>
                   {item.attachment_name}
@@ -188,7 +199,7 @@ export function ComplianceScreen() {
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
             </View>
-          </Card>
+          </Pressable>
         )}
       />
     );
@@ -197,7 +208,7 @@ export function ComplianceScreen() {
   return (
     <FlatList
       style={styles.root}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={styles.listContent}
       data={rls.data ?? []}
       keyExtractor={(t) => t.table_name}
       ListHeaderComponent={header}
@@ -209,8 +220,8 @@ export function ComplianceScreen() {
           <ErrorState error={rls.error} onRetry={rls.refetch} />
         ) : null
       }
-      renderItem={({ item }) => (
-        <Card>
+      renderItem={({ item, index }) => (
+        <View style={[styles.ledgerRow, index === 0 && styles.ledgerTop]}>
           <View style={styles.rowBetween}>
             <Text style={[styles.cardTitle, styles.flex]}>{item.table_name}</Text>
             <StatusBadge
@@ -228,7 +239,7 @@ export function ComplianceScreen() {
               • {p}
             </Text>
           ))}
-        </Card>
+        </View>
       )}
     />
   );

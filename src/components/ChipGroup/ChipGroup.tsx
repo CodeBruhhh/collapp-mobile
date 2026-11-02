@@ -25,8 +25,8 @@ export function ChipGroup({
   hint,
   error,
 }: ChipGroupProps) {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createStyles(colors, tokens);
 
   function toggle(option: string) {
     if (selected.includes(option)) {

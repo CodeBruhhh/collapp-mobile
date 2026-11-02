@@ -4,27 +4,25 @@ import {
   CONTROL_HEIGHT,
   fontSize,
   fontWeight,
-  radius,
   spacing,
   TOUCH_TARGET,
   type ThemeColors,
+  type ThemeTokens,
 } from '@/styles';
 
-export const createStyles = (c: ThemeColors) =>
+export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
   StyleSheet.create({
     base: {
       minHeight: CONTROL_HEIGHT,
       paddingHorizontal: spacing.lg,
-      borderRadius: radius.md,
+      borderRadius: t.radius.md,
       alignItems: 'center',
       justifyContent: 'center',
     },
     primary: { backgroundColor: c.primary },
-    secondary: {
-      backgroundColor: c.surface,
-      borderWidth: 1,
-      borderColor: c.border,
-    },
+    secondary: t.editorial
+      ? { backgroundColor: 'transparent', borderWidth: 1, borderColor: c.text }
+      : { backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
     danger: { backgroundColor: c.danger },
     link: {
       minHeight: TOUCH_TARGET,
@@ -33,7 +31,9 @@ export const createStyles = (c: ThemeColors) =>
     },
     pressed: { opacity: 0.75 },
     inactive: { opacity: 0.45 },
-    label: { fontSize: fontSize.md, fontWeight: fontWeight.semibold },
+    content: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    icon: { width: 16, height: 16 },
+    label: { fontSize: t.editorial ? 15 : fontSize.md, fontWeight: fontWeight.semibold },
     labelPrimary: { color: c.onPrimary },
     labelSecondary: { color: c.text },
     labelDanger: { color: '#FFFFFF' },

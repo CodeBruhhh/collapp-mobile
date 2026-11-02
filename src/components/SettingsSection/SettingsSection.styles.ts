@@ -1,8 +1,15 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, radius, spacing, type ThemeColors } from '@/styles';
+import {
+  editorialSpace,
+  fontSize,
+  fontWeight,
+  spacing,
+  type ThemeColors,
+  type ThemeTokens,
+} from '@/styles';
 
-export const createStyles = (c: ThemeColors) =>
+export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
   StyleSheet.create({
     section: { gap: spacing.sm },
     title: {
@@ -17,8 +24,30 @@ export const createStyles = (c: ThemeColors) =>
       backgroundColor: c.surface,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: radius.lg,
+      borderRadius: t.radius.lg,
       padding: spacing.md,
       gap: spacing.md,
+    },
+    // Editorial: a full-width section whose rows rule themselves off.
+    ledger: {
+      gap: spacing.xs,
+      paddingTop: editorialSpace.section,
+      paddingHorizontal: editorialSpace.gutter,
+    },
+    // A lifted sheet band, like the chart band on Analytics.
+    band: {
+      marginTop: editorialSpace.section,
+      paddingBottom: editorialSpace.section,
+      backgroundColor: c.surface,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+    },
+    ledgerTitle: {
+      fontFamily: t.headingFont,
+      fontSize: 19,
+      lineHeight: 26,
+      letterSpacing: -0.5,
+      color: c.text,
     },
   });

@@ -14,8 +14,33 @@ type ToggleRowProps = {
 
 /** Labelled switch; the whole row is announced as one control. */
 export function ToggleRow({ label, description, value, onChange, disabled }: ToggleRowProps) {
-  const { colors } = useTheme();
+  const { colors, tokens } = useTheme();
   const styles = createStyles(colors);
+
+  const control = (
+    <Switch
+      accessibilityLabel={label}
+      accessibilityHint={description}
+      value={value}
+      onValueChange={onChange}
+      disabled={disabled}
+      trackColor={{ true: colors.primary, false: colors.border }}
+      thumbColor={tokens.editorial ? colors.surface : undefined}
+      ios_backgroundColor={tokens.editorial ? colors.border : undefined}
+    />
+  );
+
+  if (tokens.editorial) {
+    return (
+      <View style={[styles.ledgerRow, disabled && styles.disabled]}>
+        <View style={styles.row}>
+          <Text style={styles.ledgerLabel}>{label}</Text>
+          {control}
+        </View>
+        {description ? <Text style={styles.ledgerDescription}>{description}</Text> : null}
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.row, disabled && styles.disabled]}>
@@ -23,14 +48,7 @@ export function ToggleRow({ label, description, value, onChange, disabled }: Tog
         <Text style={styles.label}>{label}</Text>
         {description ? <Text style={styles.description}>{description}</Text> : null}
       </View>
-      <Switch
-        accessibilityLabel={label}
-        accessibilityHint={description}
-        value={value}
-        onValueChange={onChange}
-        disabled={disabled}
-        trackColor={{ true: colors.primary, false: colors.border }}
-      />
+      {control}
     </View>
   );
 }

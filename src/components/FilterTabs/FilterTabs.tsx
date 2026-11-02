@@ -14,14 +14,15 @@ type FilterTabsProps<T extends string> = {
 
 /** Horizontal, scrollable segmented filter (SDD screens 13, 20, 26). */
 export function FilterTabs<T extends string>({ options, value, onChange }: FilterTabsProps<T>) {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createStyles(colors, tokens);
+  const editorial = tokens.editorial;
 
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.row}
+      contentContainerStyle={editorial ? styles.underlineRow : styles.row}
       accessibilityRole="tablist">
       {options.map((option) => {
         const active = option.value === value;
@@ -31,8 +32,16 @@ export function FilterTabs<T extends string>({ options, value, onChange }: Filte
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
             onPress={() => onChange(option.value)}
-            style={[styles.tab, active && styles.tabActive]}>
-            <Text style={[styles.label, active && styles.labelActive]}>
+            style={
+              editorial
+                ? [styles.underlineTab, active && styles.underlineTabActive]
+                : [styles.tab, active && styles.tabActive]
+            }>
+            <Text
+              style={[
+                styles.label,
+                active && (editorial ? styles.underlineLabelActive : styles.labelActive),
+              ]}>
               {option.label}
               {option.count !== undefined ? ` (${option.count})` : ''}
             </Text>

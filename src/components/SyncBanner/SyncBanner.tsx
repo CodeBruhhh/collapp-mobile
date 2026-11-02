@@ -11,8 +11,8 @@ import { createStyles } from './SyncBanner.styles';
  * and sync status"). Hidden when everything is online and synced.
  */
 export function SyncBanner() {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createStyles(colors, tokens);
   const { status, localDrafts, pendingFiles, requestSync } = useSync();
 
   const waiting = localDrafts.length + pendingFiles.length;

@@ -1,5 +1,10 @@
+import { EditorialTheme } from '@/components/EditorialTheme';
 import { RoleStack } from '@/components/RoleStack';
 
 export default function AdminLayout() {
-  return <RoleStack />;
+  return (
+    <EditorialTheme>
+      <RoleStack />
+    </EditorialTheme>
+  );
 }

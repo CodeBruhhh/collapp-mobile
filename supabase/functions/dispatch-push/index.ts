@@ -50,6 +50,10 @@ Deno.serve(async (req) => {
 
   // Drop tokens of uninstalled apps so they are not retried forever.
   const { data: tickets } = (await res.json()) as { data: Ticket[] };
+  // Surface rejections (e.g. InvalidCredentials when FCM isn't set up) in the function logs.
+  for (const t of tickets) {
+    if (t.status === 'error') console.error('expo push rejected', JSON.stringify(t));
+  }
   const dead = tickets
     .map((t, i) => (t.details?.error === 'DeviceNotRegistered' ? tokens[i].token : null))
     .filter((t): t is string => t !== null);

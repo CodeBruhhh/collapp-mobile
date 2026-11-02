@@ -1,10 +1,17 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, lineHeight, spacing, type ThemeColors } from '@/styles';
+import {
+  fontSize,
+  fontWeight,
+  lineHeight,
+  spacing,
+  type ThemeColors,
+  type ThemeTokens,
+} from '@/styles';
 
 const ICON_CIRCLE = 64;
 
-export const createStyles = (c: ThemeColors) =>
+export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
   StyleSheet.create({
     root: {
       alignItems: 'center',
@@ -23,8 +30,9 @@ export const createStyles = (c: ThemeColors) =>
       backgroundColor: c.surfaceMuted,
     },
     title: {
-      fontSize: fontSize.md,
-      fontWeight: fontWeight.semibold,
+      fontFamily: t.headingFont,
+      fontSize: t.headingFont ? fontSize.lg : fontSize.md,
+      fontWeight: t.headingFont ? fontWeight.regular : fontWeight.semibold,
       color: c.text,
       textAlign: 'center',
     },

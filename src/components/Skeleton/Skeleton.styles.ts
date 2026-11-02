@@ -1,8 +1,8 @@
 import { StyleSheet } from 'react-native';
 
-import { radius, spacing, type ThemeColors } from '@/styles';
+import { spacing, type ThemeColors, type ThemeTokens } from '@/styles';
 
-export const createStyles = (c: ThemeColors) =>
+export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
   StyleSheet.create({
     block: { backgroundColor: c.surfaceMuted },
     list: { gap: spacing.sm },
@@ -11,7 +11,7 @@ export const createStyles = (c: ThemeColors) =>
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.md,
-      borderRadius: radius.lg,
+      borderRadius: t.radius.lg,
       borderWidth: 1,
       borderColor: c.border,
       backgroundColor: c.surface,
@@ -23,7 +23,7 @@ export const createStyles = (c: ThemeColors) =>
     block2: {
       gap: spacing.sm,
       padding: spacing.md,
-      borderRadius: radius.lg,
+      borderRadius: t.radius.lg,
       borderWidth: 1,
       borderColor: c.border,
       backgroundColor: c.surface,

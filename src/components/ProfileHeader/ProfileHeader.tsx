@@ -17,8 +17,8 @@ function initialsOf(name: string): string {
 
 /** Initials avatar plus name and email (profile photos are not collected). */
 export function ProfileHeader({ name, email }: ProfileHeaderProps) {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createStyles(colors, tokens);
 
   return (
     <View style={styles.container}>

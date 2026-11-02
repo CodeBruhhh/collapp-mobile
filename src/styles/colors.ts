@@ -73,3 +73,47 @@ export function withAlpha(hex: string, alpha: number): string {
     .padStart(2, '0');
   return `${hex.slice(0, 7)}${a}`;
 }
+
+// "Editorial Teal" (Figma 6:1930), used by the admin console: warm paper,
+// a single deep-teal accent and earthy status hues. Text meets WCAG AA.
+export const editorialLightColors: ThemeColors = {
+  background: '#F6F4EE',
+  surface: '#FDFCF8',
+  surfaceMuted: '#EEEBE3',
+  border: '#D5DAD1',
+  text: '#202F2D',
+  textMuted: '#69766F',
+  primary: '#174F4B',
+  primarySoft: '#E6ECE5',
+  onPrimary: '#FDFCF8',
+  danger: '#A23B2C',
+  status: {
+    draft: '#69766F',
+    submitted: '#2F5D7C',
+    underReview: '#8A5E0E',
+    accepted: '#1F6B4A',
+    actionRequired: '#A23B2C',
+    rejected: '#56605B',
+  },
+};
+
+export const editorialDarkColors: ThemeColors = {
+  background: '#121816',
+  surface: '#18201E',
+  surfaceMuted: '#202A27',
+  border: '#2C3633',
+  text: '#E9ECE6',
+  textMuted: '#9AA59F',
+  primary: '#6FBFB2',
+  primarySoft: '#1E3532',
+  onPrimary: '#0F1514',
+  danger: '#E57F6E',
+  status: {
+    draft: '#9AA59F',
+    submitted: '#86B4D4',
+    underReview: '#D9AE5B',
+    accepted: '#7CC79A',
+    actionRequired: '#E57F6E',
+    rejected: '#B8C0BB',
+  },
+};

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { ActionSheet } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { ChipGroup } from '@/components/ChipGroup';
 import { FormScreen } from '@/components/FormScreen';
 import { LoadingState } from '@/components/StateView';
@@ -11,7 +11,6 @@ import type { Audience } from '@/features/admin/api';
 import { useAdminActions, useAuditLogs } from '@/features/admin/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { shortTime } from '@/lib/time';
-import { getErrorMessage } from '@/lib/validation';
 
 import { createAdminStyles } from '../adminStyles';
 
@@ -30,8 +29,8 @@ const BODY_MAX = 1000;
 
 /** SDD screen 31 — send an announcement to everyone or one role (in-app plus push). */
 export function BroadcastScreen() {
-  const { colors } = useTheme();
-  const styles = createAdminStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createAdminStyles(colors, tokens);
   const { broadcast } = useAdminActions();
   const history = useAuditLogs('notification.broadcast');
 
@@ -39,6 +38,8 @@ export function BroadcastScreen() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [errors, setErrors] = useState<{ title?: string; body?: string }>({});
+  const [confirming, setConfirming] = useState(false);
+  const [sent, setSent] = useState<string | null>(null);
 
   function confirmSend() {
     const next = {
@@ -48,40 +49,31 @@ export function BroadcastScreen() {
     setErrors(next);
     if (next.title || next.body) return;
 
-    Alert.alert(
-      `Send to ${audienceLabel.toLowerCase()}?`,
-      'It appears in their notifications right away and as a push for those who allow it. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Send',
-          onPress: async () => {
-            try {
-              const count = await broadcast.mutateAsync([
-                title.trim(),
-                body.trim(),
-                AUDIENCES[audienceLabel],
-              ]);
-              setTitle('');
-              setBody('');
-              Alert.alert(
-                'Broadcast sent',
-                `Delivered to ${count} ${count === 1 ? 'user' : 'users'}.`,
-              );
-            } catch (e) {
-              Alert.alert('Could not send', getErrorMessage(e));
-            }
-          },
-        },
-      ],
-    );
+    setSent(null);
+    setConfirming(true);
+  }
+
+  async function send() {
+    const count = await broadcast.mutateAsync([
+      title.trim(),
+      body.trim(),
+      AUDIENCES[audienceLabel],
+    ]);
+    setTitle('');
+    setBody('');
+    setSent(`Delivered to ${count} ${count === 1 ? 'user' : 'users'}.`);
   }
 
   return (
     <FormScreen>
-      <Text style={styles.subtitle}>
-        Platform announcements such as maintenance windows or application deadlines.
-      </Text>
+      <View style={styles.heading}>
+        <Text accessibilityRole="header" style={styles.title}>
+          Announcements
+        </Text>
+        <Text style={styles.subtitle}>
+          Platform announcements such as maintenance windows or application deadlines.
+        </Text>
+      </View>
 
       <ChipGroup
         label="Send to"
@@ -108,13 +100,30 @@ export function BroadcastScreen() {
         hint={`${body.length}/${BODY_MAX}`}
       />
       <Button label="Send broadcast" onPress={confirmSend} loading={broadcast.isPending} />
+      {sent ? (
+        <Text style={styles.notice} accessibilityLiveRegion="polite">
+          {sent}
+        </Text>
+      ) : null}
+
+      <ActionSheet
+        visible={confirming}
+        onClose={() => setConfirming(false)}
+        eyebrow={`To ${audienceLabel.toLowerCase()}`}
+        title={title.trim() || 'Broadcast'}
+        subtitle={body.trim()}
+        message="It appears in their notifications right away and as a push for those who allow it. This cannot be undone."
+        actions={[{ label: 'Send broadcast', onPress: send }]}
+      />
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Sent broadcasts</Text>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>
+          Sent broadcasts
+        </Text>
         {history.isPending ? (
           <LoadingState variant="inline" />
         ) : history.data?.length ? (
-          history.data.map((entry) => {
+          history.data.map((entry, index) => {
             const m = entry.meta as {
               title?: string;
               body?: string;
@@ -122,7 +131,7 @@ export function BroadcastScreen() {
               recipients?: number;
             };
             return (
-              <Card key={entry.id}>
+              <View key={entry.id} style={[styles.ledgerRow, index === 0 && styles.ledgerTop]}>
                 <View style={styles.rowBetween}>
                   <Text style={[styles.cardTitle, styles.flex]}>{m.title}</Text>
                   <Text style={styles.meta}>{shortTime(entry.created_at)}</Text>
@@ -132,7 +141,7 @@ export function BroadcastScreen() {
                   {m.audience ? AUDIENCE_LABELS[m.audience] : 'Unknown audience'} ·{' '}
                   {m.recipients ?? 0} recipients
                 </Text>
-              </Card>
+              </View>
             );
           })
         ) : (

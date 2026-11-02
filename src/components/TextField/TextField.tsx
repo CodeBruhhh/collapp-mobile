@@ -23,8 +23,8 @@ export function TextField({
   onBlur,
   ...inputProps
 }: TextFieldProps) {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createStyles(colors, tokens);
   const [revealed, setRevealed] = useState(false);
   const [focused, setFocused] = useState(false);
   const isSecret = Boolean(secureTextEntry);

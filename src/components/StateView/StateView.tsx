@@ -32,8 +32,8 @@ export function LoadingState({ variant = 'list', rows, label }: LoadingStateProp
 const NETWORK_ERROR = /network request failed|failed to fetch|network ?error|timed? ?out/i;
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createStyles(colors, tokens);
   const message = getErrorMessage(error);
   const offline = NETWORK_ERROR.test(message);
 
@@ -68,8 +68,8 @@ type EmptyStateProps = {
 };
 
 export function EmptyState({ icon, title, body, actionLabel, onAction }: EmptyStateProps) {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createStyles(colors, tokens);
   return (
     <View style={styles.root}>
       <View style={styles.iconCircle}>

@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { router, type Href } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 
+import { ActionRow } from '@/components/ActionRow';
+import { ActionSheet } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
 import { FilterChips, type ChipOption } from '@/components/FilterChips';
 import { SettingsSection } from '@/components/SettingsSection';
@@ -58,12 +60,14 @@ const CHANGE_PASSWORD_ROUTE: Record<Role, Href> = {
  * appearance, push preferences, security, data export/deletion and sign-out.
  */
 export function AccountSettingsSections({ role }: { role: Role }) {
-  const { colors } = useTheme();
+  const { colors, tokens } = useTheme();
   const styles = createAccountStyles(colors);
+  const editorial = tokens.editorial;
   const { session, signOut } = useAuth();
   const userId = session?.user.id ?? '';
   const { themeMode, setThemeMode } = usePreferences();
   const [exporting, setExporting] = useState(false);
+  const [signOutSheet, setSignOutSheet] = useState(false);
 
   const settings = useAccountSettings();
   const saveSettings = useSaveAccountSettings();
@@ -94,10 +98,12 @@ export function AccountSettingsSections({ role }: { role: Role }) {
   }
 
   const confirmSignOut = () =>
-    Alert.alert('Sign out?', 'You will need to sign in again to use CollApp.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: signOut },
-    ]);
+    editorial
+      ? setSignOutSheet(true)
+      : Alert.alert('Sign out?', 'You will need to sign in again to use CollApp.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Sign out', style: 'destructive', onPress: signOut },
+        ]);
 
   async function downloadData() {
     setExporting(true);
@@ -117,7 +123,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
 
   return (
     <>
-      <SettingsSection title="Appearance">
+      <SettingsSection title="Appearance" band>
         <FilterChips options={THEME_OPTIONS} selected={themeMode} onSelect={setThemeMode} />
       </SettingsSection>
 
@@ -162,24 +168,39 @@ export function AccountSettingsSections({ role }: { role: Role }) {
           disabled={!biometrics.data?.available}
           onChange={toggleBiometrics}
         />
-        {hasPassword ? (
+        {!hasPassword ? (
+          <Text style={editorial ? styles.ledgerHint : styles.hint}>Signed in with Google</Text>
+        ) : editorial ? (
+          <ActionRow
+            label="Change password"
+            icon={require('@/assets/images/editorial/lock.svg')}
+            onPress={() => router.push(CHANGE_PASSWORD_ROUTE[role])}
+          />
+        ) : (
           <Button
             variant="secondary"
             label="Change password"
             onPress={() => router.push(CHANGE_PASSWORD_ROUTE[role])}
           />
-        ) : (
-          <Text style={styles.hint}>Signed in with Google</Text>
         )}
       </SettingsSection>
 
-      <SettingsSection title="Your data">
-        <Button
-          variant="secondary"
-          label="Download my data"
-          onPress={downloadData}
-          loading={exporting}
-        />
+      <SettingsSection title="Your data" band>
+        {editorial ? (
+          <ActionRow
+            label="Download my data"
+            icon={require('@/assets/images/editorial/download.svg')}
+            onPress={downloadData}
+            loading={exporting}
+          />
+        ) : (
+          <Button
+            variant="secondary"
+            label="Download my data"
+            onPress={downloadData}
+            loading={exporting}
+          />
+        )}
         {role === 'student' ? (
           <Button
             variant="link"
@@ -187,11 +208,31 @@ export function AccountSettingsSections({ role }: { role: Role }) {
             onPress={() => router.push('/student/delete-account')}
           />
         ) : (
-          <Text style={styles.hint}>To close this account, contact an administrator.</Text>
+          <Text style={editorial ? styles.ledgerHint : styles.hint}>
+            To close this account, contact an administrator.
+          </Text>
         )}
       </SettingsSection>
 
-      <Button label="Sign out" variant="secondary" onPress={confirmSignOut} />
+      {editorial ? (
+        <View style={styles.signOut}>
+          <Button
+            label="Sign out"
+            variant="secondary"
+            icon={require('@/assets/images/editorial/sign-out.svg')}
+            onPress={confirmSignOut}
+          />
+          <ActionSheet
+            visible={signOutSheet}
+            onClose={() => setSignOutSheet(false)}
+            title="Sign out?"
+            message="You will need to sign in again to use CollApp."
+            actions={[{ label: 'Sign out', destructive: true, onPress: signOut }]}
+          />
+        </View>
+      ) : (
+        <Button label="Sign out" variant="secondary" onPress={confirmSignOut} />
+      )}
     </>
   );
 }

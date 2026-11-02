@@ -30,8 +30,8 @@ export function Select({
   disabled,
   hideLabel,
 }: SelectProps) {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createStyles(colors, tokens);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 

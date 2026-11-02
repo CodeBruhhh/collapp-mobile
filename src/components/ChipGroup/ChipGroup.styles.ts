@@ -1,9 +1,16 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import {
+  fontSize,
+  fontWeight,
+  spacing,
+  TOUCH_TARGET,
+  type ThemeColors,
+  type ThemeTokens,
+} from '@/styles';
 
 /** Selection chips: a soft accent tint for chosen options, never a heavy solid block. */
-export const createStyles = (c: ThemeColors) =>
+export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
   StyleSheet.create({
     root: { gap: spacing.xs },
     label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.text },
@@ -13,7 +20,7 @@ export const createStyles = (c: ThemeColors) =>
       minHeight: TOUCH_TARGET,
       justifyContent: 'center',
       paddingHorizontal: spacing.md,
-      borderRadius: radius.pill,
+      borderRadius: t.radius.pill,
       borderWidth: 1,
       borderColor: c.border,
       backgroundColor: c.surface,

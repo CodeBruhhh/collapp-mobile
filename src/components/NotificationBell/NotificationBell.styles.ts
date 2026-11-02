@@ -10,6 +10,7 @@ export const createStyles = (c: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
+    glyph: { width: 19, height: 19 },
     badge: {
       position: 'absolute',
       top: 6,

@@ -1,8 +1,15 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import {
+  fontSize,
+  fontWeight,
+  spacing,
+  TOUCH_TARGET,
+  type ThemeColors,
+  type ThemeTokens,
+} from '@/styles';
 
-export const createStyles = (c: ThemeColors) =>
+export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
   StyleSheet.create({
     banner: {
       flexDirection: 'row',
@@ -10,7 +17,7 @@ export const createStyles = (c: ThemeColors) =>
       gap: spacing.sm,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      borderRadius: radius.md,
+      borderRadius: t.radius.md,
       borderWidth: 1,
       borderColor: c.status.submitted,
       backgroundColor: c.surface,

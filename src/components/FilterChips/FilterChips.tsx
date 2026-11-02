@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, Text } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { useTheme } from '@/hooks/useTheme';
 
@@ -12,14 +12,36 @@ type FilterChipsProps<T extends string> = {
   onSelect: (value: T) => void;
 };
 
-/** Single-select horizontal chip row. */
+/** Single-select horizontal chip row (an equal-width segmented control in the editorial theme). */
 export function FilterChips<T extends string>({
   options,
   selected,
   onSelect,
 }: FilterChipsProps<T>) {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createStyles(colors, tokens);
+
+  if (tokens.editorial) {
+    return (
+      <View style={styles.segments} accessibilityRole="radiogroup">
+        {options.map((option) => {
+          const isSelected = option.value === selected;
+          return (
+            <Pressable
+              key={option.value}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: isSelected }}
+              onPress={() => onSelect(option.value)}
+              style={[styles.segment, isSelected && styles.segmentSelected]}>
+              <Text style={[styles.segmentLabel, isSelected && styles.segmentLabelSelected]}>
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    );
+  }
 
   return (
     <ScrollView

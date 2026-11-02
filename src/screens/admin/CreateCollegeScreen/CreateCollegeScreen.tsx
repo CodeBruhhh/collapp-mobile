@@ -1,10 +1,12 @@
 import * as Crypto from 'expo-crypto';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Share, Text, View } from 'react-native';
+import { Share, Text, View } from 'react-native';
 
+import { ActionSheet } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
 import { FormScreen } from '@/components/FormScreen';
+import { InfoRow } from '@/components/InfoRow';
 import { Select } from '@/components/Select';
 import { TextField } from '@/components/TextField';
 import { getCities, getProvinces, PH_REGIONS } from '@/data/ph-address';
@@ -39,8 +41,8 @@ type Form = {
 
 /** SDD screen 28 — add a college (tenant) and its first representative. Reps never self-register. */
 export function CreateCollegeScreen() {
-  const { colors } = useTheme();
-  const styles = createAdminStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createAdminStyles(colors, tokens);
   const { addCollege } = useAdminActions();
   const [form, setForm] = useState<Form>(() => ({
     name: '',
@@ -54,6 +56,10 @@ export function CreateCollegeScreen() {
     repPassword: generatePassword(),
   }));
   const [errors, setErrors] = useState<FieldErrors<Form>>({});
+  const [created, setCreated] = useState<{ name: string; email: string; password: string } | null>(
+    null,
+  );
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const set =
     <K extends keyof Form>(key: K) =>
@@ -69,6 +75,7 @@ export function CreateCollegeScreen() {
     });
     setErrors(result.errors ?? {});
     if (!result.data) return;
+    setSubmitError(null);
     const d = result.data;
     try {
       await addCollege.mutateAsync({
@@ -82,22 +89,9 @@ export function CreateCollegeScreen() {
         },
         rep: { fullName: d.repName, email: d.repEmail, password: d.repPassword },
       });
-      Alert.alert(
-        'College created',
-        `${d.name} starts as a draft. Share these sign-in details with the representative securely:\n\n${d.repEmail}\n${d.repPassword}`,
-        [
-          {
-            text: 'Share details',
-            onPress: () =>
-              Share.share({
-                message: `Your CollApp representative account for ${d.name}\nEmail: ${d.repEmail}\nTemporary password: ${d.repPassword}\nPlease change it after signing in (Settings › Change password).`,
-              }).finally(() => router.back()),
-          },
-          { text: 'Done', onPress: () => router.back() },
-        ],
-      );
+      setCreated({ name: d.name, email: d.repEmail, password: d.repPassword });
     } catch (e) {
-      Alert.alert('Could not create the college', getErrorMessage(e));
+      setSubmitError(getErrorMessage(e));
     }
   }
 
@@ -105,7 +99,9 @@ export function CreateCollegeScreen() {
     <FormScreen>
       <Stack.Screen options={{ title: 'Add college' }} />
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>College</Text>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>
+          College
+        </Text>
         <TextField
           label="College name"
           value={form.name}
@@ -157,7 +153,9 @@ export function CreateCollegeScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>First representative</Text>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>
+          First representative
+        </Text>
         <Text style={styles.meta}>
           The account is ready to use right away; ask them to change the password after signing in.
         </Text>
@@ -192,7 +190,31 @@ export function CreateCollegeScreen() {
         />
       </View>
 
+      {submitError ? <Text style={styles.dangerText}>{submitError}</Text> : null}
       <Button label="Create college" onPress={submit} loading={addCollege.isPending} />
+
+      {created ? (
+        <ActionSheet
+          visible
+          onClose={() => router.back()}
+          eyebrow="College created"
+          title={created.name}
+          subtitle="Starts as a draft. Share these sign-in details with the representative securely."
+          actions={[
+            {
+              label: 'Share sign-in details',
+              hint: 'Opens your share sheet',
+              onPress: () =>
+                Share.share({
+                  message: `Your CollApp representative account for ${created.name}\nEmail: ${created.email}\nTemporary password: ${created.password}\nPlease change it after signing in (Settings › Change password).`,
+                }),
+            },
+          ]}
+          cancelLabel="Done">
+          <InfoRow label="Email" value={created.email} />
+          <InfoRow label="Temporary password" value={created.password} />
+        </ActionSheet>
+      ) : null}
     </FormScreen>
   );
 }

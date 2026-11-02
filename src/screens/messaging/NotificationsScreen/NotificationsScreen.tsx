@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack } from 'expo-router';
 import { useState, type ComponentProps } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
 import { FilterTabs } from '@/components/FilterTabs';
@@ -29,6 +30,7 @@ const MATCHES: Record<Filter, (n: AppNotification) => boolean> = {
 /** SDD screen 17 — status updates, messages and reminders, newest first. */
 export function NotificationsScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(colors);
   const { role } = useAuth();
   const notifications = useNotifications();
@@ -82,7 +84,7 @@ export function NotificationsScreen() {
   return (
     <FlatList
       style={styles.root}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}
       data={visible}
       keyExtractor={(n) => n.id}
       refreshControl={

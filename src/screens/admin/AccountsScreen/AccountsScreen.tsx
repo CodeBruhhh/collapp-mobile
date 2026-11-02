@@ -1,12 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, FlatList, RefreshControl, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from 'react-native';
 
+import { ActionSheet, type SheetAction } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
+import { InfoRow } from '@/components/InfoRow';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/context/AuthContext';
@@ -19,7 +20,6 @@ import {
 } from '@/features/admin/hooks';
 import { collegeLocation } from '@/features/colleges/api';
 import { useTheme } from '@/hooks/useTheme';
-import { getErrorMessage } from '@/lib/validation';
 import { ROLE_LABELS } from '@/types/roles';
 
 import { createAdminStyles } from '../adminStyles';
@@ -39,8 +39,8 @@ const MAX_FEATURED = 10;
 
 /** SDD screen 28 — user and institution management. */
 export function AccountsScreen() {
-  const { colors } = useTheme();
-  const styles = createAdminStyles(colors);
+  const { colors, tokens } = useTheme();
+  const styles = createAdminStyles(colors, tokens);
   const { session } = useAuth();
   const [section, setSection] = useState<Section>('users');
   const [draftSearch, setDraftSearch] = useState('');
@@ -52,78 +52,149 @@ export function AccountsScreen() {
   const settings = usePlatformSettings();
   const { userStatus, collegeStatus, savePlatformSettings } = useAdminActions();
 
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedCollege, setSelectedCollege] = useState<AdminCollege | null>(null);
+
   const featured = settings.data?.featured_college_ids ?? [];
 
-  function run<T>(promise: Promise<T>, failure: string) {
-    promise.catch((e) => Alert.alert(failure, getErrorMessage(e)));
+  const isMe = (u: AdminUser) => u.id === session?.user.id;
+
+  function userActions(u: AdminUser): SheetAction[] {
+    if (isMe(u)) return [];
+    const name = u.full_name || u.email;
+    return u.status === 'active'
+      ? [
+          {
+            label: 'Suspend account',
+            hint: 'Signs them out and blocks access until reactivated',
+            destructive: true,
+            onPress: () => userStatus.mutateAsync([u.id, 'suspended']),
+            confirm: {
+              title: `Suspend ${name}?`,
+              message:
+                'They are signed out and lose access to all data immediately. You can reactivate them later.',
+              label: 'Suspend account',
+            },
+          },
+        ]
+      : [
+          {
+            label: 'Reactivate account',
+            hint: 'They can sign in and use CollApp again',
+            onPress: () => userStatus.mutateAsync([u.id, 'active']),
+          },
+        ];
   }
 
-  function manageUser(u: AdminUser) {
-    if (u.id === session?.user.id) {
-      Alert.alert('This is your account', 'Administrators cannot suspend themselves.');
-      return;
-    }
-    const suspending = u.status === 'active';
-    Alert.alert(
-      suspending ? `Suspend ${u.full_name || u.email}?` : `Reactivate ${u.full_name || u.email}?`,
-      suspending
-        ? 'They are signed out and lose access to all data immediately. You can reactivate them later.'
-        : 'They can sign in and use CollApp again.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: suspending ? 'Suspend' : 'Reactivate',
-          style: suspending ? 'destructive' : 'default',
-          onPress: () =>
-            run(
-              userStatus.mutateAsync([u.id, suspending ? 'suspended' : 'active']),
-              'Could not update the account',
-            ),
-        },
-      ],
-    );
-  }
-
-  function manageCollege(c: AdminCollege) {
+  function collegeActions(c: AdminCollege): SheetAction[] {
     const isFeatured = featured.includes(c.id);
     const published = c.profile_status === 'published';
-    Alert.alert(c.name, published ? 'Visible to students.' : 'Draft: hidden from students.', [
-      {
-        text: published ? 'Unpublish' : 'Publish',
-        style: published ? 'destructive' : 'default',
-        onPress: () =>
-          run(
-            collegeStatus.mutateAsync([c.id, published ? 'draft' : 'published']),
-            'Could not update the college',
-          ),
-      },
+    const featureFull = !isFeatured && featured.length >= MAX_FEATURED;
+    return [
+      published
+        ? {
+            label: 'Unpublish',
+            hint: 'Back to draft: students can no longer find it',
+            destructive: true,
+            onPress: () => collegeStatus.mutateAsync([c.id, 'draft']),
+            confirm: {
+              title: `Unpublish ${c.name}?`,
+              message:
+                'It disappears from search and the student home right away. Existing applications are kept.',
+              label: 'Unpublish college',
+            },
+          }
+        : {
+            label: 'Publish',
+            hint: 'Make it visible to students',
+            onPress: () => collegeStatus.mutateAsync([c.id, 'published']),
+          },
       ...(published || isFeatured
         ? [
             {
-              text: isFeatured ? 'Remove from featured' : 'Feature on student home',
-              onPress: () => {
-                if (!isFeatured && featured.length >= MAX_FEATURED) {
-                  Alert.alert('Too many featured', `Feature up to ${MAX_FEATURED} colleges.`);
-                  return;
-                }
-                run(
-                  savePlatformSettings.mutateAsync({
-                    featured_college_ids: isFeatured
-                      ? featured.filter((id) => id !== c.id)
-                      : [...featured, c.id],
-                  }),
-                  'Could not update featured colleges',
-                );
-              },
+              label: isFeatured ? 'Remove from featured' : 'Feature on student home',
+              hint: featureFull
+                ? `The featured list is full (${MAX_FEATURED}). Remove one first.`
+                : `${featured.length} of ${MAX_FEATURED} featured`,
+              disabled: featureFull,
+              onPress: () =>
+                savePlatformSettings.mutateAsync({
+                  featured_college_ids: isFeatured
+                    ? featured.filter((id) => id !== c.id)
+                    : [...featured, c.id],
+                }),
             },
           ]
         : []),
-      { text: 'Cancel', style: 'cancel' as const },
-    ]);
+    ];
   }
 
+  const sheets = (
+    <>
+      {selectedUser ? (
+        <ActionSheet
+          visible
+          onClose={() => setSelectedUser(null)}
+          eyebrow={ROLE_LABELS[selectedUser.role]}
+          title={selectedUser.full_name || 'No name'}
+          subtitle={selectedUser.email}
+          message={
+            isMe(selectedUser)
+              ? 'This is your account. Administrators cannot suspend themselves.'
+              : undefined
+          }
+          actions={userActions(selectedUser)}
+          cancelLabel="Close">
+          <InfoRow
+            label="Status"
+            value={selectedUser.status === 'active' ? 'Active' : 'Suspended'}
+          />
+          {selectedUser.college ? (
+            <InfoRow label="College" value={selectedUser.college.name} />
+          ) : null}
+        </ActionSheet>
+      ) : null}
+      {selectedCollege ? (
+        <ActionSheet
+          visible
+          onClose={() => setSelectedCollege(null)}
+          eyebrow="College"
+          title={selectedCollege.name}
+          subtitle={collegeLocation(selectedCollege) || undefined}
+          actions={collegeActions(selectedCollege)}
+          cancelLabel="Close">
+          <InfoRow
+            label="Visibility"
+            value={
+              selectedCollege.profile_status === 'published'
+                ? 'Published'
+                : 'Draft · hidden from students'
+            }
+          />
+          <InfoRow
+            label="Student home"
+            value={featured.includes(selectedCollege.id) ? 'Featured' : 'Not featured'}
+          />
+        </ActionSheet>
+      ) : null}
+    </>
+  );
+
+  const userList = (users.data ?? []).filter(USER_FILTERS[userFilter]);
+  const tally =
+    section === 'users'
+      ? users.data && `${userList.length} ${userList.length === 1 ? 'person' : 'people'}`
+      : colleges.data &&
+        `${colleges.data.length} ${colleges.data.length === 1 ? 'college' : 'colleges'} · ${featured.length} featured`;
+
   const header = (
-    <View style={styles.section}>
+    <View style={[styles.section, styles.listHeader]}>
+      <View style={styles.heading}>
+        <Text accessibilityRole="header" style={styles.title}>
+          Directory
+        </Text>
+        <Text style={styles.subtitle}>Who can sign in, and which colleges students can see.</Text>
+      </View>
       <FilterTabs<Section>
         value={section}
         onChange={setSection}
@@ -166,106 +237,124 @@ export function AccountsScreen() {
           onPress={() => router.push('/admin/college/new')}
         />
       )}
+      {tally ? <Text style={styles.tally}>{tally}</Text> : null}
     </View>
   );
 
   if (section === 'users') {
-    const list = (users.data ?? []).filter(USER_FILTERS[userFilter]);
     return (
-      <FlatList
-        style={styles.root}
-        contentContainerStyle={styles.content}
-        data={list}
-        keyExtractor={(u) => u.id}
-        ListHeaderComponent={header}
-        refreshControl={
-          <RefreshControl refreshing={users.isRefetching} onRefresh={users.refetch} />
-        }
-        ListEmptyComponent={
-          users.isPending ? (
-            <LoadingState />
-          ) : users.isError ? (
-            <ErrorState error={users.error} onRetry={users.refetch} />
-          ) : (
-            <EmptyState icon="people-outline" title="No users match" />
-          )
-        }
-        renderItem={({ item }) => (
-          <Card
-            onPress={() => manageUser(item)}
-            accessibilityLabel={`${item.full_name || item.email}, ${ROLE_LABELS[item.role]}, ${item.status}`}>
-            <View style={styles.rowBetween}>
-              <View style={styles.flex}>
-                <Text style={styles.cardTitle} numberOfLines={1}>
-                  {item.full_name || 'No name'}
-                  {item.id === session?.user.id ? ' (you)' : ''}
-                </Text>
-                <Text style={styles.meta} numberOfLines={1}>
-                  {item.email}
-                </Text>
-                <Text style={styles.meta} numberOfLines={1}>
-                  {ROLE_LABELS[item.role]}
-                  {item.college ? ` · ${item.college.name}` : ''}
-                </Text>
+      <>
+        <FlatList
+          style={styles.root}
+          contentContainerStyle={styles.listContent}
+          data={userList}
+          keyExtractor={(u) => u.id}
+          ListHeaderComponent={header}
+          refreshControl={
+            <RefreshControl refreshing={users.isRefetching} onRefresh={users.refetch} />
+          }
+          ListEmptyComponent={
+            users.isPending ? (
+              <LoadingState />
+            ) : users.isError ? (
+              <ErrorState error={users.error} onRetry={users.refetch} />
+            ) : (
+              <EmptyState icon="people-outline" title="No users match" />
+            )
+          }
+          renderItem={({ item, index }) => (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setSelectedUser(item)}
+              accessibilityLabel={`${item.full_name || item.email}, ${ROLE_LABELS[item.role]}, ${item.status}`}
+              style={({ pressed }) => [
+                styles.ledgerRow,
+                index === 0 && styles.ledgerTop,
+                pressed && styles.pressed,
+              ]}>
+              <View style={styles.rowBetween}>
+                <View style={styles.flex}>
+                  <Text style={styles.cardTitle} numberOfLines={1}>
+                    {item.full_name || 'No name'}
+                    {item.id === session?.user.id ? ' (you)' : ''}
+                  </Text>
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {item.email}
+                  </Text>
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {ROLE_LABELS[item.role]}
+                    {item.college ? ` · ${item.college.name}` : ''}
+                  </Text>
+                </View>
+                <StatusBadge
+                  label={item.status === 'active' ? 'Active' : 'Suspended'}
+                  color={item.status === 'active' ? colors.status.accepted : colors.danger}
+                />
               </View>
-              <StatusBadge
-                label={item.status === 'active' ? 'Active' : 'Suspended'}
-                color={item.status === 'active' ? colors.status.accepted : colors.danger}
-              />
-            </View>
-          </Card>
-        )}
-      />
+            </Pressable>
+          )}
+        />
+        {sheets}
+      </>
     );
   }
 
   return (
-    <FlatList
-      style={styles.root}
-      contentContainerStyle={styles.content}
-      data={colleges.data ?? []}
-      keyExtractor={(c) => c.id}
-      ListHeaderComponent={header}
-      refreshControl={
-        <RefreshControl refreshing={colleges.isRefetching} onRefresh={colleges.refetch} />
-      }
-      ListEmptyComponent={
-        colleges.isPending ? (
-          <LoadingState />
-        ) : colleges.isError ? (
-          <ErrorState error={colleges.error} onRetry={colleges.refetch} />
-        ) : (
-          <EmptyState icon="school-outline" title="No colleges yet" />
-        )
-      }
-      renderItem={({ item }) => {
-        const isFeatured = featured.includes(item.id);
-        const published = item.profile_status === 'published';
-        return (
-          <Card
-            onPress={() => manageCollege(item)}
-            accessibilityLabel={`${item.name}, ${published ? 'published' : 'draft'}${isFeatured ? ', featured' : ''}`}>
-            <View style={styles.row}>
-              <CollegeLogo name={item.name} logoPath={item.logo_path} size={44} />
-              <View style={styles.flex}>
-                <Text style={styles.cardTitle} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={styles.meta} numberOfLines={1}>
-                  {collegeLocation(item)}
-                </Text>
+    <>
+      <FlatList
+        style={styles.root}
+        contentContainerStyle={styles.listContent}
+        data={colleges.data ?? []}
+        keyExtractor={(c) => c.id}
+        ListHeaderComponent={header}
+        refreshControl={
+          <RefreshControl refreshing={colleges.isRefetching} onRefresh={colleges.refetch} />
+        }
+        ListEmptyComponent={
+          colleges.isPending ? (
+            <LoadingState />
+          ) : colleges.isError ? (
+            <ErrorState error={colleges.error} onRetry={colleges.refetch} />
+          ) : (
+            <EmptyState icon="school-outline" title="No colleges yet" />
+          )
+        }
+        renderItem={({ item, index }) => {
+          const isFeatured = featured.includes(item.id);
+          const published = item.profile_status === 'published';
+          return (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setSelectedCollege(item)}
+              accessibilityLabel={`${item.name}, ${published ? 'published' : 'draft'}${isFeatured ? ', featured' : ''}`}
+              style={({ pressed }) => [
+                styles.ledgerRow,
+                index === 0 && styles.ledgerTop,
+                pressed && styles.pressed,
+              ]}>
+              <View style={styles.row}>
+                <CollegeLogo name={item.name} logoPath={item.logo_path} size={40} />
+                <View style={styles.flex}>
+                  <Text style={styles.cardTitle} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {collegeLocation(item)}
+                  </Text>
+                </View>
+                <View style={styles.badges}>
+                  <StatusBadge
+                    label={published ? 'Published' : 'Draft'}
+                    color={published ? colors.status.accepted : colors.status.draft}
+                  />
+                  {isFeatured ? <StatusBadge label="Featured" color={colors.primary} /> : null}
+                </View>
               </View>
-              {isFeatured ? (
-                <Ionicons name="star" size={18} color={colors.status.underReview} />
-              ) : null}
-            </View>
-            <StatusBadge
-              label={published ? 'Published' : 'Draft'}
-              color={published ? colors.status.accepted : colors.status.draft}
-            />
-          </Card>
-        );
-      }}
-    />
+            </Pressable>
+          );
+        }}
+      />
+      {sheets}
+    </>
   );
 }

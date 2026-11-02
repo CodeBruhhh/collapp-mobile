@@ -4,13 +4,13 @@ import {
   CONTROL_HEIGHT,
   fontSize,
   fontWeight,
-  radius,
   spacing,
   TOUCH_TARGET,
   type ThemeColors,
+  type ThemeTokens,
 } from '@/styles';
 
-export const createStyles = (c: ThemeColors) =>
+export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
   StyleSheet.create({
     root: { gap: spacing.xs },
     label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.text },
@@ -20,7 +20,7 @@ export const createStyles = (c: ThemeColors) =>
       minHeight: CONTROL_HEIGHT,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: radius.md,
+      borderRadius: t.radius.md,
       backgroundColor: c.surface,
     },
     inputRowFocused: { borderColor: c.primary },

@@ -8,7 +8,9 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   Text,
   TextInput,
@@ -93,6 +95,17 @@ export function ChatScreen({ id }: { id: string }) {
   const markRead = useMarkThreadRead(id);
 
   const [body, setBody] = useState('');
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  useEffect(() => {
+    // iOS reports the keyboard before it animates in; Android only after.
+    const show = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hide = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const subs = [
+      Keyboard.addListener(show, () => setKeyboardOpen(true)),
+      Keyboard.addListener(hide, () => setKeyboardOpen(false)),
+    ];
+    return () => subs.forEach((s) => s.remove());
+  }, []);
   const [attachment, setAttachment] = useState<LocalFile | null>(null);
   // Kept so a failed bubble can be re-sent with the same id (no duplicates).
   const [sent, setSent] = useState<Record<string, Draft>>({});
@@ -165,6 +178,10 @@ export function ChatScreen({ id }: { id: string }) {
 
   if (thread.isError) return <ErrorState error={thread.error} onRetry={thread.refetch} />;
 
+  // The keyboard covers the system navigation bar, so the composer only keeps
+  // its bottom safe-area padding while the keyboard is closed.
+  const footerEdges = keyboardOpen ? [] : (['bottom'] as const);
+
   const canSend = online && Boolean(body.trim() || attachment);
   const attachingPhoto = attachment?.mimeType.startsWith('image/');
 
@@ -234,13 +251,13 @@ export function ChatScreen({ id }: { id: string }) {
       )}
 
       {readOnly ? (
-        <SafeAreaView edges={['bottom']} style={styles.footer}>
+        <SafeAreaView edges={footerEdges} style={styles.footer}>
           <Text style={[styles.notice, styles.readOnlyNotice]}>
             Audit view: administrators can read student conversations but not reply.
           </Text>
         </SafeAreaView>
       ) : (
-        <SafeAreaView edges={['bottom']} style={styles.footer}>
+        <SafeAreaView edges={footerEdges} style={styles.footer}>
           {!online ? (
             <Text style={styles.notice}>You&apos;re offline. Reconnect to send messages.</Text>
           ) : null}

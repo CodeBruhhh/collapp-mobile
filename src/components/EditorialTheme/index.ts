@@ -1,0 +1,1 @@
+export { EditorialTheme } from './EditorialTheme';

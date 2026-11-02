@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
@@ -13,8 +14,8 @@ import { createStyles } from './AccountButton.styles';
  */
 export function AccountButton() {
   const { role } = useAuth();
-  const { colors } = useTheme();
-  const styles = createStyles();
+  const { colors, tokens } = useTheme();
+  const styles = createStyles(colors);
   if (role !== 'school_rep' && role !== 'admin') return null;
 
   return (
@@ -22,8 +23,18 @@ export function AccountButton() {
       accessibilityRole="button"
       accessibilityLabel="Profile and settings"
       onPress={() => router.push(role === 'admin' ? '/admin/account' : '/rep/account')}
-      style={styles.button}>
-      <Ionicons name="person-circle-outline" size={26} color={colors.text} />
+      style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
+      {tokens.editorial ? (
+        <View style={styles.avatar}>
+          <Image
+            source={require('@/assets/images/editorial/profile.svg')}
+            style={styles.glyph}
+            tintColor={colors.primary}
+          />
+        </View>
+      ) : (
+        <Ionicons name="person-circle-outline" size={26} color={colors.text} />
+      )}
     </Pressable>
   );
 }
