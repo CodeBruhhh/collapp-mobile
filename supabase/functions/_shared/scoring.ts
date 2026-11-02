@@ -88,10 +88,13 @@ const INTEREST_KEYWORDS: Record<string, string[]> = {
   'Public Service': ['public', 'administration', 'political', 'social', 'criminology'],
 };
 
-/** Strands a program usually fits when the college didn't list any. */
+/**
+ * Strands a program usually fits when the college didn't list any. "Science"
+ * alone is not a STEM signal: Political or Social Science are HUMSS programs.
+ */
 const STRAND_HINTS: [RegExp, string[]][] = [
   [
-    /engineer|computer|information tech|science|nursing|medical|pharmacy|architect|math|biology/i,
+    /engineer|computer|information tech|data science|natural science|environmental science|marine science|food science|nursing|medical|pharmacy|architect|math|biology|chemistry|physics/i,
     ['STEM'],
   ],
   [
@@ -108,6 +111,9 @@ const STRAND_HINTS: [RegExp, string[]][] = [
   [/physical education|sports/i, ['Sports']],
 ];
 
+/** Strands the hints can speak for; any other strand is scored neutrally, never penalized. */
+const HINTED_STRANDS = new Set(STRAND_HINTS.flatMap(([, s]) => s.map((x) => x.toLowerCase())));
+
 const pct = (x: number) => Math.round(Math.max(0, Math.min(1, x)) * 100);
 
 function strandFit(
@@ -122,7 +128,9 @@ function strandFit(
       : { value: 0.2 };
   }
   const inferred = STRAND_HINTS.filter(([re]) => re.test(program.name)).flatMap(([, s]) => s);
-  if (!inferred.length || student.strand === 'GAS') return { value: 0.6 };
+  // GAS, "Academic Track", "Technical-Professional Track" and other strands the
+  // hints don't cover get a neutral score instead of looking like a mismatch.
+  if (!inferred.length || !HINTED_STRANDS.has(strand)) return { value: 0.6 };
   return inferred.some((s) => s.toLowerCase() === strand)
     ? { value: 0.85, reason: `${student.strand} prepares you well for this program` }
     : { value: 0.35 };
@@ -220,9 +228,11 @@ export function matchScore(
 }
 
 export type ApplicationInput = {
-  isFirstChoice: boolean;
   essay: string | null;
+  /** Whether the college asks for an essay; if not, the essay is left out of fit. */
+  essayRequired: boolean;
   requiredDocuments: number;
+  /** Required documents uploaded and not flagged (pending or approved). */
   submittedDocuments: number;
   approvedDocuments: number;
   followsCollege: boolean;
@@ -243,6 +253,7 @@ export function applicantScore(
   const academic = academicFit(student, program);
   const strand = strandFit(student, program);
   const major = courseFit(student, text, semantic).value;
+  // Uploaded counts half, approved counts fully; flagged documents earn nothing.
   const docs = app.requiredDocuments
     ? Math.min(1, (app.submittedDocuments + app.approvedDocuments) / (2 * app.requiredDocuments))
     : 1;
@@ -252,23 +263,33 @@ export function applicantScore(
   if (academic.reason) reasons.push(academic.reason);
   if (strand.reason) reasons.push(strand.reason);
   if (major >= 0.5) reasons.push('Program matches the course the student wants');
-  if (docs === 1) reasons.push('All required documents approved');
-  if (words >= 250) reasons.push('Substantial essay');
+  if (app.requiredDocuments > 0 && app.approvedDocuments >= app.requiredDocuments) {
+    reasons.push('All required documents approved');
+  }
+  if (app.essayRequired && words >= 250) reasons.push('Substantial essay');
 
-  const fit = 0.35 * academic.value + 0.2 * strand.value + 0.2 * major + 0.15 * docs + 0.1 * essay;
+  // Essay counts only when the college asks for one; otherwise its weight is
+  // shared out so applicants to essay-free programs are not marked down.
+  const parts: [weight: number, value: number][] = [
+    [0.35, academic.value],
+    [0.2, strand.value],
+    [0.2, major],
+    [0.15, docs],
+    ...(app.essayRequired ? ([[0.1, essay]] as [number, number][]) : []),
+  ];
+  const totalWeight = parts.reduce((sum, [w]) => sum + w, 0);
+  const fit = parts.reduce((sum, [w, v]) => sum + w * v, 0) / totalWeight;
 
-  const nearby =
+  // Likelihood signals the app actually knows (no college ranking is collected).
+  const nearby = Boolean(
     college.region &&
-    (student.region === college.region || student.preferred_locations.includes(college.region));
-  if (app.isFirstChoice) reasons.push('Applied as first choice');
+    (student.region === college.region || student.preferred_locations.includes(college.region)),
+  );
   if (nearby) reasons.push('Lives in or prefers this region');
-  if (app.followsCollege) reasons.push('Follows the college');
+  if (app.followsCollege) reasons.push('Saved this college');
   const competition = 1 / (1 + Math.max(0, app.otherActiveApplications) * 0.35);
   const likelihood =
-    0.3 * (app.isFirstChoice ? 1 : 0.55) +
-    0.25 * (nearby ? 1 : 0.4) +
-    0.15 * (app.followsCollege ? 1 : 0.5) +
-    0.3 * competition;
+    0.4 * (nearby ? 1 : 0.3) + 0.2 * (app.followsCollege ? 1 : 0.4) + 0.4 * competition;
 
   return {
     fit: pct(fit),
@@ -278,10 +299,11 @@ export function applicantScore(
       strand: pct(strand.value),
       course_match: pct(major),
       documents: pct(docs),
-      essay: pct(essay),
-      first_choice: app.isFirstChoice ? 100 : 55,
-      proximity: nearby ? 100 : 40,
+      // -1 = not part of the score (no essay required).
+      essay: app.essayRequired ? pct(essay) : -1,
+      proximity: nearby ? 100 : 30,
       competing_applications: app.otherActiveApplications,
+      semantic_used: semantic === undefined ? 0 : 1,
     },
     reasons,
   };

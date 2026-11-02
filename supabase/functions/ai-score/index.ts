@@ -1,6 +1,10 @@
 // AI Applicant Scoring (SRS 3.1.2.2, SDD 5): institutional fit and predicted
 // enrollment likelihood for one application, saved to ai_scores. Advisory only:
 // students may trigger scoring of their own submission but never see the result.
+// Called by the database (submit, document review, profile edits) with the
+// webhook secret, or by a signed-in rep/admin from the app (Recalculate).
+// Deployed with verify_jwt off because database calls carry no user JWT; both
+// paths are authenticated below.
 import {
   cosine,
   programEmbeddings,
@@ -9,19 +13,24 @@ import {
   studentEmbedding,
   studentText,
 } from '../_shared/embeddings.ts';
-import { adminClient, corsHeaders, getCaller, json } from '../_shared/http.ts';
+import { adminClient, corsHeaders, getCaller, json, type Caller } from '../_shared/http.ts';
 import { applicantScore } from '../_shared/scoring.ts';
+import { isFromDatabase } from '../_shared/webhook.ts';
+
+const ACTIVE = ['submitted', 'under_review', 'action_required'];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
   const admin = adminClient();
-  const caller = await getCaller(req, admin);
-  if (!caller) return json({ error: 'Not signed in' }, 401);
+  const fromDatabase = await isFromDatabase(req, admin);
+  const caller: Caller | null = fromDatabase ? null : await getCaller(req, admin);
+  if (!fromDatabase && !caller) return json({ error: 'Not signed in' }, 401);
 
   const body = await req.json().catch(() => null);
-  const applicationId = typeof body?.applicationId === 'string' ? body.applicationId : null;
+  const raw = body?.applicationId ?? body?.application_id;
+  const applicationId = typeof raw === 'string' ? raw : null;
   if (!applicationId) return json({ error: 'applicationId is required' }, 400);
 
   const { data: app, error } = await admin
@@ -37,11 +46,15 @@ Deno.serve(async (req) => {
   if (error || !app) return json({ error: 'Application not found' }, 404);
 
   const allowed =
-    caller.role === 'admin' ||
-    (caller.role === 'school_rep' && caller.collegeId === app.college_id) ||
-    (caller.role === 'student' && caller.id === app.student_id);
+    fromDatabase ||
+    caller?.role === 'admin' ||
+    (caller?.role === 'school_rep' && caller.collegeId === app.college_id) ||
+    (caller?.role === 'student' && caller.id === app.student_id);
   if (!allowed) return json({ error: 'Not allowed' }, 403);
-  if (app.status === 'draft') return json({ error: 'Only submitted applications are scored' }, 400);
+  // Decided applications keep the score they were decided on.
+  if (!ACTIVE.includes(app.status)) {
+    return json({ error: 'Only applications under consideration are scored' }, 400);
+  }
 
   const [{ data: s }, { data: requirements }, { count: follows }, { count: others }] =
     await Promise.all([
@@ -52,9 +65,8 @@ Deno.serve(async (req) => {
         .single(),
       admin
         .from('requirements')
-        .select('id, program_id')
+        .select('id, program_id, kind')
         .eq('college_id', app.college_id)
-        .eq('kind', 'document')
         .eq('is_required', true),
       admin
         .from('follows')
@@ -71,13 +83,24 @@ Deno.serve(async (req) => {
   if (!s || !app.program || !app.college)
     return json({ error: 'Incomplete application data' }, 400);
 
-  const required = (requirements ?? []).filter(
+  const applicable = (requirements ?? []).filter(
     (r) => r.program_id === null || r.program_id === app.program_id,
   );
-  const requiredIds = new Set(required.map((r) => r.id));
-  const relevantDocs = app.documents.filter(
-    (d) => d.requirement_id && requiredIds.has(d.requirement_id),
-  );
+  const required = applicable.filter((r) => r.kind === 'document');
+  const essayRequired = applicable.some((r) => r.kind === 'essay');
+  // One entry per requirement (best status wins); flagged documents earn nothing.
+  const rank: Record<string, number> = { approved: 3, pending: 2, resubmit: 1, rejected: 0 };
+  const best = new Map<string, string>();
+  for (const d of app.documents) {
+    if (!d.requirement_id || !required.some((r) => r.id === d.requirement_id)) continue;
+    const prev = best.get(d.requirement_id);
+    if (prev === undefined || (rank[d.review_status] ?? 0) > (rank[prev] ?? 0)) {
+      best.set(d.requirement_id, d.review_status);
+    }
+  }
+  const statuses = [...best.values()];
+  const approvedDocuments = statuses.filter((st) => st === 'approved').length;
+  const submittedDocuments = statuses.filter((st) => st === 'approved' || st === 'pending').length;
 
   // Semantic course match from the embedding model; rules only if it fails.
   let semantic: number | undefined;
@@ -105,12 +128,11 @@ Deno.serve(async (req) => {
     { ...app.program, min_gpa: app.program.min_gpa === null ? null : Number(app.program.min_gpa) },
     app.college,
     {
-      // program_id is always the student's first choice.
-      isFirstChoice: true,
       essay: app.essay,
+      essayRequired,
       requiredDocuments: required.length,
-      submittedDocuments: relevantDocs.length,
-      approvedDocuments: relevantDocs.filter((d) => d.review_status === 'approved').length,
+      submittedDocuments,
+      approvedDocuments,
       followsCollege: (follows ?? 0) > 0,
       otherActiveApplications: others ?? 0,
     },
@@ -130,8 +152,8 @@ Deno.serve(async (req) => {
   );
   if (upsertError) return json({ error: upsertError.message }, 500);
 
-  // Scores are staff-only; students just learn that scoring ran.
-  return caller.role === 'student'
+  // Scores are staff-only; students (and the database) just learn that scoring ran.
+  return !caller || caller.role === 'student'
     ? json({ ok: true })
     : json({ ok: true, fit_score: result.fit, enrollment_likelihood: result.likelihood });
 });

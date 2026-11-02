@@ -14,7 +14,6 @@ import {
 import { keepLocalVersion, keepServerVersion } from '@/lib/offline/sync';
 import type { LocalFile } from '@/lib/storage';
 
-import { scoreApplication } from '@/features/ai/api';
 import { useColleges } from '@/features/colleges/hooks';
 
 import {
@@ -250,9 +249,8 @@ export function useOfflineDraft(collegeId: string) {
     if (stuck) {
       throw new Error('Some changes are still uploading. Check your connection and try again.');
     }
+    // The database scores it for the admissions team on submit (SRS 3.1.2.2).
     await submitApplication(draft.id);
-    // Score for the admissions team in the background; students never see it (SRS 3.1.2.2).
-    scoreApplication(draft.id).catch(() => {});
     await queryClient.invalidateQueries({ queryKey: applicationKeys.all });
   }
 

@@ -82,4 +82,14 @@ export const createRepStyles = (c: ThemeColors) =>
     },
     docPreviewImage: { width: '100%', height: '100%' },
     postImage: { width: '100%', aspectRatio: 16 / 9, borderRadius: radius.md },
+    headerIcon: {
+      width: TOUCH_TARGET,
+      height: TOUCH_TARGET,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerBlock: { gap: spacing.sm },
+    decisionCard: { borderLeftWidth: 4 },
+    reason: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+    footerHint: { fontSize: fontSize.xs, color: c.textMuted, textAlign: 'center' },
   });
