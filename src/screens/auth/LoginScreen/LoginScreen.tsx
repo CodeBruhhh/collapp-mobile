@@ -3,13 +3,13 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { FormScreen } from '@/components/FormScreen';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { loginSchema } from '@/features/auth/schemas';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
+import { AuthLayout } from '../AuthLayout';
 import { createAuthStyles } from '../authStyles';
 import { GoogleButton } from '../GoogleButton';
 
@@ -47,16 +47,10 @@ export function LoginScreen() {
   }
 
   return (
-    <FormScreen centered>
-      <View style={styles.header}>
-        <Text accessibilityRole="header" style={styles.brand}>
-          CollApp
-        </Text>
-        <Text style={[styles.subtitle, styles.centeredText]}>
-          Your college applications, in one app.
-        </Text>
-      </View>
-
+    <AuthLayout
+      brand
+      eyebrow="College applications"
+      subtitle="Your college applications, in one app.">
       <View style={styles.form}>
         <TextField
           label="Email"
@@ -99,13 +93,19 @@ export function LoginScreen() {
         <View style={styles.actions}>
           <Button label="Sign in" onPress={handleSubmit} loading={submitting} />
           <GoogleButton onError={setFormError} />
+        </View>
+      </View>
+
+      <View style={styles.push}>
+        <View style={styles.row}>
+          <Text style={styles.muted}>New here?</Text>
           <Button
+            variant="link"
             label="Create a student account"
-            variant="secondary"
             onPress={() => router.push('/register')}
           />
         </View>
       </View>
-    </FormScreen>
+    </AuthLayout>
   );
 }

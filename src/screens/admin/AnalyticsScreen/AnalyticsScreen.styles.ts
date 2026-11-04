@@ -2,9 +2,6 @@ import { StyleSheet } from 'react-native';
 
 import { fonts, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
 
-/** Tallest submission bar; the plot leaves room above it for the value label. */
-export const CHART_MAX_BAR = 88;
-const PLOT_HEIGHT = 114;
 /** "Editorial Teal" (Figma 6:1930); colors come from the admin theme. */
 const GUTTER = spacing.lg;
 
@@ -15,16 +12,6 @@ export const createAnalyticsStyles = (c: ThemeColors) =>
 
     // Overview
     overview: { padding: GUTTER, gap: 26 },
-    heading: { gap: 10 },
-    titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    title: {
-      flex: 1,
-      fontFamily: fonts.serif,
-      fontSize: 27,
-      lineHeight: 32,
-      letterSpacing: -1.1,
-      color: c.text,
-    },
     iconButton: {
       width: TOUCH_TARGET,
       height: TOUCH_TARGET,
@@ -32,24 +19,7 @@ export const createAnalyticsStyles = (c: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    subtitle: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 21, color: c.textMuted },
     totals: { flexDirection: 'row', gap: GUTTER },
-    panel: { width: 164, height: 160, padding: 18, justifyContent: 'space-between' },
-    panelShape: { position: 'absolute', top: 0, left: 0, width: 164, height: 160 },
-    panelHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    panelLabel: { fontFamily: fonts.regular, fontSize: 13, color: c.onPrimary },
-    panelValue: { fontFamily: fonts.serif, fontSize: 64, lineHeight: 72, color: c.onPrimary },
-    accountTotals: { flex: 1 },
-    metric: {
-      height: 53,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: c.border,
-    },
-    metricLabel: { fontFamily: fonts.regular, fontSize: 14, color: c.textMuted },
-    metricValue: { fontFamily: fonts.regular, fontSize: 28, letterSpacing: -1, color: c.text },
 
     // Shared section chrome
     section: { paddingHorizontal: GUTTER, paddingVertical: 28, gap: 18 },
@@ -74,29 +44,9 @@ export const createAnalyticsStyles = (c: ThemeColors) =>
     total: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm },
     totalValue: { fontFamily: fonts.serif, fontSize: 34, letterSpacing: -1, color: c.primary },
     totalMeta: { fontFamily: fonts.regular, fontSize: 13, color: c.textMuted },
-    chart: { gap: 9 },
-    plot: { height: PLOT_HEIGHT, flexDirection: 'row', alignItems: 'flex-end' },
-    guide: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: c.border },
-    upperGuide: { top: PLOT_HEIGHT - CHART_MAX_BAR - 8 },
-    baseline: { bottom: 0 },
-    barColumn: { flex: 1, alignItems: 'center', gap: 6 },
-    barValue: { fontFamily: fonts.regular, fontSize: 11, color: c.textMuted },
-    barValueActive: { fontFamily: fonts.semibold, color: c.primary },
-    bar: { width: 23, height: 2, backgroundColor: c.border },
-    barActive: { backgroundColor: c.primary },
-    weekLabels: { flexDirection: 'row' },
-    weekLabel: {
-      flex: 1,
-      fontFamily: fonts.regular,
-      fontSize: 10,
-      textAlign: 'center',
-      color: c.textMuted,
-    },
-    weekLabelActive: { color: c.primary },
 
     // Applications by status
     statusRow: { height: 44, flexDirection: 'row', alignItems: 'center', gap: 14 },
-    statusIcon: { width: 16, height: 16 },
     statusLabel: { flex: 1, fontFamily: fonts.regular, fontSize: 14, color: c.text },
     statusLabelAccent: { fontFamily: fonts.semibold, color: c.primary },
     statusCount: { fontFamily: fonts.regular, fontSize: 16, color: c.textMuted },

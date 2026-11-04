@@ -65,7 +65,7 @@ export function BroadcastScreen() {
   }
 
   return (
-    <FormScreen>
+    <FormScreen underHeader>
       <View style={styles.heading}>
         <Text accessibilityRole="header" style={styles.title}>
           Announcements

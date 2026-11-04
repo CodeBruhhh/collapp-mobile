@@ -1,7 +1,7 @@
 import { router, Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
@@ -16,6 +16,7 @@ import { collegeLocation, requirementsFor } from '@/features/colleges/api';
 import { useCollege, useFollowedColleges, useToggleFollow } from '@/features/colleges/hooks';
 import { useStartThread } from '@/features/messaging/hooks';
 import { useTheme } from '@/hooks/useTheme';
+import { notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
 
 import { createStyles } from './CollegeDetailScreen.styles';
@@ -68,7 +69,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
     try {
       await toggleFollow.mutateAsync({ collegeId: c.id, following: !isSaved });
     } catch (e) {
-      Alert.alert('Could not update', getErrorMessage(e));
+      notify.error('Could not update', getErrorMessage(e));
     }
   }
 
@@ -78,7 +79,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
       const thread = await startThread.mutateAsync({ collegeId: c.id });
       router.push({ pathname: '/student/thread/[id]', params: { id: thread.id } });
     } catch (e) {
-      Alert.alert('Could not open conversation', getErrorMessage(e));
+      notify.error('Could not open conversation', getErrorMessage(e));
     }
   }
 

@@ -1,12 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { ChipGroup } from '@/components/ChipGroup';
 import { DateField } from '@/components/DateField';
 import { FormScreen } from '@/components/FormScreen';
+import { Stepper } from '@/components/Stepper';
+import { StickyActionBar } from '@/components/StickyActionBar';
 import { Select } from '@/components/Select';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
@@ -17,6 +19,7 @@ import { fetchStudentProfile, saveFullName, saveStudentProfile } from '@/feature
 import { INTEREST_OPTIONS, MAJOR_OPTIONS, SHS_STRANDS } from '@/features/profile/constants';
 import { academicSchema, addressSchema, personalSchema } from '@/features/profile/schemas';
 import { useTheme } from '@/hooks/useTheme';
+import { notify } from '@/lib/feedback';
 import { getErrorMessage, validate } from '@/lib/validation';
 
 import { createStyles } from './OnboardingScreen.styles';
@@ -229,33 +232,63 @@ export function OnboardingScreen({ mode = 'onboarding' }: OnboardingScreenProps)
         await refreshProfile();
       }
     } catch (error) {
-      Alert.alert('Could not save', getErrorMessage(error));
+      notify.error('Could not save', getErrorMessage(error));
     } finally {
       setSaving(false);
     }
   }
 
-  const progress = (step + 1) / STEPS.length;
-
   return (
-    <FormScreen>
+    <FormScreen
+      underHeader={editing}
+      footer={
+        <StickyActionBar>
+          {step > 0 ? (
+            <View style={styles.side}>
+              <Button
+                variant="secondary"
+                label="Back"
+                onPress={() => setStep((s) => s - 1)}
+                disabled={saving}
+              />
+            </View>
+          ) : editing ? (
+            <View style={styles.side}>
+              <Button
+                variant="link"
+                label="Cancel"
+                onPress={() => router.back()}
+                disabled={saving}
+              />
+            </View>
+          ) : (
+            <View style={styles.side}>
+              <Button variant="link" label="Sign out" onPress={signOut} />
+            </View>
+          )}
+          <View style={styles.main}>
+            <Button
+              label={step === STEPS.length - 1 ? (editing ? 'Save changes' : 'Finish') : 'Next'}
+              onPress={handleNext}
+              loading={saving}
+            />
+          </View>
+        </StickyActionBar>
+      }>
       {editing ? <Stack.Screen options={{ title: 'Edit profile' }} /> : null}
       <View style={styles.header}>
-        <Text accessibilityRole="header" style={styles.title}>
-          {editing ? 'Edit academic profile' : 'Academic profile'}
-        </Text>
-        <Text style={styles.step}>
-          Step {step + 1} of {STEPS.length}: {STEPS[step]}
-        </Text>
-        <View
-          accessibilityRole="progressbar"
-          accessibilityValue={{ min: 0, max: STEPS.length, now: step + 1 }}
-          style={styles.track}>
-          <View style={[styles.fill, { width: `${progress * 100}%` }]} />
+        <Stepper steps={STEPS} current={step} />
+        <View style={styles.heading}>
+          <Text style={styles.eyebrow}>
+            {editing ? 'Edit academic profile' : 'Academic profile'}
+          </Text>
+          <Text accessibilityRole="header" style={styles.title}>
+            {STEPS[step]}
+          </Text>
+          <Text style={styles.subtitle}>
+            This personalizes your college recommendations and pre-fills your applications.
+          </Text>
         </View>
-        <Text style={styles.subtitle}>
-          This personalizes your college recommendations and pre-fills your applications.
-        </Text>
       </View>
 
       {step === 0 ? (
@@ -455,26 +488,6 @@ export function OnboardingScreen({ mode = 'onboarding' }: OnboardingScreenProps)
           />
         </View>
       ) : null}
-
-      <View style={styles.actions}>
-        <Button
-          label={step === STEPS.length - 1 ? (editing ? 'Save changes' : 'Finish') : 'Next'}
-          onPress={handleNext}
-          loading={saving}
-        />
-        {step > 0 ? (
-          <Button
-            variant="secondary"
-            label="Back"
-            onPress={() => setStep((s) => s - 1)}
-            disabled={saving}
-          />
-        ) : editing ? (
-          <Button variant="link" label="Cancel" onPress={() => router.back()} disabled={saving} />
-        ) : (
-          <Button variant="link" label="Sign out" onPress={signOut} />
-        )}
-      </View>
     </FormScreen>
   );
 }

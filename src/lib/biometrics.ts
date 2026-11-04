@@ -1,6 +1,6 @@
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
-import { Alert } from 'react-native';
+import { ask } from '@/lib/feedback';
 
 // Biometrics only gate an existing session on this device; they never replace
 // the password (SPMP R10). The opt-in flag is stored per user in the keychain.
@@ -30,7 +30,7 @@ export async function setBiometricEnabled(userId: string, enabled: boolean): Pro
 /** After a password sign-in, offer biometric unlock once if the device supports it. */
 export async function offerBiometricUnlock(userId: string): Promise<void> {
   if (!(await isBiometricAvailable()) || (await isBiometricEnabled(userId))) return;
-  Alert.alert('Unlock faster next time?', 'Use Face ID or your fingerprint to open CollApp.', [
+  ask('Unlock faster next time?', 'Use Face ID or your fingerprint to open CollApp.', [
     { text: 'Not now', style: 'cancel' },
     {
       text: 'Enable',

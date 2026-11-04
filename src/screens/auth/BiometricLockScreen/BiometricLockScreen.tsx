@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { FormScreen } from '@/components/FormScreen';
 import { Icon } from '@/components/Icon';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 
+import { AuthLayout } from '../AuthLayout';
 import { createAuthStyles } from '../authStyles';
 
 /** SDD screen 4. Shown over a restored session when biometric unlock is enabled. */
@@ -34,18 +34,16 @@ export function BiometricLockScreen() {
   }, []);
 
   return (
-    <FormScreen centered>
-      <View style={[styles.header, { alignItems: 'center' }]}>
-        <Icon name="finger-print" size={72} color={colors.primary} />
-        <Text accessibilityRole="header" style={[styles.title, styles.centeredText]}>
-          Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}
-        </Text>
-        <Text style={[styles.subtitle, styles.centeredText]}>
-          Use your device biometrics to continue.
-        </Text>
+    <AuthLayout
+      brand
+      eyebrow="Unlock"
+      subtitle={`Welcome back${profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}`}>
+      <View style={styles.lockMark}>
+        <Icon name="finger-print" size={56} color={colors.primary} />
       </View>
+      <Text style={styles.bodyText}>Use your device biometrics to continue.</Text>
       {failed ? (
-        <Text accessibilityLiveRegion="polite" style={[styles.errorText, styles.centeredText]}>
+        <Text accessibilityLiveRegion="polite" style={styles.errorText}>
           Biometric check didn&apos;t succeed. Try again or sign in with your password.
         </Text>
       ) : null}
@@ -53,6 +51,6 @@ export function BiometricLockScreen() {
         <Button label="Use biometrics" onPress={attempt} />
         <Button variant="link" label="Use password instead" onPress={signOut} />
       </View>
-    </FormScreen>
+    </AuthLayout>
   );
 }

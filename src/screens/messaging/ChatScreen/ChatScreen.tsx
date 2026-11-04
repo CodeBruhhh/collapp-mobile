@@ -6,7 +6,6 @@ import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
 import {
-  Alert,
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
@@ -34,6 +33,7 @@ import {
 } from '@/features/messaging/hooks';
 import { useIsOnline } from '@/hooks/useIsOnline';
 import { useTheme } from '@/hooks/useTheme';
+import { ask, notify } from '@/lib/feedback';
 import { pickAttachmentFile } from '@/lib/pickers';
 import type { LocalFile } from '@/lib/storage';
 import { getErrorMessage } from '@/lib/validation';
@@ -135,7 +135,7 @@ export function ChatScreen({ id }: { id: string }) {
 
   /** An unsent message from before a restart: its file and text are gone, so remove it. */
   function discardUnsent(messageId: string) {
-    Alert.alert('Message not sent', 'This message was not delivered. Please write it again.', [
+    ask('Message not sent', 'This message was not delivered. Please write it again.', [
       {
         text: 'Remove',
         onPress: () =>
@@ -161,7 +161,7 @@ export function ChatScreen({ id }: { id: string }) {
       const file = await pickAttachmentFile();
       if (file) setAttachment(file);
     } catch (e) {
-      Alert.alert('Cannot attach this file', getErrorMessage(e));
+      notify.error('Cannot attach this file', getErrorMessage(e));
     }
   }
 
@@ -174,7 +174,7 @@ export function ChatScreen({ id }: { id: string }) {
         presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
       });
     } catch (e) {
-      Alert.alert('Could not open the file', getErrorMessage(e));
+      notify.error('Could not open the file', getErrorMessage(e));
     } finally {
       setOpening(false);
     }

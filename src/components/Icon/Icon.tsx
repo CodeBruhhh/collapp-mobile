@@ -30,6 +30,7 @@ const ICONS = {
   'close-circle-filled': require('@/assets/images/editorial/close-circle-filled.svg'),
   'cloud-offline': require('@/assets/images/editorial/cloud-offline.svg'),
   'cloud-upload': require('@/assets/images/editorial/cloud-upload.svg'),
+  college: require('@/assets/images/editorial/college.svg'),
   construct: require('@/assets/images/editorial/construct.svg'),
   create: require('@/assets/images/editorial/create.svg'),
   document: require('@/assets/images/editorial/document.svg'),
@@ -48,6 +49,7 @@ const ICONS = {
   'logo-google': require('@/assets/images/editorial/logo-google.svg'),
   megaphone: require('@/assets/images/editorial/megaphone.svg'),
   notifications: require('@/assets/images/editorial/notifications.svg'),
+  options: require('@/assets/images/editorial/options.svg'),
   people: require('@/assets/images/editorial/people.svg'),
   person: require('@/assets/images/editorial/person.svg'),
   'person-add': require('@/assets/images/editorial/person-add.svg'),
@@ -63,6 +65,12 @@ const ICONS = {
   'sign-out': require('@/assets/images/editorial/sign-out.svg'),
   sparkles: require('@/assets/images/editorial/sparkles.svg'),
   square: require('@/assets/images/editorial/square.svg'),
+  'status-accepted': require('@/assets/images/editorial/status-accepted.svg'),
+  'status-action-required': require('@/assets/images/editorial/status-action-required.svg'),
+  'status-draft': require('@/assets/images/editorial/status-draft.svg'),
+  'status-rejected': require('@/assets/images/editorial/status-rejected.svg'),
+  'status-submitted': require('@/assets/images/editorial/status-submitted.svg'),
+  'status-under-review': require('@/assets/images/editorial/status-under-review.svg'),
   trash: require('@/assets/images/editorial/trash.svg'),
 } as const;
 

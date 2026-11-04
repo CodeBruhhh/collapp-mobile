@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { FeedbackHost } from '@/components/FeedbackHost';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { LiveUpdates } from '@/context/LiveUpdates';
 import { PreferencesProvider } from '@/context/PreferencesContext';
@@ -90,6 +91,7 @@ export default function RootLayout() {
             <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
               <StatusBar style="auto" />
               <RootNavigator fontsReady={fontsLoaded || Boolean(fontError)} />
+              <FeedbackHost />
             </ThemeProvider>
           </SyncProvider>
         </AuthProvider>

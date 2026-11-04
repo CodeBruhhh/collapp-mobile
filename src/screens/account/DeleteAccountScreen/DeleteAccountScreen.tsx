@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { FormScreen } from '@/components/FormScreen';
@@ -8,6 +8,7 @@ import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { useIsOnline } from '@/hooks/useIsOnline';
 import { useTheme } from '@/hooks/useTheme';
+import { ask, notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
 
 import { createAccountStyles } from '../accountStyles';
@@ -31,7 +32,7 @@ export function DeleteAccountScreen() {
   const [deleting, setDeleting] = useState(false);
 
   function confirm() {
-    Alert.alert(
+    ask(
       'Delete your account forever?',
       'This cannot be undone. Colleges you applied to will no longer see your application.',
       [
@@ -46,7 +47,7 @@ export function DeleteAccountScreen() {
               await deleteAccount();
             } catch (e) {
               setDeleting(false);
-              Alert.alert('Could not delete your account', getErrorMessage(e));
+              notify.error('Could not delete your account', getErrorMessage(e));
             }
           },
         },
@@ -55,7 +56,7 @@ export function DeleteAccountScreen() {
   }
 
   return (
-    <FormScreen>
+    <FormScreen underHeader>
       <Stack.Screen options={{ title: 'Delete account' }} />
       <View style={styles.form}>
         <Text accessibilityRole="header" style={styles.title}>

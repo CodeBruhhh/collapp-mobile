@@ -1,15 +1,16 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { FormScreen } from '@/components/FormScreen';
+import { Notice } from '@/components/Notice';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { OTP_MAX_LENGTH, verifySchema } from '@/features/auth/schemas';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage, validate } from '@/lib/validation';
 
+import { AuthLayout } from '../AuthLayout';
 import { createAuthStyles } from '../authStyles';
 
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -61,14 +62,10 @@ export function VerifyEmailScreen() {
   }
 
   return (
-    <FormScreen>
-      <View style={styles.header}>
-        <Text accessibilityRole="header" style={styles.title}>
-          Verify your email
-        </Text>
-        <Text style={styles.subtitle}>We sent a verification code to {email || 'your email'}.</Text>
-      </View>
-
+    <AuthLayout
+      eyebrow="One last step"
+      title="Verify your email"
+      subtitle={`We sent a verification code to ${email || 'your email'}.`}>
       <View style={styles.form}>
         <TextField
           label="Verification code"
@@ -83,11 +80,7 @@ export function VerifyEmailScreen() {
           onSubmitEditing={handleVerify}
         />
 
-        {notice ? (
-          <View style={styles.banner}>
-            <Text style={styles.bannerText}>{notice}</Text>
-          </View>
-        ) : null}
+        {notice ? <Notice title={notice} icon="checkmark-circle" /> : null}
 
         <View style={styles.actions}>
           <Button label="Verify" onPress={handleVerify} loading={submitting} />
@@ -100,6 +93,6 @@ export function VerifyEmailScreen() {
           <Button variant="link" label="Use a different email" onPress={() => router.back()} />
         </View>
       </View>
-    </FormScreen>
+    </AuthLayout>
   );
 }

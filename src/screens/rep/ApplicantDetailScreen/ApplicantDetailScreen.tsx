@@ -2,7 +2,6 @@ import { router, Stack } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Pressable,
   RefreshControl,
@@ -24,6 +23,7 @@ import { useStartThread } from '@/features/messaging/hooks';
 import { firstOf, studentName } from '@/features/rep/api';
 import { useApplicant, useMyCollege, useRepActions } from '@/features/rep/hooks';
 import { useTheme } from '@/hooks/useTheme';
+import { notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
 
 import { createScreenStyles } from '@/screens/screenStyles';
@@ -65,7 +65,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
       const thread = await startThread.mutateAsync({ studentId: a.student_id });
       router.push({ pathname: '/rep/thread/[id]', params: { id: thread.id } });
     } catch (e) {
-      Alert.alert('Could not open conversation', getErrorMessage(e));
+      notify.error('Could not open conversation', getErrorMessage(e));
     }
   }
 
@@ -158,7 +158,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
                 onPress={() =>
                   scoreApplication
                     .mutateAsync(a.id)
-                    .catch((e) => Alert.alert('Could not score', getErrorMessage(e)))
+                    .catch((e) => notify.error('Could not score', getErrorMessage(e)))
                 }
               />
             ) : null}

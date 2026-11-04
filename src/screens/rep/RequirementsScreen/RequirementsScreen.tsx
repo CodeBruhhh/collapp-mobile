@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -13,6 +13,7 @@ import type { Requirement } from '@/features/colleges/api';
 import { useCollegeId, useMyCollege, useRepActions } from '@/features/rep/hooks';
 import { requirementSchema, STANDARD_REQUIREMENTS } from '@/features/rep/schemas';
 import { useTheme } from '@/hooks/useTheme';
+import { ask, notify } from '@/lib/feedback';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
 import { createScreenStyles } from '@/screens/screenStyles';
@@ -59,7 +60,7 @@ export function RequirementsScreen() {
       });
       return true;
     } catch (e) {
-      Alert.alert('Could not add requirement', getErrorMessage(e));
+      notify.error('Could not add requirement', getErrorMessage(e));
       return false;
     }
   }
@@ -74,12 +75,12 @@ export function RequirementsScreen() {
     try {
       await actions.saveRequirement.mutateAsync({ ...req, is_required: value });
     } catch (e) {
-      Alert.alert('Could not update', getErrorMessage(e));
+      notify.error('Could not update', getErrorMessage(e));
     }
   }
 
   function remove(req: Requirement) {
-    Alert.alert('Remove this requirement?', req.label, [
+    ask('Remove this requirement?', req.label, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
@@ -87,7 +88,7 @@ export function RequirementsScreen() {
         onPress: () =>
           actions.deleteRequirement
             .mutateAsync(req.id)
-            .catch((e) => Alert.alert('Could not remove', getErrorMessage(e))),
+            .catch((e) => notify.error('Could not remove', getErrorMessage(e))),
       },
     ]);
   }

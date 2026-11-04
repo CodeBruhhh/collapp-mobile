@@ -3,13 +3,13 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { FormScreen } from '@/components/FormScreen';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { forgotPasswordSchema, OTP_MAX_LENGTH, resetPasswordSchema } from '@/features/auth/schemas';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
+import { AuthLayout } from '../AuthLayout';
 import { createAuthStyles } from '../authStyles';
 
 type ResetFields = { code: string; password: string; confirmPassword: string };
@@ -72,18 +72,14 @@ export function ForgotPasswordScreen() {
     setFields((prev) => ({ ...prev, [key]: value }));
 
   return (
-    <FormScreen>
-      <View style={styles.header}>
-        <Text accessibilityRole="header" style={styles.title}>
-          Reset your password
-        </Text>
-        <Text style={styles.subtitle}>
-          {step === 'request'
-            ? 'Enter your account email and we will send you a one-time code.'
-            : `Enter the code we sent to ${email} and choose a new password.`}
-        </Text>
-      </View>
-
+    <AuthLayout
+      eyebrow="Account recovery"
+      title="Reset your password"
+      subtitle={
+        step === 'request'
+          ? 'Enter your account email and we will send you a one-time code.'
+          : `Enter the code we sent to ${email} and choose a new password.`
+      }>
       <View style={styles.form}>
         {step === 'request' ? (
           <TextField
@@ -149,6 +145,6 @@ export function ForgotPasswordScreen() {
           <Button variant="link" label="Back to sign in" onPress={() => router.back()} />
         </View>
       </View>
-    </FormScreen>
+    </AuthLayout>
   );
 }

@@ -110,10 +110,10 @@ export function ListSkeleton({
   const { colors } = useTheme();
   const styles = createStyles(colors);
   return (
-    <SkeletonGroup style={styles.list} label={label}>
+    <SkeletonGroup label={label}>
       {Array.from({ length: rows }, (_, i) => (
         <View key={i} style={styles.card}>
-          {avatar ? <Skeleton width={44} height={44} radius={12} /> : null}
+          {avatar ? <Skeleton width={44} height={44} radius={2} /> : null}
           <View style={styles.lines}>
             <Skeleton width="62%" height={16} />
             <Skeleton width="88%" />
@@ -136,7 +136,7 @@ export function DetailSkeleton({ label }: { label?: string }) {
         <Skeleton width="45%" />
       </View>
       <View style={styles.block2}>
-        <Skeleton width={96} height={22} radius={11} />
+        <Skeleton width={96} height={22} radius={4} />
         <Skeleton height={6} radius={3} />
         <Skeleton width="90%" />
         <Skeleton width="60%" />

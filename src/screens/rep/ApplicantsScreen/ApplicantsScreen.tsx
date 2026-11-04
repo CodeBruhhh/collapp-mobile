@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, RefreshControl, Text, TextInput, View } from 'react-native';
+import { FlatList, RefreshControl, Text, View } from 'react-native';
 
 import { Card } from '@/components/Card';
 import { FilterTabs } from '@/components/FilterTabs';
 import { Icon } from '@/components/Icon';
+import { SearchField } from '@/components/SearchField';
 import { StatusBadge } from '@/components/StatusBadge';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
@@ -55,17 +56,12 @@ export function ApplicantsScreen() {
       }
       ListHeaderComponent={
         <View style={styles.section}>
-          <View style={styles.searchBox}>
-            <Icon name="search" size={18} color={colors.textMuted} />
-            <TextInput
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search applicants"
-              placeholderTextColor={colors.textMuted}
-              accessibilityLabel="Search applicants"
-              style={styles.searchInput}
-            />
-          </View>
+          <SearchField
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search applicants"
+            accessibilityLabel="Search applicants"
+          />
           <FilterTabs<ApplicantFilter>
             value={filter}
             onChange={setFilter}

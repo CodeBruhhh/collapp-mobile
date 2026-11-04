@@ -1,13 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import { ActionSheet, type SheetAction } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
-import { Icon } from '@/components/Icon';
 import { InfoRow } from '@/components/InfoRow';
+import { SearchField } from '@/components/SearchField';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/context/AuthContext';
@@ -205,20 +205,15 @@ export function AccountsScreen() {
       />
       {section === 'users' ? (
         <>
-          <View style={styles.searchBox}>
-            <Icon name="search" size={18} color={colors.textMuted} />
-            <TextInput
-              value={draftSearch}
-              onChangeText={setDraftSearch}
-              onSubmitEditing={() => setSearch(draftSearch)}
-              placeholder="Search name or email"
-              placeholderTextColor={colors.textMuted}
-              accessibilityLabel="Search users"
-              returnKeyType="search"
-              autoCapitalize="none"
-              style={styles.searchInput}
-            />
-          </View>
+          <SearchField
+            value={draftSearch}
+            onChangeText={setDraftSearch}
+            onSubmitEditing={() => setSearch(draftSearch)}
+            onClear={() => setSearch('')}
+            placeholder="Search name or email"
+            accessibilityLabel="Search users"
+            autoCapitalize="none"
+          />
           <FilterTabs<UserFilter>
             value={userFilter}
             onChange={setUserFilter}

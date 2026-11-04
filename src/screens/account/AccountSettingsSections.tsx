@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { router, type Href } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { ActionRow } from '@/components/ActionRow';
 import { ActionSheet } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
 import { FilterChips, type ChipOption } from '@/components/FilterChips';
-import { SettingsSection } from '@/components/SettingsSection';
+import { Section } from '@/components/Section';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { ToggleRow } from '@/components/ToggleRow';
 import { useAuth } from '@/context/AuthContext';
@@ -22,6 +22,7 @@ import {
   isBiometricEnabled,
   setBiometricEnabled,
 } from '@/lib/biometrics';
+import { notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
 import type { Role } from '@/types/roles';
 
@@ -81,7 +82,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
 
   function updateSettings(next: AccountSettings) {
     saveSettings.mutate(next, {
-      onError: (e) => Alert.alert('Could not save your settings', getErrorMessage(e)),
+      onError: (e) => notify.error('Could not save your settings', getErrorMessage(e)),
     });
   }
 
@@ -92,7 +93,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
       await setBiometricEnabled(userId, enable);
       await biometrics.refetch();
     } catch (e) {
-      Alert.alert('Could not update biometric unlock', getErrorMessage(e));
+      notify.error('Could not update biometric unlock', getErrorMessage(e));
     }
   }
 
@@ -100,9 +101,9 @@ export function AccountSettingsSections({ role }: { role: Role }) {
     setExporting(true);
     try {
       const fileName = await saveDataExport(await buildDataExport(userId, role));
-      if (fileName) Alert.alert('Your data was saved', fileName);
+      if (fileName) notify.success('Your data was saved', fileName);
     } catch (e) {
-      Alert.alert('Could not export your data', getErrorMessage(e));
+      notify.error('Could not export your data', getErrorMessage(e));
     } finally {
       setExporting(false);
     }
@@ -114,11 +115,11 @@ export function AccountSettingsSections({ role }: { role: Role }) {
 
   return (
     <>
-      <SettingsSection title="Appearance" band>
+      <Section title="Appearance" band>
         <FilterChips options={THEME_OPTIONS} selected={themeMode} onSelect={setThemeMode} />
-      </SettingsSection>
+      </Section>
 
-      <SettingsSection title="Notifications">
+      <Section title="Notifications">
         {settings.isPending ? (
           <LoadingState variant="inline" />
         ) : settings.isError || !current ? (
@@ -147,9 +148,9 @@ export function AccountSettingsSections({ role }: { role: Role }) {
             ))}
           </>
         )}
-      </SettingsSection>
+      </Section>
 
-      <SettingsSection title="Security">
+      <Section title="Security">
         <ToggleRow
           label="Biometric unlock"
           description={
@@ -168,9 +169,9 @@ export function AccountSettingsSections({ role }: { role: Role }) {
         ) : (
           <Text style={styles.hint}>Signed in with Google</Text>
         )}
-      </SettingsSection>
+      </Section>
 
-      <SettingsSection title="Your data" band>
+      <Section title="Your data" band>
         <ActionRow
           label="Download my data"
           icon="download"
@@ -186,7 +187,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
         ) : (
           <Text style={styles.hint}>To close this account, contact an administrator.</Text>
         )}
-      </SettingsSection>
+      </Section>
 
       <View style={styles.signOut}>
         <Button

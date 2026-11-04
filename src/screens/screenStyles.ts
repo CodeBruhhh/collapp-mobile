@@ -78,23 +78,6 @@ export const createScreenStyles = (c: ThemeColors) =>
       textAlign: 'right',
     },
     fab: { position: 'absolute', right: spacing.md, bottom: spacing.md },
-    searchBox: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.md,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.surface,
-    },
-    searchInput: {
-      flex: 1,
-      minHeight: TOUCH_TARGET,
-      fontFamily: fonts.regular,
-      fontSize: fontSize.md,
-      color: c.text,
-    },
     docPreview: {
       height: 180,
       overflow: 'hidden',

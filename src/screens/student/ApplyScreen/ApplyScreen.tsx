@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
@@ -17,6 +17,7 @@ import { requirementsFor } from '@/features/colleges/api';
 import { useCollege } from '@/features/colleges/hooks';
 import { fetchStudentProfile } from '@/features/profile/api';
 import { useTheme } from '@/hooks/useTheme';
+import { ask, notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
 
 import { createStyles } from './ApplyScreen.styles';
@@ -85,7 +86,7 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
 
   async function saveDraft(next: number) {
     if (!program) {
-      Alert.alert('Choose a program', 'Pick your first-choice program to continue.');
+      notify.info('Choose a program', 'Pick your first-choice program to continue.');
       return;
     }
     setSaving(true);
@@ -97,7 +98,7 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
       });
       setStep(next);
     } catch (e) {
-      Alert.alert('Could not save', getErrorMessage(e));
+      notify.error('Could not save', getErrorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -108,16 +109,16 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
     try {
       await offline.submit();
       router.replace({ pathname: '/student/application/[id]', params: { id: draft!.id } });
-      Alert.alert('Application submitted', `${c.name} will review your application.`);
+      notify.success('Application submitted', `${c.name} will review your application.`);
     } catch (e) {
-      Alert.alert('Not submitted yet', getErrorMessage(e));
+      notify.error('Not submitted yet', getErrorMessage(e));
     } finally {
       setSaving(false);
     }
   }
 
   function handleDelete() {
-    Alert.alert('Delete this draft?', 'Uploaded files will be removed too.', [
+    ask('Delete this draft?', 'Uploaded files will be removed too.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -127,7 +128,7 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
             await offline.deleteDraft();
             router.back();
           } catch (e) {
-            Alert.alert('Could not delete', getErrorMessage(e));
+            notify.error('Could not delete', getErrorMessage(e));
           }
         },
       },

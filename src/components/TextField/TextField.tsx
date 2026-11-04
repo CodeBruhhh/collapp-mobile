@@ -35,6 +35,7 @@ export function TextField({
       <View
         style={[
           styles.inputRow,
+          inputProps.multiline && styles.inputRowBoxed,
           focused && styles.inputRowFocused,
           error ? styles.inputRowError : null,
         ]}>

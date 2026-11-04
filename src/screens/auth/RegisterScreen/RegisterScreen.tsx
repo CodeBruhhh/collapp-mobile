@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { FormScreen } from '@/components/FormScreen';
 import { Icon } from '@/components/Icon';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
@@ -11,6 +10,7 @@ import { registerSchema } from '@/features/auth/schemas';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
+import { AuthLayout } from '../AuthLayout';
 import { createAuthStyles } from '../authStyles';
 import { GoogleButton } from '../GoogleButton';
 
@@ -71,14 +71,7 @@ export function RegisterScreen() {
   }
 
   return (
-    <FormScreen>
-      <View style={styles.header}>
-        <Text accessibilityRole="header" style={styles.title}>
-          Create your account
-        </Text>
-        <Text style={styles.subtitle}>Student registration</Text>
-      </View>
-
+    <AuthLayout eyebrow="Student registration" title="Create your account">
       <View style={styles.form}>
         <TextField
           label="Full name"
@@ -150,6 +143,6 @@ export function RegisterScreen() {
           </View>
         </View>
       </View>
-    </FormScreen>
+    </AuthLayout>
   );
 }

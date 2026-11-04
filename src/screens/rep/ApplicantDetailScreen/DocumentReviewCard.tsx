@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -16,6 +16,7 @@ import {
   type ReviewStatus,
 } from '@/features/applications/status';
 import { useTheme } from '@/hooks/useTheme';
+import { notify } from '@/lib/feedback';
 import { signedUrl } from '@/lib/storage';
 import { getErrorMessage } from '@/lib/validation';
 
@@ -59,7 +60,7 @@ export function DocumentReviewCard({ document, locked, onReview }: DocumentRevie
         presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
       });
     } catch (e) {
-      Alert.alert('Could not open file', getErrorMessage(e));
+      notify.error('Could not open file', getErrorMessage(e));
     }
   }
 
@@ -70,7 +71,7 @@ export function DocumentReviewCard({ document, locked, onReview }: DocumentRevie
       setNoteMode(null);
       setNote('');
     } catch (e) {
-      Alert.alert('Could not save review', getErrorMessage(e));
+      notify.error('Could not save review', getErrorMessage(e));
     } finally {
       setBusy(false);
     }

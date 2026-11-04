@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useDeferredValue, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from 'react-native';
+import { FlatList, RefreshControl, Text, View } from 'react-native';
 
 import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
 import { Icon } from '@/components/Icon';
+import { SearchField } from '@/components/SearchField';
 import { Select } from '@/components/Select';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { PH_REGIONS } from '@/data/ph-address';
@@ -62,28 +63,12 @@ export function ExploreScreen() {
       }
       ListHeaderComponent={
         <View style={styles.header}>
-          <View style={styles.searchBox}>
-            <Icon name="search" size={18} color={colors.textMuted} />
-            <TextInput
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search universities"
-              placeholderTextColor={colors.textMuted}
-              accessibilityLabel="Search universities"
-              returnKeyType="search"
-              style={styles.searchInput}
-            />
-            {search ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Clear search"
-                onPress={() => setSearch('')}
-                hitSlop={8}
-                style={styles.clear}>
-                <Icon name="close-circle-filled" size={18} color={colors.textMuted} />
-              </Pressable>
-            ) : null}
-          </View>
+          <SearchField
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search universities"
+            accessibilityLabel="Search universities"
+          />
           <View style={styles.filters}>
             <FilterTabs<Scope>
               value={scope}

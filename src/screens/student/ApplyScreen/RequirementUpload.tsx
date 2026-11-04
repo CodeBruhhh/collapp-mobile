@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -10,6 +10,7 @@ import type { DisplayDocument } from '@/features/applications/offline';
 import { REVIEW_STATUS_LABELS, reviewStatusColor } from '@/features/applications/status';
 import type { Requirement } from '@/features/colleges/api';
 import { useTheme } from '@/hooks/useTheme';
+import { ask, notify } from '@/lib/feedback';
 import { pickDocumentFile, pickPhoto } from '@/lib/pickers';
 import { scanDocument } from '@/lib/scanner';
 import type { LocalFile } from '@/lib/storage';
@@ -45,7 +46,7 @@ export function RequirementUpload({
     try {
       await onUpload(file);
     } catch (e) {
-      Alert.alert('Could not save the file', getErrorMessage(e));
+      notify.error('Could not save the file', getErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -56,7 +57,7 @@ export function RequirementUpload({
       const file = await scanDocument(`${requirement.label}.jpg`);
       if (file) setScan(file);
     } catch (e) {
-      Alert.alert('Scanner unavailable', getErrorMessage(e));
+      notify.error('Scanner unavailable', getErrorMessage(e));
     }
   }
 
@@ -65,13 +66,13 @@ export function RequirementUpload({
       const file = source === 'file' ? await pickDocumentFile() : await pickPhoto('library');
       if (file) await save(file);
     } catch (e) {
-      Alert.alert('Could not add the file', getErrorMessage(e));
+      notify.error('Could not add the file', getErrorMessage(e));
     }
   }
 
   // Android dialogs show at most three buttons, so each prompt offers three.
   function promptReplace() {
-    Alert.alert(`Replace ${requirement.label}`, undefined, [
+    ask(`Replace ${requirement.label}`, undefined, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Choose file', onPress: () => choose('file') },
       { text: 'Scan', onPress: startScan },
@@ -79,7 +80,7 @@ export function RequirementUpload({
   }
 
   function promptAttach() {
-    Alert.alert(requirement.label, undefined, [
+    ask(requirement.label, undefined, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'PDF', onPress: () => choose('file') },
       { text: 'Photo', onPress: () => choose('library') },
@@ -138,14 +139,14 @@ export function RequirementUpload({
                     label="Remove"
                     disabled={busy}
                     onPress={() =>
-                      Alert.alert('Remove this file?', requirement.label, [
+                      ask('Remove this file?', requirement.label, [
                         { text: 'Cancel', style: 'cancel' },
                         {
                           text: 'Remove',
                           style: 'destructive',
                           onPress: () =>
                             onRemove().catch((e) =>
-                              Alert.alert('Could not remove', getErrorMessage(e)),
+                              notify.error('Could not remove', getErrorMessage(e)),
                             ),
                         },
                       ])

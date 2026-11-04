@@ -1,18 +1,11 @@
-import { Pressable, Text, View } from 'react-native';
-
-import { Icon } from '@/components/Icon';
+import { Notice } from '@/components/Notice';
 import { useSync } from '@/context/SyncContext';
-import { useTheme } from '@/hooks/useTheme';
-
-import { createStyles } from './SyncBanner.styles';
 
 /**
  * Offline/sync status for the student's drafts (SDD 6.1 "local save indicator
  * and sync status"). Hidden when everything is online and synced.
  */
 export function SyncBanner() {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
   const { status, localDrafts, pendingFiles, requestSync } = useSync();
 
   const waiting = localDrafts.length + pendingFiles.length;
@@ -31,18 +24,12 @@ export function SyncBanner() {
           : `${waiting} change${waiting === 1 ? '' : 's'} waiting to sync.`;
 
   return (
-    <View style={styles.banner} accessibilityLiveRegion="polite">
-      <Icon
-        name={status === 'offline' ? 'cloud-offline' : 'cloud-upload'}
-        size={18}
-        color={colors.text}
-      />
-      <Text style={styles.text}>{message}</Text>
-      {status === 'idle' && waiting > 0 ? (
-        <Pressable accessibilityRole="button" onPress={requestSync} style={styles.action}>
-          <Text style={styles.actionText}>Sync now</Text>
-        </Pressable>
-      ) : null}
-    </View>
+    <Notice
+      title={message}
+      icon={status === 'offline' ? 'cloud-offline' : 'cloud-upload'}
+      action={
+        status === 'idle' && waiting > 0 ? { label: 'Sync now', onPress: requestSync } : undefined
+      }
+    />
   );
 }

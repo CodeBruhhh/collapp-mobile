@@ -7,5 +7,4 @@ export const createStyles = (c: ThemeColors) =>
     root: { flex: 1, backgroundColor: c.background },
     flex: { flex: 1 },
     content: { flexGrow: 1, padding: spacing.lg, gap: spacing.md },
-    centered: { justifyContent: 'center' },
   });

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -16,6 +16,7 @@ import type { RepCollege } from '@/features/rep/api';
 import { useMyCollege, useRepActions } from '@/features/rep/hooks';
 import { institutionSchema } from '@/features/rep/schemas';
 import { useTheme } from '@/hooks/useTheme';
+import { notify } from '@/lib/feedback';
 import { pickPhoto } from '@/lib/pickers';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
@@ -61,15 +62,15 @@ function InstitutionForm({ college }: { college: RepCollege }) {
     if (!result.data) return;
     try {
       await actions.updateCollege.mutateAsync({ id: college.id, changes: result.data });
-      Alert.alert('Saved', 'Your institution profile is up to date.');
+      notify.success('Saved', 'Your institution profile is up to date.');
     } catch (e) {
-      Alert.alert('Could not save', getErrorMessage(e));
+      notify.error('Could not save', getErrorMessage(e));
     }
   }
 
   async function togglePublished(next: boolean) {
     if (next && !canPublish) {
-      Alert.alert(
+      notify.info(
         'Almost there',
         'Add at least one open program and one requirement before publishing.',
       );
@@ -81,7 +82,7 @@ function InstitutionForm({ college }: { college: RepCollege }) {
         changes: { profile_status: next ? 'published' : 'draft' },
       });
     } catch (e) {
-      Alert.alert('Could not update', getErrorMessage(e));
+      notify.error('Could not update', getErrorMessage(e));
     }
   }
 
@@ -90,7 +91,7 @@ function InstitutionForm({ college }: { college: RepCollege }) {
       const file = await pickPhoto('library');
       if (file) await actions.uploadLogo.mutateAsync([college, file]);
     } catch (e) {
-      Alert.alert('Upload failed', getErrorMessage(e));
+      notify.error('Upload failed', getErrorMessage(e));
     }
   }
 

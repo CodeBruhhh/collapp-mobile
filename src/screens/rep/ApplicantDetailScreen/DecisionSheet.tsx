@@ -1,20 +1,12 @@
 import { useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ActionSheet } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { TextField } from '@/components/TextField';
 import { useTheme } from '@/hooks/useTheme';
-import { getErrorMessage } from '@/lib/validation';
 
 import { createDecisionStyles } from './DecisionSheet.styles';
 
@@ -66,6 +58,7 @@ export function DecisionSheet({
   const [message, setMessage] = useState('');
   // Only replace the text with a new template while the rep hasn't edited it.
   const [edited, setEdited] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const programName = programs.find((p) => p.id === programId)?.name ?? programs[0]?.name ?? '';
 
@@ -85,32 +78,15 @@ export function DecisionSheet({
   const ready =
     decision !== null && message.trim().length > 0 && (decision === 'reject' || programId !== null);
 
-  function confirm() {
-    if (!decision) return;
-    const accepting = decision === 'accept';
-    Alert.alert(
-      accepting ? `Admit ${studentFirstName}?` : 'Decline this application?',
-      'The student is notified right away. This cannot be changed later.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: accepting ? 'Admit' : 'Decline',
-          style: accepting ? 'default' : 'destructive',
-          onPress: async () => {
-            try {
-              await onSubmit({
-                decision,
-                programId: accepting ? programId : null,
-                message: message.trim(),
-              });
-              onClose();
-            } catch (e) {
-              Alert.alert('Could not send the decision', getErrorMessage(e));
-            }
-          },
-        },
-      ],
-    );
+  const accepting = decision === 'accept';
+
+  async function send() {
+    await onSubmit({
+      decision: accepting ? 'accept' : 'reject',
+      programId: accepting ? programId : null,
+      message: message.trim(),
+    });
+    onClose();
   }
 
   return (
@@ -242,13 +218,24 @@ export function DecisionSheet({
             <Button
               variant={decision === 'reject' ? 'danger' : 'primary'}
               label={decision === 'reject' ? 'Send decision' : 'Send admission'}
-              onPress={confirm}
+              onPress={() => decision && setConfirming(true)}
               loading={submitting}
               disabled={!ready}
             />
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      {/* Nested so it opens above this sheet; a failed send stays here with its error. */}
+      <ActionSheet
+        visible={confirming}
+        onClose={() => setConfirming(false)}
+        eyebrow="Final decision"
+        title={accepting ? `Admit ${studentFirstName}?` : 'Decline this application?'}
+        message="The student is notified right away. This cannot be changed later."
+        actions={[
+          { label: accepting ? 'Admit' : 'Decline', destructive: !accepting, onPress: send },
+        ]}
+      />
     </Modal>
   );
 }

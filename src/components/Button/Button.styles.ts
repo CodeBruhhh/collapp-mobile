@@ -1,13 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import {
-  CONTROL_HEIGHT,
-  fonts,
-  radius,
-  spacing,
-  TOUCH_TARGET,
-  type ThemeColors,
-} from '@/styles';
+import { CONTROL_HEIGHT, fonts, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({

@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { ChipGroup } from '@/components/ChipGroup';
@@ -13,6 +13,7 @@ import { useCollegeId, usePosts, useRepActions } from '@/features/rep/hooks';
 import { POST_TYPE_LABELS, type PostType } from '@/features/rep/posts';
 import { postSchema } from '@/features/rep/schemas';
 import { useTheme } from '@/hooks/useTheme';
+import { ask, notify } from '@/lib/feedback';
 import { pickPhoto } from '@/lib/pickers';
 import { publicUrl, removeFile, type LocalFile } from '@/lib/storage';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
@@ -72,7 +73,7 @@ function PostForm({ post }: { post: Post | null }) {
       }
       router.back();
     } catch (e) {
-      Alert.alert('Could not save post', getErrorMessage(e));
+      notify.error('Could not save post', getErrorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -80,7 +81,7 @@ function PostForm({ post }: { post: Post | null }) {
 
   function remove() {
     if (!post) return;
-    Alert.alert('Delete this post?', post.title, [
+    ask('Delete this post?', post.title, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -90,7 +91,7 @@ function PostForm({ post }: { post: Post | null }) {
             await actions.deletePost.mutateAsync(post);
             router.back();
           } catch (e) {
-            Alert.alert('Could not delete', getErrorMessage(e));
+            notify.error('Could not delete', getErrorMessage(e));
           }
         },
       },
@@ -105,7 +106,7 @@ function PostForm({ post }: { post: Post | null }) {
         setRemoveImage(false);
       }
     } catch (e) {
-      Alert.alert('Could not add image', getErrorMessage(e));
+      notify.error('Could not add image', getErrorMessage(e));
     }
   }
 

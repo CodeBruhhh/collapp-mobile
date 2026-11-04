@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, FlatList, RefreshControl, Text, View } from 'react-native';
+import { FlatList, RefreshControl, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -15,6 +15,7 @@ import { listCollegesForAdmin, type ThreadSummary } from '@/features/messaging/a
 import { useStartThread, useThreads } from '@/features/messaging/hooks';
 import { threadRoute } from '@/features/notifications/routing';
 import { useTheme } from '@/hooks/useTheme';
+import { notify } from '@/lib/feedback';
 import { shortTime } from '@/lib/time';
 import { getErrorMessage } from '@/lib/validation';
 import type { Role } from '@/types/roles';
@@ -67,7 +68,7 @@ export function InboxScreen() {
       const thread = await startThread.mutateAsync(target);
       router.push(threadRoute(role!, thread.id));
     } catch (e) {
-      Alert.alert('Could not open conversation', getErrorMessage(e));
+      notify.error('Could not open conversation', getErrorMessage(e));
     }
   }
 

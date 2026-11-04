@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { Icon } from '@/components/Icon';
+import { Button } from '@/components/Button';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage } from '@/lib/validation';
@@ -35,22 +35,13 @@ export function GoogleButton({ onError }: { onError: (message: string | null) =>
         <Text style={styles.muted}>or</Text>
         <View style={styles.dividerLine} />
       </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Continue with Google"
-        accessibilityState={{ busy, disabled: busy }}
-        disabled={busy}
+      <Button
+        variant="secondary"
+        icon="logo-google"
+        label="Continue with Google"
         onPress={handlePress}
-        style={({ pressed }) => [styles.googleButton, pressed && styles.pressed]}>
-        {busy ? (
-          <ActivityIndicator color={colors.text} />
-        ) : (
-          <>
-            <Icon name="logo-google" size={20} color={colors.text} />
-            <Text style={styles.googleLabel}>Continue with Google</Text>
-          </>
-        )}
-      </Pressable>
+        loading={busy}
+      />
     </>
   );
 }

@@ -2,7 +2,7 @@ import { File } from 'expo-file-system';
 import { Image } from 'expo-image';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useState } from 'react';
-import { Alert, Modal, Text, View } from 'react-native';
+import { Modal, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
@@ -28,11 +28,13 @@ export function ScanPreview({ file, title, onRetake, onCancel, onConfirm }: Scan
   const styles = createStyles(colors);
   const [rotated, setRotated] = useState<LocalFile | null>(null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const current = rotated ?? file;
 
   async function rotate() {
     if (!current) return;
     setBusy(true);
+    setError(null);
     try {
       const context = ImageManipulator.manipulate(current.uri);
       context.rotate(90);
@@ -40,7 +42,7 @@ export function ScanPreview({ file, title, onRetake, onCancel, onConfirm }: Scan
       const saved = await image.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
       setRotated({ ...current, uri: saved.uri, size: new File(saved.uri).size });
     } catch (e) {
-      Alert.alert('Could not rotate', getErrorMessage(e));
+      setError(`Could not rotate. ${getErrorMessage(e)}`);
     } finally {
       setBusy(false);
     }
@@ -70,6 +72,11 @@ export function ScanPreview({ file, title, onRetake, onCancel, onConfirm }: Scan
               <Text style={styles.meta}>{(current.size / 1024 / 1024).toFixed(2)} MB · JPEG</Text>
             </View>
           </>
+        ) : null}
+        {error ? (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {error}
+          </Text>
         ) : null}
         <View style={styles.actions}>
           <View style={styles.flex}>

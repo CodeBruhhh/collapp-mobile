@@ -96,7 +96,7 @@ export function CreateCollegeScreen() {
   }
 
   return (
-    <FormScreen>
+    <FormScreen underHeader>
       <Stack.Screen options={{ title: 'Add college' }} />
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.sectionTitle}>

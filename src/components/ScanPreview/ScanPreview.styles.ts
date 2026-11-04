@@ -8,6 +8,12 @@ export const createStyles = (c: ThemeColors) =>
     flex: { flex: 1 },
     title: { fontSize: fontSize.lg, fontFamily: fonts.semibold, color: c.text },
     image: { flex: 1, borderRadius: radius.md, backgroundColor: c.surface },
+    error: {
+      fontFamily: fonts.regular,
+      fontSize: fontSize.sm,
+      color: c.danger,
+      textAlign: 'center',
+    },
     metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
     meta: {
       fontFamily: fonts.regular,

@@ -5,7 +5,7 @@ import { Button } from '@/components/Button';
 import { InfoRow } from '@/components/InfoRow';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { Screen } from '@/components/Screen';
-import { SettingsSection } from '@/components/SettingsSection';
+import { Section } from '@/components/Section';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { useAuth } from '@/context/AuthContext';
 import { useStudentProfile } from '@/features/profile/hooks';
@@ -26,7 +26,7 @@ export function ProfileScreen() {
     <Screen>
       <ProfileHeader name={profile?.full_name || 'Student'} email={profile?.email ?? ''} />
 
-      <SettingsSection title="Academic profile">
+      <Section title="Academic profile">
         {student.isPending ? (
           <LoadingState variant="inline" />
         ) : student.isError ? (
@@ -60,7 +60,7 @@ export function ProfileScreen() {
             </View>
           </>
         )}
-      </SettingsSection>
+      </Section>
 
       <AccountSettingsSections role="student" />
     </Screen>

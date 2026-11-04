@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, FlatList, RefreshControl, Text, View } from 'react-native';
+import { FlatList, RefreshControl, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { FilterTabs } from '@/components/FilterTabs';
@@ -8,6 +8,7 @@ import { MatchCard } from '@/components/MatchCard';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { useRecommendations } from '@/features/ai/hooks';
 import { useTheme } from '@/hooks/useTheme';
+import { notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
 
 import { createStyles } from './RecommendationsScreen.styles';
@@ -33,7 +34,7 @@ export function RecommendationsScreen() {
     try {
       await refresh.mutateAsync();
     } catch (e) {
-      Alert.alert('Could not update recommendations', getErrorMessage(e));
+      notify.error('Could not update recommendations', getErrorMessage(e));
     }
   }
 

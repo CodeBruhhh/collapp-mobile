@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { InfoRow } from '@/components/InfoRow';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { Screen } from '@/components/Screen';
-import { SettingsSection } from '@/components/SettingsSection';
+import { Section } from '@/components/Section';
 import { useAuth } from '@/context/AuthContext';
 import { useMyCollege } from '@/features/rep/hooks';
 import { ROLE_LABELS } from '@/types/roles';
@@ -26,10 +26,10 @@ export function AccountScreen() {
       <Stack.Screen options={{ title: 'Profile & settings' }} />
       <ProfileHeader name={profile.full_name || ROLE_LABELS[role]} email={profile.email} />
 
-      <SettingsSection title="Account">
+      <Section title="Account">
         <InfoRow label="Role" value={ROLE_LABELS[role]} />
         {role === 'school_rep' ? <RepCollegeRow /> : null}
-      </SettingsSection>
+      </Section>
 
       <AccountSettingsSections role={role} />
     </Screen>

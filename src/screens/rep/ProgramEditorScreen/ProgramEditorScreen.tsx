@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { ChipGroup } from '@/components/ChipGroup';
@@ -12,6 +12,7 @@ import { SHS_STRANDS } from '@/features/profile/constants';
 import { useCollegeId, useMyCollege, useRepActions } from '@/features/rep/hooks';
 import { programSchema } from '@/features/rep/schemas';
 import { useTheme } from '@/hooks/useTheme';
+import { ask, notify } from '@/lib/feedback';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
 import { createScreenStyles } from '@/screens/screenStyles';
@@ -65,13 +66,13 @@ function ProgramForm({ program }: { program: Program | null }) {
       });
       router.back();
     } catch (e) {
-      Alert.alert('Could not save', getErrorMessage(e));
+      notify.error('Could not save', getErrorMessage(e));
     }
   }
 
   function remove() {
     if (!program) return;
-    Alert.alert('Delete this program?', program.name, [
+    ask('Delete this program?', program.name, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -81,7 +82,7 @@ function ProgramForm({ program }: { program: Program | null }) {
             await actions.deleteProgram.mutateAsync(program.id);
             router.back();
           } catch (e) {
-            Alert.alert('Could not delete', getErrorMessage(e));
+            notify.error('Could not delete', getErrorMessage(e));
           }
         },
       },

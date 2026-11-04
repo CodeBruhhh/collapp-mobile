@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
@@ -12,6 +12,7 @@ import type { AppNotification } from '@/features/notifications/api';
 import { useNotificationActions, useNotifications } from '@/features/notifications/hooks';
 import { NOTIFICATION_ICONS, notificationTarget } from '@/features/notifications/routing';
 import { useTheme } from '@/hooks/useTheme';
+import { ask, notify } from '@/lib/feedback';
 import { shortTime } from '@/lib/time';
 import { getErrorMessage } from '@/lib/validation';
 
@@ -41,7 +42,7 @@ export function NotificationsScreen() {
   const unread = all.filter(MATCHES.unread).length;
   const read = all.length - unread;
 
-  const fail = (title: string) => (e: unknown) => Alert.alert(title, getErrorMessage(e));
+  const fail = (title: string) => (e: unknown) => notify.error(title, getErrorMessage(e));
 
   function open(n: AppNotification) {
     if (!n.read_at) markRead.mutate([n.id]);
@@ -50,7 +51,7 @@ export function NotificationsScreen() {
   }
 
   function itemOptions(n: AppNotification) {
-    Alert.alert(n.title, undefined, [
+    ask(n.title, undefined, [
       { text: 'Cancel', style: 'cancel' },
       ...(n.read_at ? [] : [{ text: 'Mark as read', onPress: () => markRead.mutate([n.id]) }]),
       {
@@ -62,7 +63,7 @@ export function NotificationsScreen() {
   }
 
   function confirmClear() {
-    Alert.alert('Clear notifications?', 'This removes them from this list.', [
+    ask('Clear notifications?', 'This removes them from this list.', [
       { text: 'Cancel', style: 'cancel' },
       ...(read && unread
         ? [

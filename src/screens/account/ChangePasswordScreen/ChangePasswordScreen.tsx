@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { FormScreen } from '@/components/FormScreen';
@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { changePasswordSchema } from '@/features/auth/schemas';
 import { changePassword } from '@/features/profile/api';
 import { useTheme } from '@/hooks/useTheme';
+import { notify } from '@/lib/feedback';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
 import { createStyles } from './ChangePasswordScreen.styles';
@@ -37,17 +38,17 @@ export function ChangePasswordScreen() {
     setSaving(true);
     try {
       await changePassword(profile.email, result.data.currentPassword, result.data.password);
-      Alert.alert('Password changed', 'Use your new password the next time you sign in.');
+      notify.success('Password changed', 'Use your new password the next time you sign in.');
       router.back();
     } catch (e) {
-      Alert.alert('Could not change password', getErrorMessage(e));
+      notify.error('Could not change password', getErrorMessage(e));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <FormScreen>
+    <FormScreen underHeader>
       <Stack.Screen options={{ title: 'Change password' }} />
       <View style={styles.form}>
         <Text style={styles.hint}>Use at least 8 characters with a letter and a number.</Text>
