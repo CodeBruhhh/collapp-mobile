@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { InfoRow } from '@/components/InfoRow';
@@ -9,6 +10,7 @@ import { ErrorState, LoadingState } from '@/components/StateView';
 import { useAuth } from '@/context/AuthContext';
 import { useStudentProfile } from '@/features/profile/hooks';
 import { AccountSettingsSections } from '@/screens/account/AccountSettingsSections';
+import { spacing } from '@/styles';
 
 const list = (values: string[] | undefined) => values?.join(', ');
 
@@ -49,11 +51,13 @@ export function ProfileScreen() {
                   : [address.city, address.province].filter(Boolean).join(', ')
               }
             />
-            <Button
-              variant="secondary"
-              label="Edit academic profile"
-              onPress={() => router.push('/student/edit-profile')}
-            />
+            <View style={{ paddingTop: spacing.md }}>
+              <Button
+                variant="secondary"
+                label="Edit academic profile"
+                onPress={() => router.push('/student/edit-profile')}
+              />
+            </View>
           </>
         )}
       </SettingsSection>

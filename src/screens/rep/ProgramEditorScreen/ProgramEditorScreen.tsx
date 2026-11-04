@@ -14,7 +14,7 @@ import { programSchema } from '@/features/rep/schemas';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
-import { createRepStyles } from '../repStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 /** Create or edit one program (SDD screen 23 "Programs", screen 24 deadline/prerequisites). */
 export function ProgramEditorScreen({ id }: { id: string }) {
@@ -30,7 +30,7 @@ const str = (v: number | null | undefined) => (v === null || v === undefined ? '
 
 function ProgramForm({ program }: { program: Program | null }) {
   const { colors } = useTheme();
-  const styles = createRepStyles(colors);
+  const styles = createScreenStyles(colors);
   const collegeId = useCollegeId();
   const actions = useRepActions();
 

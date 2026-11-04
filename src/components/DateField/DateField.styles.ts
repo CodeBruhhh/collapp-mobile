@@ -2,8 +2,8 @@ import { StyleSheet } from 'react-native';
 
 import {
   CONTROL_HEIGHT,
+  fonts,
   fontSize,
-  fontWeight,
   radius,
   spacing,
   TOUCH_TARGET,
@@ -13,7 +13,7 @@ import {
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { gap: spacing.xs },
-    label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.text },
+    label: { fontSize: fontSize.sm, fontFamily: fonts.medium, color: c.text },
     inputRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -29,6 +29,7 @@ export const createStyles = (c: ThemeColors) =>
       flex: 1,
       minHeight: CONTROL_HEIGHT,
       paddingHorizontal: spacing.md,
+      fontFamily: fonts.regular,
       fontSize: fontSize.md,
       color: c.text,
     },
@@ -38,7 +39,7 @@ export const createStyles = (c: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    error: { fontSize: fontSize.sm, color: c.danger },
+    error: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.danger },
 
     backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(16,24,40,0.4)' },
     sheetWrap: { backgroundColor: c.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
@@ -56,7 +57,7 @@ export const createStyles = (c: ThemeColors) =>
       minHeight: TOUCH_TARGET,
       paddingHorizontal: spacing.xs,
     },
-    titleText: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: c.text },
+    titleText: { fontSize: fontSize.lg, fontFamily: fonts.semibold, color: c.text },
     nav: { flexDirection: 'row' },
     week: { flexDirection: 'row' },
     weekday: {
@@ -64,7 +65,7 @@ export const createStyles = (c: ThemeColors) =>
       textAlign: 'center',
       paddingVertical: spacing.xs,
       fontSize: fontSize.xs,
-      fontWeight: fontWeight.medium,
+      fontFamily: fonts.medium,
       color: c.textMuted,
     },
     grid: { flexDirection: 'row', flexWrap: 'wrap' },
@@ -77,8 +78,8 @@ export const createStyles = (c: ThemeColors) =>
       justifyContent: 'center',
     },
     dayActive: { backgroundColor: c.primary },
-    dayText: { fontSize: fontSize.md, color: c.text },
-    dayTextActive: { color: c.onPrimary, fontWeight: fontWeight.semibold },
+    dayText: { fontFamily: fonts.regular, fontSize: fontSize.md, color: c.text },
+    dayTextActive: { color: c.onPrimary, fontFamily: fonts.semibold },
     dayDisabled: { color: c.border },
     years: { maxHeight: 288 },
     year: {
@@ -89,6 +90,6 @@ export const createStyles = (c: ThemeColors) =>
       borderRadius: radius.pill,
     },
     yearActive: { backgroundColor: c.primarySoft },
-    yearText: { fontSize: fontSize.md, color: c.text },
-    yearTextActive: { color: c.primary, fontWeight: fontWeight.semibold },
+    yearText: { fontFamily: fonts.regular, fontSize: fontSize.md, color: c.text },
+    yearTextActive: { color: c.primary, fontFamily: fonts.semibold },
   });

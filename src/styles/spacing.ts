@@ -7,12 +7,16 @@ export const spacing = {
   xl: 32,
 } as const;
 
+/** Squared-off corners; avatars stay round (they size their own radius). */
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  pill: 999,
+  sm: 2,
+  md: 4,
+  lg: 4,
+  pill: 4,
 } as const;
+
+/** Page rhythm: side gutter and the space between sections. */
+export const rhythm = { gutter: 24, section: 28 } as const;
 
 /** Minimum touch target in points (SRS 3.2.1 / 3.6.10). */
 export const TOUCH_TARGET = 44;

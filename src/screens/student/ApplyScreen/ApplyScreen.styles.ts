@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, radius, spacing, type ThemeColors } from '@/styles';
+import { fonts, fontSize, radius, spacing, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -11,24 +11,24 @@ export const createStyles = (c: ThemeColors) =>
     stepItem: { flex: 1, gap: spacing.xs },
     stepBar: { height: 4, borderRadius: radius.sm, backgroundColor: c.border },
     stepBarActive: { backgroundColor: c.primary },
-    stepLabel: { fontSize: fontSize.xs, color: c.textMuted },
-    stepLabelActive: { color: c.text, fontWeight: fontWeight.semibold },
-    title: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: c.text },
-    subtitle: { fontSize: fontSize.sm, color: c.textMuted },
+    stepLabel: { fontFamily: fonts.regular, fontSize: fontSize.xs, color: c.textMuted },
+    stepLabelActive: { color: c.text, fontFamily: fonts.semibold },
+    title: { fontSize: fontSize.lg, fontFamily: fonts.semibold, color: c.text },
+    subtitle: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
     section: { gap: spacing.sm },
-    sectionTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: c.text },
-    meta: { fontSize: fontSize.sm, color: c.textMuted },
-    note: { fontSize: fontSize.sm, color: c.status.actionRequired },
+    sectionTitle: { fontSize: fontSize.md, fontFamily: fonts.semibold, color: c.text },
+    meta: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
+    note: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.status.actionRequired },
     reqHeader: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
     reqText: { flex: 1, gap: 2 },
-    reqLabel: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: c.text },
+    reqLabel: { fontSize: fontSize.md, fontFamily: fonts.semibold, color: c.text },
     reqActions: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
     summaryRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
-    summaryLabel: { fontSize: fontSize.sm, color: c.textMuted },
+    summaryLabel: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
     summaryValue: {
       flexShrink: 1,
       fontSize: fontSize.sm,
-      fontWeight: fontWeight.medium,
+      fontFamily: fonts.medium,
       color: c.text,
       textAlign: 'right',
     },
@@ -39,7 +39,7 @@ export const createStyles = (c: ThemeColors) =>
       borderColor: c.status.actionRequired,
       backgroundColor: c.surface,
     },
-    warningText: { fontSize: fontSize.sm, color: c.text },
+    warningText: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.text },
     footer: {
       gap: spacing.sm,
       padding: spacing.md,

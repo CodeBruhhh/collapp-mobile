@@ -32,8 +32,8 @@ function weekLabel(week: string) {
 
 /** SDD screen 27 — platform totals, weekly submissions and the platform switches. */
 export function AnalyticsScreen() {
-  const { colors: c, tokens } = useTheme();
-  const styles = createAnalyticsStyles(c, tokens);
+  const { colors: c } = useTheme();
+  const styles = createAnalyticsStyles(c);
   const stats = useAdminStats();
   const settings = usePlatformSettings();
   const { savePlatformSettings } = useAdminActions();

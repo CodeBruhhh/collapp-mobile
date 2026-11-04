@@ -1,9 +1,9 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { Icon } from '@/components/Icon';
 import { ScanPreview } from '@/components/ScanPreview';
 import { StatusBadge } from '@/components/StatusBadge';
 import type { DisplayDocument } from '@/features/applications/offline';
@@ -89,11 +89,10 @@ export function RequirementUpload({
   return (
     <Card>
       <View style={styles.reqHeader}>
-        <Ionicons
-          name={document ? 'checkmark-circle' : 'ellipse-outline'}
+        <Icon
+          name={document ? 'checkmark-circle-filled' : 'ellipse'}
           size={22}
           color={document ? colors.status.accepted : colors.textMuted}
-          accessibilityElementsHidden
         />
         <View style={styles.reqText}>
           <Text style={styles.reqLabel}>

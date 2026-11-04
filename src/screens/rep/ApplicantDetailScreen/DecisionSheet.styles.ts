@@ -1,8 +1,8 @@
 import { StyleSheet } from 'react-native';
 
 import {
+  fonts,
   fontSize,
-  fontWeight,
   radius,
   spacing,
   TOUCH_TARGET,
@@ -24,12 +24,12 @@ export const createDecisionStyles = (c: ThemeColors) =>
       backgroundColor: c.surface,
     },
     headerSide: { width: 72, minHeight: TOUCH_TARGET, justifyContent: 'center' },
-    cancel: { fontSize: fontSize.md, color: c.primary },
+    cancel: { fontFamily: fonts.regular, fontSize: fontSize.md, color: c.primary },
     title: {
       flex: 1,
       textAlign: 'center',
       fontSize: fontSize.md,
-      fontWeight: fontWeight.semibold,
+      fontFamily: fonts.semibold,
       color: c.text,
     },
     content: { padding: spacing.md, gap: spacing.lg },
@@ -50,11 +50,11 @@ export const createDecisionStyles = (c: ThemeColors) =>
     },
     optionDecline: { borderColor: c.danger, backgroundColor: withAlpha(c.danger, 0.06) },
     optionDisabled: { opacity: 0.55 },
-    optionTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: c.text },
-    optionHint: { fontSize: fontSize.xs, color: c.textMuted },
+    optionTitle: { fontSize: fontSize.md, fontFamily: fonts.semibold, color: c.text },
+    optionHint: { fontFamily: fonts.regular, fontSize: fontSize.xs, color: c.textMuted },
 
     group: { gap: spacing.sm },
-    label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.text },
+    label: { fontSize: fontSize.sm, fontFamily: fonts.medium, color: c.text },
     program: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -68,11 +68,16 @@ export const createDecisionStyles = (c: ThemeColors) =>
       backgroundColor: c.surface,
     },
     programActive: { borderColor: c.primary, backgroundColor: c.primarySoft },
-    programName: { fontSize: fontSize.md, fontWeight: fontWeight.medium, color: c.text },
+    programName: { fontSize: fontSize.md, fontFamily: fonts.medium, color: c.text },
 
     reset: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start' },
-    resetText: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: c.primary },
-    prompt: { fontSize: fontSize.sm, color: c.textMuted, textAlign: 'center' },
+    resetText: { fontSize: fontSize.sm, fontFamily: fonts.semibold, color: c.primary },
+    prompt: {
+      fontFamily: fonts.regular,
+      fontSize: fontSize.sm,
+      color: c.textMuted,
+      textAlign: 'center',
+    },
 
     footer: {
       padding: spacing.md,

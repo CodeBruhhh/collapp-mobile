@@ -1,8 +1,8 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Icon } from '@/components/Icon';
 import { useTheme } from '@/hooks/useTheme';
 
 import { createStyles } from './DateField.styles';
@@ -120,7 +120,7 @@ export function DateField({
           accessibilityLabel={`Choose ${label.toLowerCase()} from a calendar`}
           onPress={openCalendar}
           style={styles.iconButton}>
-          <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+          <Icon name="calendar" size={20} color={colors.primary} />
         </Pressable>
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -137,7 +137,7 @@ export function DateField({
                   onPress={() => setPicking((p) => (p === 'day' ? 'year' : 'day'))}
                   style={styles.title}>
                   <Text style={styles.titleText}>{monthTitle}</Text>
-                  <Ionicons
+                  <Icon
                     name={picking === 'day' ? 'chevron-down' : 'chevron-up'}
                     size={16}
                     color={colors.text}
@@ -150,14 +150,14 @@ export function DateField({
                       accessibilityLabel="Previous month"
                       onPress={() => shiftMonth(-1)}
                       style={styles.iconButton}>
-                      <Ionicons name="chevron-back" size={20} color={colors.text} />
+                      <Icon name="chevron-back" size={20} color={colors.text} />
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Next month"
                       onPress={() => shiftMonth(1)}
                       style={styles.iconButton}>
-                      <Ionicons name="chevron-forward" size={20} color={colors.text} />
+                      <Icon name="chevron-forward" size={20} color={colors.text} />
                     </Pressable>
                   </View>
                 ) : null}

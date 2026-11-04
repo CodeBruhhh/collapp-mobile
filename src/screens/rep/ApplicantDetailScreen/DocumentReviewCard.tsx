@@ -19,7 +19,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { signedUrl } from '@/lib/storage';
 import { getErrorMessage } from '@/lib/validation';
 
-import { createRepStyles } from '../repStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 const SIGNED_URL_STALE_MS = 8 * 60 * 1000;
 
@@ -32,7 +32,7 @@ type DocumentReviewCardProps = {
 /** SDD screen 22 — open a submitted file and approve, reject or request a resubmission. */
 export function DocumentReviewCard({ document, locked, onReview }: DocumentReviewCardProps) {
   const { colors } = useTheme();
-  const styles = createRepStyles(colors);
+  const styles = createScreenStyles(colors);
   const [noteMode, setNoteMode] = useState<'resubmit' | 'rejected' | null>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);

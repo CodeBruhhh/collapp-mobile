@@ -12,43 +12,27 @@ type ToggleRowProps = {
   disabled?: boolean;
 };
 
-/** Labelled switch; the whole row is announced as one control. */
+/** Labelled switch on a ruled line; the description runs underneath. */
 export function ToggleRow({ label, description, value, onChange, disabled }: ToggleRowProps) {
-  const { colors, tokens } = useTheme();
+  const { colors } = useTheme();
   const styles = createStyles(colors);
 
-  const control = (
-    <Switch
-      accessibilityLabel={label}
-      accessibilityHint={description}
-      value={value}
-      onValueChange={onChange}
-      disabled={disabled}
-      trackColor={{ true: colors.primary, false: colors.border }}
-      thumbColor={tokens.editorial ? colors.surface : undefined}
-      ios_backgroundColor={tokens.editorial ? colors.border : undefined}
-    />
-  );
-
-  if (tokens.editorial) {
-    return (
-      <View style={[styles.ledgerRow, disabled && styles.disabled]}>
-        <View style={styles.row}>
-          <Text style={styles.ledgerLabel}>{label}</Text>
-          {control}
-        </View>
-        {description ? <Text style={styles.ledgerDescription}>{description}</Text> : null}
-      </View>
-    );
-  }
-
   return (
-    <View style={[styles.row, disabled && styles.disabled]}>
-      <View style={styles.text}>
+    <View style={[styles.ruled, disabled && styles.disabled]}>
+      <View style={styles.row}>
         <Text style={styles.label}>{label}</Text>
-        {description ? <Text style={styles.description}>{description}</Text> : null}
+        <Switch
+          accessibilityLabel={label}
+          accessibilityHint={description}
+          value={value}
+          onValueChange={onChange}
+          disabled={disabled}
+          trackColor={{ true: colors.primary, false: colors.border }}
+          thumbColor={colors.surface}
+          ios_backgroundColor={colors.border}
+        />
       </View>
-      {control}
+      {description ? <Text style={styles.description}>{description}</Text> : null}
     </View>
   );
 }

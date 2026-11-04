@@ -1,6 +1,6 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, Text, View } from 'react-native';
 
+import { Icon } from '@/components/Icon';
 import { useSync } from '@/context/SyncContext';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -11,8 +11,8 @@ import { createStyles } from './SyncBanner.styles';
  * and sync status"). Hidden when everything is online and synced.
  */
 export function SyncBanner() {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { status, localDrafts, pendingFiles, requestSync } = useSync();
 
   const waiting = localDrafts.length + pendingFiles.length;
@@ -32,11 +32,10 @@ export function SyncBanner() {
 
   return (
     <View style={styles.banner} accessibilityLiveRegion="polite">
-      <Ionicons
-        name={status === 'offline' ? 'cloud-offline-outline' : 'cloud-upload-outline'}
+      <Icon
+        name={status === 'offline' ? 'cloud-offline' : 'cloud-upload'}
         size={18}
         color={colors.text}
-        accessibilityElementsHidden
       />
       <Text style={styles.text}>{message}</Text>
       {status === 'idle' && waiting > 0 ? (

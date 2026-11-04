@@ -1,9 +1,9 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import { FilterTabs } from '@/components/FilterTabs';
+import { Icon } from '@/components/Icon';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { StatusBadge } from '@/components/StatusBadge';
 import type { AuditEntry } from '@/features/admin/api';
@@ -11,7 +11,7 @@ import { useAuditLogs, useBlockedAttachments, useRlsOverview } from '@/features/
 import { useTheme } from '@/hooks/useTheme';
 import { shortTime } from '@/lib/time';
 
-import { createAdminStyles } from '../adminStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 type Section = 'audit' | 'blocked' | 'rls';
 type AuditFilter =
@@ -66,8 +66,8 @@ function describe(entry: AuditEntry): string {
 
 /** SDD screens 29-30 — audit trail, flagged attachments and tenant/RLS oversight. */
 export function ComplianceScreen() {
-  const { colors, tokens } = useTheme();
-  const styles = createAdminStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createScreenStyles(colors);
   const [section, setSection] = useState<Section>('audit');
   const [auditFilter, setAuditFilter] = useState<AuditFilter>('all');
 
@@ -133,7 +133,7 @@ export function ComplianceScreen() {
           ) : audit.isError ? (
             <ErrorState error={audit.error} onRetry={audit.refetch} />
           ) : (
-            <EmptyState icon="document-text-outline" title="No audit entries" />
+            <EmptyState icon="document-text" title="No audit entries" />
           )
         }
         renderItem={({ item, index }) => (
@@ -171,7 +171,7 @@ export function ComplianceScreen() {
           ) : blocked.isError ? (
             <ErrorState error={blocked.error} onRetry={blocked.refetch} />
           ) : (
-            <EmptyState icon="shield-checkmark-outline" title="No blocked attachments" />
+            <EmptyState icon="shield-checkmark" title="No blocked attachments" />
           )
         }
         renderItem={({ item, index }) => (
@@ -187,7 +187,7 @@ export function ComplianceScreen() {
               pressed && styles.pressed,
             ]}>
             <View style={styles.row}>
-              <Ionicons name="alert-circle-outline" size={20} color={colors.danger} />
+              <Icon name="alert-circle" size={20} color={colors.danger} />
               <View style={styles.flex}>
                 <Text style={styles.cardTitle} numberOfLines={1}>
                   {item.attachment_name}
@@ -197,7 +197,7 @@ export function ComplianceScreen() {
                   {shortTime(item.created_at)}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              <Icon name="chevron-forward" size={18} color={colors.textMuted} />
             </View>
           </Pressable>
         )}

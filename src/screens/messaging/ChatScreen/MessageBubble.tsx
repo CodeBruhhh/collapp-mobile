@@ -1,8 +1,8 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { Icon } from '@/components/Icon';
 import { useAttachmentUrl, type ChatMessage } from '@/features/messaging/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { clockTime } from '@/lib/time';
@@ -56,7 +56,7 @@ function PhotoAttachment({
   if (message.scan_status === 'blocked') {
     return (
       <View style={[styles.photo, styles.photoNotice, { width: PHOTO_WIDTH }]}>
-        <Ionicons name="alert-circle-outline" size={24} color={colors.danger} />
+        <Icon name="alert-circle" size={24} color={colors.danger} />
         <Text style={[styles.noticeText, styles.blocked]}>Blocked by the security check</Text>
       </View>
     );
@@ -137,8 +137,8 @@ function FileAttachment({
         pressed && styles.filePressed,
       ]}>
       <View style={[styles.fileIcon, blocked && styles.fileIconBlocked]}>
-        <Ionicons
-          name={blocked ? 'alert-circle-outline' : 'document-text-outline'}
+        <Icon
+          name={blocked ? 'alert-circle' : 'document-text'}
           size={22}
           color={blocked ? colors.danger : colors.primary}
         />

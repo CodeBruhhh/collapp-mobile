@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { fontWeight, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import { fonts, TOUCH_TARGET, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -15,6 +15,5 @@ export const createStyles = (c: ThemeColors) =>
     },
     pressed: { opacity: 0.6 },
     inactive: { opacity: 0.45 },
-    icon: { width: 16, height: 16 },
-    label: { flex: 1, fontSize: 14, fontWeight: fontWeight.medium, color: c.primary },
+    label: { flex: 1, fontSize: 14, fontFamily: fonts.medium, color: c.primary },
   });

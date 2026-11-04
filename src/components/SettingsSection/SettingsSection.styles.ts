@@ -1,53 +1,22 @@
 import { StyleSheet } from 'react-native';
 
-import {
-  editorialSpace,
-  fontSize,
-  fontWeight,
-  spacing,
-  type ThemeColors,
-  type ThemeTokens,
-} from '@/styles';
+import { rhythm, spacing, type, type ThemeColors } from '@/styles';
 
-export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
+export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
-    section: { gap: spacing.sm },
-    title: {
-      paddingHorizontal: spacing.xs,
-      fontSize: fontSize.xs,
-      fontWeight: fontWeight.semibold,
-      letterSpacing: 0.6,
-      color: c.textMuted,
-      textTransform: 'uppercase',
-    },
-    card: {
-      backgroundColor: c.surface,
-      borderWidth: 1,
-      borderColor: c.border,
-      borderRadius: t.radius.lg,
-      padding: spacing.md,
-      gap: spacing.md,
-    },
-    // Editorial: a full-width section whose rows rule themselves off.
-    ledger: {
+    section: {
       gap: spacing.xs,
-      paddingTop: editorialSpace.section,
-      paddingHorizontal: editorialSpace.gutter,
+      paddingTop: rhythm.section,
+      paddingHorizontal: rhythm.gutter,
     },
     // A lifted sheet band, like the chart band on Analytics.
     band: {
-      marginTop: editorialSpace.section,
-      paddingBottom: editorialSpace.section,
+      marginTop: rhythm.section,
+      paddingBottom: rhythm.section,
       backgroundColor: c.surface,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
     },
-    ledgerTitle: {
-      fontFamily: t.headingFont,
-      fontSize: 19,
-      lineHeight: 26,
-      letterSpacing: -0.5,
-      color: c.text,
-    },
+    title: { ...type.heading, color: c.text },
   });

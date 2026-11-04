@@ -1,3 +1,5 @@
+import type { TextStyle } from 'react-native';
+
 /** Type scale: 12 / 14 / 16 / 18 / 24, plus 28 for the few display headings. */
 export const fontSize = {
   xs: 12,
@@ -14,9 +16,35 @@ export const lineHeight = {
   md: 24,
 } as const;
 
-export const fontWeight = {
-  regular: '400',
-  medium: '500',
-  semibold: '600',
-  bold: '700',
+/**
+ * Loaded before the first screen renders (src/app/_layout.tsx). Each weight is
+ * its own family: `fontWeight` does not select custom font files on Android.
+ */
+export const fonts = {
+  serif: 'LibreBaskerville_400Regular',
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
 } as const;
+
+/** Semantic text styles; spread into a style and add the color. */
+export const type = {
+  /** Screen headings: "Platform overview", "Hello, Aaron". */
+  display: { fontFamily: fonts.serif, fontSize: 27, lineHeight: 32, letterSpacing: -1.1 },
+  /** Section headings. */
+  heading: { fontFamily: fonts.serif, fontSize: 19, lineHeight: 26, letterSpacing: -0.5 },
+  /** Large figures set in the serif. */
+  numeral: { fontFamily: fonts.serif, letterSpacing: -1 },
+  /** Row titles. */
+  title: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 21 },
+  body: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 21 },
+  label: { fontFamily: fonts.medium, fontSize: 14 },
+  caption: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  /** Small caps labels: badges, eyebrows. */
+  overline: {
+    fontFamily: fonts.semibold,
+    fontSize: 10,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+} as const satisfies Record<string, TextStyle>;

@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import {
   Alert,
@@ -12,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
 import { TextField } from '@/components/TextField';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage } from '@/lib/validation';
@@ -152,8 +152,8 @@ export function DecisionSheet({
                   decision === 'accept' && styles.optionAdmit,
                   !canAdmit && styles.optionDisabled,
                 ]}>
-                <Ionicons
-                  name={decision === 'accept' ? 'checkmark-circle' : 'checkmark-circle-outline'}
+                <Icon
+                  name={decision === 'accept' ? 'checkmark-circle-filled' : 'checkmark-circle'}
                   size={28}
                   color={canAdmit ? colors.status.accepted : colors.textMuted}
                 />
@@ -167,8 +167,8 @@ export function DecisionSheet({
                 accessibilityState={{ checked: decision === 'reject' }}
                 onPress={() => choose('reject')}
                 style={[styles.option, decision === 'reject' && styles.optionDecline]}>
-                <Ionicons
-                  name={decision === 'reject' ? 'close-circle' : 'close-circle-outline'}
+                <Icon
+                  name={decision === 'reject' ? 'close-circle-filled' : 'close-circle'}
                   size={28}
                   color={colors.danger}
                 />
@@ -189,7 +189,7 @@ export function DecisionSheet({
                       accessibilityState={{ checked: active }}
                       onPress={() => chooseProgram(p.id)}
                       style={[styles.program, active && styles.programActive]}>
-                      <Ionicons
+                      <Icon
                         name={active ? 'radio-button-on' : 'radio-button-off'}
                         size={20}
                         color={active ? colors.primary : colors.textMuted}
@@ -228,7 +228,7 @@ export function DecisionSheet({
                     }}
                     hitSlop={8}
                     style={styles.reset}>
-                    <Ionicons name="refresh" size={14} color={colors.primary} />
+                    <Icon name="refresh" size={14} color={colors.primary} />
                     <Text style={styles.resetText}>Use template</Text>
                   </Pressable>
                 ) : null}

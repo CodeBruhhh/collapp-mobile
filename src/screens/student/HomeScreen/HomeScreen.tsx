@@ -1,9 +1,9 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
+import { Icon } from '@/components/Icon';
 import { MatchCard } from '@/components/MatchCard';
 import { PostCard } from '@/components/PostCard';
 import { SyncBanner } from '@/components/SyncBanner';
@@ -76,7 +76,7 @@ export function HomeScreen() {
         accessibilityLabel="Search universities"
         onPress={() => router.push('/student/explore')}
         style={styles.search}>
-        <Ionicons name="search" size={18} color={colors.textMuted} />
+        <Icon name="search" size={18} color={colors.textMuted} />
         <Text style={styles.searchText}>Search universities</Text>
       </Pressable>
 
@@ -176,7 +176,7 @@ export function HomeScreen() {
                   <Text style={styles.cardTitle}>{c.name}</Text>
                   <Text style={styles.meta}>{collegeLocation(c)}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                <Icon name="chevron-forward" size={18} color={colors.textMuted} />
               </View>
             </Card>
           ))

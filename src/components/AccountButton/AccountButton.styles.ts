@@ -19,6 +19,5 @@ export const createStyles = (c: ThemeColors) =>
       justifyContent: 'center',
       backgroundColor: c.primarySoft,
     },
-    glyph: { width: 17, height: 17 },
     pressed: { opacity: 0.6 },
   });

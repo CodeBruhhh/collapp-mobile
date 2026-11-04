@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, spacing, type ThemeColors } from '@/styles';
+import { fonts, fontSize, spacing, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -14,9 +14,14 @@ export const createStyles = (c: ThemeColors) =>
     },
     title: {
       fontSize: fontSize.xl,
-      fontWeight: fontWeight.bold,
+      fontFamily: fonts.semibold,
       color: c.text,
       textAlign: 'center',
     },
-    body: { fontSize: fontSize.md, color: c.textMuted, textAlign: 'center' },
+    body: {
+      fontFamily: fonts.regular,
+      fontSize: fontSize.md,
+      color: c.textMuted,
+      textAlign: 'center',
+    },
   });

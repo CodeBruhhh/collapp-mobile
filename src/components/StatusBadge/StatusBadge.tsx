@@ -7,24 +7,13 @@ import { createStyles } from './StatusBadge.styles';
 
 /** Color-coded milestone badge (SRS 3.2.2). The label carries the meaning, not just the color. */
 export function StatusBadge({ label, color }: { label: string; color: string }) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
-
-  if (tokens.editorial) {
-    return (
-      <View
-        style={[styles.badge, styles.outlined, { borderColor: withAlpha(color, 0.45) }]}
-        accessibilityLabel={`Status: ${label}`}>
-        <Text style={[styles.text, styles.caps, { color }]}>{label}</Text>
-      </View>
-    );
-  }
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   return (
     <View
-      style={[styles.badge, { backgroundColor: withAlpha(color, 0.12) }]}
+      style={[styles.badge, { borderColor: withAlpha(color, 0.45) }]}
       accessibilityLabel={`Status: ${label}`}>
-      <View style={[styles.dot, { backgroundColor: color }]} />
       <Text style={[styles.text, { color }]}>{label}</Text>
     </View>
   );

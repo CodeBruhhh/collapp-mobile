@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { File } from 'expo-file-system';
 import { Image } from 'expo-image';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
@@ -7,6 +6,7 @@ import { Alert, Modal, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import type { LocalFile } from '@/lib/storage';
 import { getErrorMessage } from '@/lib/validation';
@@ -65,10 +65,10 @@ export function ScanPreview({ file, title, onRetake, onCancel, onConfirm }: Scan
               contentFit="contain"
               accessibilityLabel="Scanned document preview"
             />
-            <Text style={styles.meta}>
-              <Ionicons name="document-outline" size={14} />{' '}
-              {(current.size / 1024 / 1024).toFixed(2)} MB · JPEG
-            </Text>
+            <View style={styles.metaRow}>
+              <Icon name="document" size={14} color={colors.textMuted} />
+              <Text style={styles.meta}>{(current.size / 1024 / 1024).toFixed(2)} MB · JPEG</Text>
+            </View>
           </>
         ) : null}
         <View style={styles.actions}>

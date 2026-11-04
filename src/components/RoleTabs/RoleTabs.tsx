@@ -1,50 +1,37 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { Tabs } from 'expo-router';
-import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AccountButton } from '@/components/AccountButton';
+import { Icon, type IconName } from '@/components/Icon';
 import { NotificationBell } from '@/components/NotificationBell';
 import { useUnreadMessageCount } from '@/features/messaging/hooks';
 import { useTheme } from '@/hooks/useTheme';
-import { fontSize, fontWeight, type ThemeColors } from '@/styles';
-
-type IconName = ComponentProps<typeof Ionicons>['name'];
+import { fonts, radius, type, type ThemeColors } from '@/styles';
 
 export type TabConfig = {
   /** Must match the route file name, e.g. "home" -> home.tsx */
   name: string;
   title: string;
   icon: IconName;
-  /** Line glyph (SVG asset) used instead of `icon` in the editorial theme. */
-  glyph?: number;
 };
 
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     actions: { flexDirection: 'row', alignItems: 'center' },
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    title: { fontSize: 19, letterSpacing: -0.6, color: c.text },
+    title: { fontFamily: fonts.regular, fontSize: 19, letterSpacing: -0.6, color: c.text },
     badge: {
       paddingHorizontal: 7,
       paddingVertical: 4,
-      borderRadius: 4,
+      borderRadius: radius.md,
       borderWidth: 1,
       borderColor: c.border,
     },
-    badgeText: {
-      fontSize: 9,
-      fontWeight: fontWeight.semibold,
-      letterSpacing: 1,
-      color: c.primary,
-      textTransform: 'uppercase',
-    },
+    badgeText: { ...type.overline, fontSize: 9, color: c.primary },
     tabButton: { flex: 1 },
     // Full-width track so flexbox centers the bar over the glyph (no offset math).
     indicatorTrack: { position: 'absolute', top: 0, left: 0, right: 0, alignItems: 'center' },
     indicator: { width: 28, height: 2, backgroundColor: c.primary },
-    glyph: { width: 20, height: 20 },
   });
 
 function HeaderActions() {
@@ -59,7 +46,7 @@ function HeaderActions() {
 }
 
 /** Screen name plus an outlined role badge, e.g. "Analytics  ADMIN". */
-function EditorialTitle({ title, badge }: { title: string; badge?: string }) {
+function HeaderTitle({ title, badge }: { title: string; badge?: string }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   return (
@@ -78,33 +65,27 @@ function EditorialTitle({ title, badge }: { title: string; badge?: string }) {
 
 type RoleTabsProps = {
   tabs: TabConfig[];
-  /** Role label shown beside the title in the editorial header. */
+  /** Role label shown beside the title. */
   badge?: string;
 };
 
 /** Bottom-tab navigator shared by all three roles; each role only supplies its tab list. */
 export function RoleTabs({ tabs, badge }: RoleTabsProps) {
-  const { colors, tokens } = useTheme();
+  const { colors } = useTheme();
   const styles = createStyles(colors);
   // Every role has a "messages" tab; it shows the unread count (SDD 15).
   const unreadMessages = useUnreadMessageCount();
-  const editorial = tokens.editorial;
 
   return (
     <Tabs
       screenOptions={{
         headerStyle: {
-          backgroundColor: editorial ? colors.background : colors.surface,
-          ...(editorial && { borderBottomWidth: StyleSheet.hairlineWidth }),
+          backgroundColor: colors.background,
+          borderBottomWidth: StyleSheet.hairlineWidth,
           borderBottomColor: colors.border,
         },
         headerShadowVisible: false,
-        headerTitleAlign: editorial ? 'left' : undefined,
-        headerTitleStyle: {
-          color: colors.text,
-          fontSize: fontSize.lg,
-          fontWeight: fontWeight.semibold,
-        },
+        headerTitleAlign: 'left',
         headerRight: () => <HeaderActions />,
         sceneStyle: { backgroundColor: colors.background },
         tabBarStyle: {
@@ -112,32 +93,32 @@ export function RoleTabs({ tabs, badge }: RoleTabsProps) {
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
         },
-        tabBarLabelStyle: editorial
-          ? { fontSize: 10, fontWeight: fontWeight.medium }
-          : { fontSize: fontSize.xs, fontWeight: fontWeight.medium },
+        tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: 10 },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarBadgeStyle: { backgroundColor: colors.danger, fontSize: 11 },
-        // The editorial bar marks the current tab with a short rule above it.
-        tabBarButton: editorial
-          ? (props) => (
-              <Pressable
-                onPress={props.onPress}
-                onLongPress={props.onLongPress}
-                testID={props.testID}
-                aria-label={props['aria-label']}
-                aria-selected={props['aria-selected']}
-                role={props.role}
-                style={[props.style, styles.tabButton]}>
-                {props['aria-selected'] ? (
-                  <View style={styles.indicatorTrack} pointerEvents="none">
-                    <View style={styles.indicator} />
-                  </View>
-                ) : null}
-                {props.children}
-              </Pressable>
-            )
-          : undefined,
+        tabBarBadgeStyle: {
+          backgroundColor: colors.danger,
+          fontFamily: fonts.medium,
+          fontSize: 11,
+        },
+        // The current tab is marked with a short rule above its glyph.
+        tabBarButton: (props) => (
+          <Pressable
+            onPress={props.onPress}
+            onLongPress={props.onLongPress}
+            testID={props.testID}
+            aria-label={props['aria-label']}
+            aria-selected={props['aria-selected']}
+            role={props.role}
+            style={[props.style, styles.tabButton]}>
+            {props['aria-selected'] ? (
+              <View style={styles.indicatorTrack} pointerEvents="none">
+                <View style={styles.indicator} />
+              </View>
+            ) : null}
+            {props.children}
+          </Pressable>
+        ),
       }}>
       {tabs.map((tab) => (
         <Tabs.Screen
@@ -145,26 +126,9 @@ export function RoleTabs({ tabs, badge }: RoleTabsProps) {
           name={tab.name}
           options={{
             title: tab.title,
-            headerTitle: editorial
-              ? () => <EditorialTitle title={tab.title} badge={badge} />
-              : undefined,
+            headerTitle: () => <HeaderTitle title={tab.title} badge={badge} />,
             tabBarBadge: tab.name === 'messages' && unreadMessages ? unreadMessages : undefined,
-            // Filled glyph marks the current tab; outline for the rest. The
-            // editorial bar keeps outlines and uses its indicator instead.
-            tabBarIcon: ({ focused, color, size }) =>
-              editorial && tab.glyph ? (
-                <Image source={tab.glyph} style={styles.glyph} tintColor={String(color)} />
-              ) : (
-                <Ionicons
-                  name={
-                    focused && !editorial
-                      ? (tab.icon.replace(/-outline$/, '') as IconName)
-                      : tab.icon
-                  }
-                  size={editorial ? 21 : size}
-                  color={color}
-                />
-              ),
+            tabBarIcon: ({ color }) => <Icon name={tab.icon} size={20} color={String(color)} />,
           }}
         />
       ))}

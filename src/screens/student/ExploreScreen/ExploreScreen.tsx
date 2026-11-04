@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useDeferredValue, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from 'react-native';
@@ -6,6 +5,7 @@ import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from 'reac
 import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
+import { Icon } from '@/components/Icon';
 import { Select } from '@/components/Select';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { PH_REGIONS } from '@/data/ph-address';
@@ -63,7 +63,7 @@ export function ExploreScreen() {
       ListHeaderComponent={
         <View style={styles.header}>
           <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color={colors.textMuted} />
+            <Icon name="search" size={18} color={colors.textMuted} />
             <TextInput
               value={search}
               onChangeText={setSearch}
@@ -80,7 +80,7 @@ export function ExploreScreen() {
                 onPress={() => setSearch('')}
                 hitSlop={8}
                 style={styles.clear}>
-                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+                <Icon name="close-circle-filled" size={18} color={colors.textMuted} />
               </Pressable>
             ) : null}
           </View>
@@ -115,14 +115,14 @@ export function ExploreScreen() {
           <ErrorState error={colleges.error} onRetry={colleges.refetch} />
         ) : scope === 'saved' && !filtering ? (
           <EmptyState
-            icon="bookmark-outline"
+            icon="bookmark"
             title="No saved universities"
             body="Tap Save on a university to keep it here."
             actionLabel="Browse all"
             onAction={() => setScope('all')}
           />
         ) : (
-          <EmptyState icon="school-outline" title="No matches" body="Try another name or region." />
+          <EmptyState icon="school" title="No matches" body="Try another name or region." />
         )
       }
       renderItem={({ item }) => {
@@ -148,7 +148,7 @@ export function ExploreScreen() {
                 </Text>
               </View>
               {savedIds.has(item.id) ? (
-                <Ionicons name="bookmark" size={18} color={colors.primary} />
+                <Icon name="bookmark-filled" size={18} color={colors.primary} />
               ) : null}
             </View>
           </Card>

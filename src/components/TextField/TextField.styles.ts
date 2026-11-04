@@ -2,25 +2,25 @@ import { StyleSheet } from 'react-native';
 
 import {
   CONTROL_HEIGHT,
+  fonts,
   fontSize,
-  fontWeight,
+  radius,
   spacing,
   TOUCH_TARGET,
   type ThemeColors,
-  type ThemeTokens,
 } from '@/styles';
 
-export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
+export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { gap: spacing.xs },
-    label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.text },
+    label: { fontSize: fontSize.sm, fontFamily: fonts.medium, color: c.text },
     inputRow: {
       flexDirection: 'row',
       alignItems: 'center',
       minHeight: CONTROL_HEIGHT,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: t.radius.md,
+      borderRadius: radius.md,
       backgroundColor: c.surface,
     },
     inputRowFocused: { borderColor: c.primary },
@@ -30,6 +30,7 @@ export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
       minHeight: CONTROL_HEIGHT,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
+      fontFamily: fonts.regular,
       fontSize: fontSize.md,
       color: c.text,
     },
@@ -40,6 +41,6 @@ export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    error: { fontSize: fontSize.sm, color: c.danger },
-    hint: { fontSize: fontSize.sm, color: c.textMuted },
+    error: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.danger },
+    hint: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
   });

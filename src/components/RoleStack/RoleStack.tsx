@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import { StyleSheet } from 'react-native';
 
 import { useTheme } from '@/hooks/useTheme';
-import { fontSize, fontWeight } from '@/styles';
+import { fonts } from '@/styles';
 
 /**
  * Stack shared by the three role sections. Tabs live in (tabs) with their own
@@ -10,25 +10,21 @@ import { fontSize, fontWeight } from '@/styles';
  * set their title with <Stack.Screen options={{ title }} />.
  */
 export function RoleStack() {
-  const { colors, tokens } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: tokens.editorial ? colors.background : colors.surface },
+        headerStyle: { backgroundColor: colors.background },
         headerShadowVisible: false,
         headerTintColor: colors.primary,
-        headerTitleStyle: tokens.editorial
-          ? { color: colors.text, fontSize: 19, fontWeight: fontWeight.regular }
-          : { color: colors.text, fontSize: fontSize.lg, fontWeight: fontWeight.semibold },
+        headerTitleStyle: { color: colors.text, fontFamily: fonts.regular, fontSize: 19 },
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: {
           backgroundColor: colors.background,
           // Native stack headers take no border, so the rule sits on top of the page.
-          ...(tokens.editorial && {
-            borderTopWidth: StyleSheet.hairlineWidth,
-            borderTopColor: colors.border,
-          }),
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: colors.border,
         },
       }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

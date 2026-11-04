@@ -15,7 +15,7 @@ import { requirementSchema, STANDARD_REQUIREMENTS } from '@/features/rep/schemas
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
-import { createRepStyles } from '../repStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 const ALL_PROGRAMS = 'All programs';
 const KIND_LABELS = { Document: 'document', Essay: 'essay' } as const;
@@ -23,7 +23,7 @@ const KIND_LABELS = { Document: 'document', Essay: 'essay' } as const;
 /** SDD screen 24 — dynamic requirement builder (SRS 3.1.2.1). */
 export function RequirementsScreen() {
   const { colors } = useTheme();
-  const styles = createRepStyles(colors);
+  const styles = createScreenStyles(colors);
   const collegeId = useCollegeId();
   const college = useMyCollege();
   const actions = useRepActions();

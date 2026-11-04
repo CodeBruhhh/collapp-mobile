@@ -1,20 +1,32 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import {
+  fonts,
+  fontSize,
+  radius,
+  rhythm,
+  spacing,
+  TOUCH_TARGET,
+  type,
+  type ThemeColors,
+} from '@/styles';
 
-/** Shared layout for the school-representative screens (SDD screens 19-26). */
-export const createRepStyles = (c: ThemeColors) =>
+/**
+ * Shared layout for the representative and admin screens (SDD screens 19-31):
+ * literary headings, ruled ledger rows and the console's common pieces.
+ */
+export const createScreenStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.md, gap: spacing.md },
+    content: { padding: rhythm.gutter, gap: spacing.lg },
     flex: { flex: 1 },
-    title: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: c.text },
-    subtitle: { fontSize: fontSize.sm, color: c.textMuted },
+    title: { ...type.display, color: c.text },
+    subtitle: { ...type.body, color: c.textMuted },
     section: { gap: spacing.sm },
-    sectionTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: c.text },
-    cardTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: c.text },
-    body: { fontSize: fontSize.md, color: c.text, lineHeight: 22 },
-    meta: { fontSize: fontSize.sm, color: c.textMuted },
+    sectionTitle: { ...type.heading, color: c.text },
+    cardTitle: { ...type.title, color: c.text },
+    body: { ...type.body, color: c.text },
+    meta: { ...type.caption, color: c.textMuted },
     row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
     rowBetween: {
       flexDirection: 'row',
@@ -34,8 +46,13 @@ export const createRepStyles = (c: ThemeColors) =>
       borderColor: c.border,
       backgroundColor: c.surface,
     },
-    statValue: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: c.text },
-    statLabel: { fontSize: fontSize.xs, color: c.textMuted, textAlign: 'center' },
+    statValue: { fontSize: fontSize.xl, fontFamily: fonts.semibold, color: c.text },
+    statLabel: {
+      fontFamily: fonts.regular,
+      fontSize: fontSize.xs,
+      color: c.textMuted,
+      textAlign: 'center',
+    },
     banner: {
       gap: spacing.sm,
       padding: spacing.md,
@@ -52,11 +69,11 @@ export const createRepStyles = (c: ThemeColors) =>
       backgroundColor: c.surface,
     },
     kv: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
-    kvLabel: { fontSize: fontSize.sm, color: c.textMuted },
+    kvLabel: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
     kvValue: {
       flexShrink: 1,
       fontSize: fontSize.sm,
-      fontWeight: fontWeight.medium,
+      fontFamily: fonts.medium,
       color: c.text,
       textAlign: 'right',
     },
@@ -71,7 +88,13 @@ export const createRepStyles = (c: ThemeColors) =>
       borderColor: c.border,
       backgroundColor: c.surface,
     },
-    searchInput: { flex: 1, minHeight: TOUCH_TARGET, fontSize: fontSize.md, color: c.text },
+    searchInput: {
+      flex: 1,
+      minHeight: TOUCH_TARGET,
+      fontFamily: fonts.regular,
+      fontSize: fontSize.md,
+      color: c.text,
+    },
     docPreview: {
       height: 180,
       overflow: 'hidden',
@@ -91,5 +114,28 @@ export const createRepStyles = (c: ThemeColors) =>
     headerBlock: { gap: spacing.sm },
     decisionCard: { borderLeftWidth: 4 },
     reason: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-    footerHint: { fontSize: fontSize.xs, color: c.textMuted, textAlign: 'center' },
+    footerHint: {
+      fontFamily: fonts.regular,
+      fontSize: fontSize.xs,
+      color: c.textMuted,
+      textAlign: 'center',
+    },
+    heading: { gap: 10 },
+    /** Ledger lists: rows sit flush, the rules separate them. */
+    listContent: { padding: rhythm.gutter, paddingBottom: spacing.xl },
+    listHeader: { gap: spacing.md, paddingBottom: spacing.md },
+    badges: { alignItems: 'flex-end', gap: 6 },
+    /** Muted count above a ledger, e.g. "12 people". */
+    tally: { ...type.caption, fontSize: 12, letterSpacing: 0.4, color: c.textMuted },
+    /** One ruled line of a ledger; the list's first row adds `ledgerTop`. */
+    ledgerRow: {
+      gap: 6,
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    ledgerTop: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border },
+    pressed: { backgroundColor: c.surfaceMuted },
+    notice: { ...type.caption, fontFamily: fonts.medium, color: c.primary, textAlign: 'center' },
+    dangerText: { color: c.danger },
   });

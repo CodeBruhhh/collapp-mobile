@@ -1,11 +1,11 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack } from 'expo-router';
-import { useState, type ComponentProps } from 'react';
+import { useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
 import { FilterTabs } from '@/components/FilterTabs';
+import { Icon, type IconName } from '@/components/Icon';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { useAuth } from '@/context/AuthContext';
 import type { AppNotification } from '@/features/notifications/api';
@@ -17,7 +17,6 @@ import { getErrorMessage } from '@/lib/validation';
 
 import { createStyles } from './NotificationsScreen.styles';
 
-type IconName = ComponentProps<typeof Ionicons>['name'];
 type Filter = 'all' | 'unread' | 'messages' | 'updates';
 
 const MATCHES: Record<Filter, (n: AppNotification) => boolean> = {
@@ -107,14 +106,14 @@ export function NotificationsScreen() {
                         markRead.mutate(undefined, { onError: fail('Could not update') })
                       }
                       style={[styles.headerButton, !unread && styles.headerButtonDisabled]}>
-                      <Ionicons name="checkmark-done" size={22} color={colors.primary} />
+                      <Icon name="checkmark-done" size={22} color={colors.primary} />
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Clear notifications"
                       onPress={confirmClear}
                       style={styles.headerButton}>
-                      <Ionicons name="trash-outline" size={21} color={colors.text} />
+                      <Icon name="trash" size={21} color={colors.text} />
                     </Pressable>
                   </View>
                 ) : null,
@@ -138,10 +137,10 @@ export function NotificationsScreen() {
         ) : notifications.isError ? (
           <ErrorState error={notifications.error} onRetry={notifications.refetch} />
         ) : filter === 'unread' && all.length ? (
-          <EmptyState icon="checkmark-done-outline" title="You're all caught up" />
+          <EmptyState icon="checkmark-done" title="You're all caught up" />
         ) : (
           <EmptyState
-            icon="notifications-outline"
+            icon="notifications"
             title={filter === 'all' ? 'No notifications' : 'Nothing here'}
             body={filter === 'all' ? 'Updates and messages will show up here.' : undefined}
           />
@@ -156,8 +155,8 @@ export function NotificationsScreen() {
             accessibilityLabel={`${isUnread ? 'Unread. ' : ''}${item.title}. ${item.body}`}>
             <View style={styles.row}>
               <View style={[styles.icon, isUnread && styles.iconUnread]}>
-                <Ionicons
-                  name={(NOTIFICATION_ICONS[item.type] ?? 'notifications-outline') as IconName}
+                <Icon
+                  name={(NOTIFICATION_ICONS[item.type] ?? 'notifications') as IconName}
                   size={18}
                   color={isUnread ? colors.primary : colors.textMuted}
                 />

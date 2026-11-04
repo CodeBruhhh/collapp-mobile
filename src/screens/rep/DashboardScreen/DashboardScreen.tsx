@@ -1,10 +1,10 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
+import { Icon } from '@/components/Icon';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
@@ -12,12 +12,12 @@ import { APPLICANT_FILTERS, studentName } from '@/features/rep/api';
 import { useApplicants, useMyCollege } from '@/features/rep/hooks';
 import { useTheme } from '@/hooks/useTheme';
 
-import { createRepStyles } from '../repStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 /** SDD screen 19 — applicant counts, profile status, recent applicants and quick actions. */
 export function DashboardScreen() {
   const { colors } = useTheme();
-  const styles = createRepStyles(colors);
+  const styles = createScreenStyles(colors);
   const college = useMyCollege();
   const applicants = useApplicants();
 
@@ -120,7 +120,7 @@ export function DashboardScreen() {
                   <Text style={styles.cardTitle}>{studentName(a.student)}</Text>
                   <Text style={styles.meta}>{a.program?.name}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                <Icon name="chevron-forward" size={18} color={colors.textMuted} />
               </View>
               <StatusBadge
                 label={APPLICATION_STATUS_LABELS[a.status]}

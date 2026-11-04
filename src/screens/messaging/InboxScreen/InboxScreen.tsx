@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
+import { Icon } from '@/components/Icon';
 import { Select } from '@/components/Select';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { useAuth } from '@/context/AuthContext';
@@ -124,7 +124,7 @@ export function InboxScreen() {
           <ErrorState error={threads.error} onRetry={threads.refetch} />
         ) : role === 'student' ? (
           <EmptyState
-            icon="chatbubbles-outline"
+            icon="chatbubbles"
             title="No conversations yet"
             body="Open a university's page and tap Message admissions to ask a question."
             actionLabel="Explore universities"
@@ -132,12 +132,12 @@ export function InboxScreen() {
           />
         ) : role === 'school_rep' && repFilter === 'students' ? (
           <EmptyState
-            icon="chatbubbles-outline"
+            icon="chatbubbles"
             title="No student inquiries"
             body="Students who message your college appear here. You can also message an applicant from their application."
           />
         ) : (
-          <EmptyState icon="chatbubbles-outline" title="No conversations yet" />
+          <EmptyState icon="chatbubbles" title="No conversations yet" />
         )
       }
       renderItem={({ item }) => {
@@ -153,7 +153,7 @@ export function InboxScreen() {
             <View style={styles.row}>
               {role === 'school_rep' && item.kind === 'rep_admin' ? (
                 <View style={styles.adminAvatar}>
-                  <Ionicons name="shield-checkmark-outline" size={24} color={colors.text} />
+                  <Icon name="shield-checkmark" size={24} color={colors.text} />
                 </View>
               ) : (
                 <CollegeLogo

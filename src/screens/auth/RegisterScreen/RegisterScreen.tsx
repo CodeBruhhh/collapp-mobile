@@ -1,10 +1,10 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { FormScreen } from '@/components/FormScreen';
+import { Icon } from '@/components/Icon';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { registerSchema } from '@/features/auth/schemas';
@@ -123,8 +123,8 @@ export function RegisterScreen() {
           accessibilityState={{ checked: fields.acceptedTerms }}
           onPress={() => set('acceptedTerms')(!fields.acceptedTerms)}
           style={styles.checkboxRow}>
-          <Ionicons
-            name={fields.acceptedTerms ? 'checkbox' : 'square-outline'}
+          <Icon
+            name={fields.acceptedTerms ? 'checkbox-filled' : 'square'}
             size={24}
             color={fields.acceptedTerms ? colors.primary : colors.textMuted}
           />

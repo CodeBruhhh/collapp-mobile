@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, lineHeight, radius, spacing, type ThemeColors } from '@/styles';
+import { fonts, fontSize, lineHeight, radius, spacing, type ThemeColors } from '@/styles';
 
 /** Inline photos and file cards share one width so a conversation lines up. */
 export const PHOTO_WIDTH = 232;
@@ -31,13 +31,23 @@ export const createStyles = (c: ThemeColors) =>
     theirsJoinTop: { borderTopLeftRadius: JOINED_RADIUS },
     theirsJoinBottom: { borderBottomLeftRadius: JOINED_RADIUS },
 
-    body: { fontSize: fontSize.md, lineHeight: lineHeight.md - 2, color: c.text },
+    body: {
+      fontFamily: fonts.regular,
+      fontSize: fontSize.md,
+      lineHeight: lineHeight.md - 2,
+      color: c.text,
+    },
     bodyMine: { color: c.onPrimary },
     caption: { paddingHorizontal: spacing.sm, paddingTop: spacing.xs, paddingBottom: 2 },
 
-    status: { fontSize: fontSize.xs, color: c.textMuted, paddingHorizontal: spacing.xs },
+    status: {
+      fontFamily: fonts.regular,
+      fontSize: fontSize.xs,
+      color: c.textMuted,
+      paddingHorizontal: spacing.xs,
+    },
     statusMine: { textAlign: 'right' },
-    error: { color: c.danger, fontWeight: fontWeight.medium },
+    error: { color: c.danger, fontFamily: fonts.medium },
 
     photo: {
       overflow: 'hidden',
@@ -54,7 +64,12 @@ export const createStyles = (c: ThemeColors) =>
       backgroundColor: 'rgba(0,0,0,0.25)',
     },
     photoNotice: { height: 120, gap: spacing.sm, padding: spacing.md },
-    noticeText: { fontSize: fontSize.sm, color: c.textMuted, textAlign: 'center' },
+    noticeText: {
+      fontFamily: fonts.regular,
+      fontSize: fontSize.sm,
+      color: c.textMuted,
+      textAlign: 'center',
+    },
     blocked: { color: c.danger },
 
     file: {
@@ -78,6 +93,6 @@ export const createStyles = (c: ThemeColors) =>
     },
     fileIconBlocked: { backgroundColor: c.surfaceMuted },
     fileText: { flex: 1, gap: 2 },
-    fileName: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: c.text },
-    fileMeta: { fontSize: fontSize.xs, color: c.textMuted },
+    fileName: { fontSize: fontSize.sm, fontFamily: fonts.semibold, color: c.text },
+    fileMeta: { fontFamily: fonts.regular, fontSize: fontSize.xs, color: c.textMuted },
   });

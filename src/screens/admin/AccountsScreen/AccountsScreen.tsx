@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from 'react-native';
@@ -7,6 +6,7 @@ import { ActionSheet, type SheetAction } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
+import { Icon } from '@/components/Icon';
 import { InfoRow } from '@/components/InfoRow';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -22,7 +22,7 @@ import { collegeLocation } from '@/features/colleges/api';
 import { useTheme } from '@/hooks/useTheme';
 import { ROLE_LABELS } from '@/types/roles';
 
-import { createAdminStyles } from '../adminStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 type Section = 'users' | 'colleges';
 type UserFilter = 'all' | 'student' | 'school_rep' | 'admin' | 'suspended';
@@ -39,8 +39,8 @@ const MAX_FEATURED = 10;
 
 /** SDD screen 28 — user and institution management. */
 export function AccountsScreen() {
-  const { colors, tokens } = useTheme();
-  const styles = createAdminStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createScreenStyles(colors);
   const { session } = useAuth();
   const [section, setSection] = useState<Section>('users');
   const [draftSearch, setDraftSearch] = useState('');
@@ -206,7 +206,7 @@ export function AccountsScreen() {
       {section === 'users' ? (
         <>
           <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color={colors.textMuted} />
+            <Icon name="search" size={18} color={colors.textMuted} />
             <TextInput
               value={draftSearch}
               onChangeText={setDraftSearch}
@@ -259,7 +259,7 @@ export function AccountsScreen() {
             ) : users.isError ? (
               <ErrorState error={users.error} onRetry={users.refetch} />
             ) : (
-              <EmptyState icon="people-outline" title="No users match" />
+              <EmptyState icon="people" title="No users match" />
             )
           }
           renderItem={({ item, index }) => (
@@ -316,7 +316,7 @@ export function AccountsScreen() {
           ) : colleges.isError ? (
             <ErrorState error={colleges.error} onRetry={colleges.refetch} />
           ) : (
-            <EmptyState icon="school-outline" title="No colleges yet" />
+            <EmptyState icon="school" title="No colleges yet" />
           )
         }
         renderItem={({ item, index }) => {

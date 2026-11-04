@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { fontWeight, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import { fonts, TOUCH_TARGET, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -10,7 +10,6 @@ export const createStyles = (c: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    glyph: { width: 19, height: 19 },
     badge: {
       position: 'absolute',
       top: 6,
@@ -23,5 +22,5 @@ export const createStyles = (c: ThemeColors) =>
       justifyContent: 'center',
       backgroundColor: c.danger,
     },
-    badgeText: { fontSize: 11, fontWeight: fontWeight.bold, color: '#FFFFFF' },
+    badgeText: { fontSize: 11, fontFamily: fonts.semibold, color: '#FFFFFF' },
   });

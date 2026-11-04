@@ -1,8 +1,8 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Icon } from '@/components/Icon';
 import { useTheme } from '@/hooks/useTheme';
 
 import { createStyles } from './Select.styles';
@@ -30,8 +30,8 @@ export function Select({
   disabled,
   hideLabel,
 }: SelectProps) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -59,7 +59,7 @@ export function Select({
         <Text style={[styles.value, !value && styles.placeholder]} numberOfLines={1}>
           {value ?? placeholder}
         </Text>
-        <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
+        <Icon name="chevron-down" size={18} color={colors.textMuted} />
       </Pressable>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -74,7 +74,7 @@ export function Select({
               accessibilityLabel="Close"
               onPress={() => setOpen(false)}
               style={styles.close}>
-              <Ionicons name="close" size={24} color={colors.text} />
+              <Icon name="close" size={24} color={colors.text} />
             </Pressable>
           </View>
           {options.length > 8 ? (
@@ -99,9 +99,7 @@ export function Select({
                 onPress={() => choose(item)}
                 style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}>
                 <Text style={styles.optionText}>{item}</Text>
-                {item === value ? (
-                  <Ionicons name="checkmark" size={20} color={colors.primary} />
-                ) : null}
+                {item === value ? <Icon name="checkmark" size={20} color={colors.primary} /> : null}
               </Pressable>
             )}
             ListEmptyComponent={<Text style={styles.empty}>No matches</Text>}

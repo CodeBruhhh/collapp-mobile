@@ -9,14 +9,14 @@ import { POST_TYPE_LABELS } from '@/features/rep/posts';
 import { usePosts } from '@/features/rep/hooks';
 import { useTheme } from '@/hooks/useTheme';
 
-import { createRepStyles } from '../repStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 const openEditor = (id: string) => router.push({ pathname: '/rep/post/[id]', params: { id } });
 
 /** Campus posts (SRS 3.1.2.3) — drafts and published items that feed student timelines. */
 export function PostsScreen() {
   const { colors } = useTheme();
-  const styles = createRepStyles(colors);
+  const styles = createScreenStyles(colors);
   const posts = usePosts();
 
   return (
@@ -36,7 +36,7 @@ export function PostsScreen() {
             <ErrorState error={posts.error} onRetry={posts.refetch} />
           ) : (
             <EmptyState
-              icon="megaphone-outline"
+              icon="megaphone"
               title="No posts yet"
               body="Share campus news, events, scholarships and deadlines with students."
             />

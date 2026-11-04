@@ -1,7 +1,6 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useState, type ComponentProps } from 'react';
+import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,6 +8,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
+import { Icon, type IconName } from '@/components/Icon';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { useApplicationsWithLocal } from '@/features/applications/offline';
 import { deadlineLabel } from '@/features/applications/status';
@@ -21,8 +21,6 @@ import { getErrorMessage } from '@/lib/validation';
 import { createStyles } from './CollegeDetailScreen.styles';
 
 type Tab = 'about' | 'programs' | 'requirements';
-type IconName = ComponentProps<typeof Ionicons>['name'];
-
 const peso = new Intl.NumberFormat('en-PH', {
   style: 'currency',
   currency: 'PHP',
@@ -35,7 +33,7 @@ function Fact({ icon, label }: { icon: IconName; label: string }) {
   const styles = createStyles(colors);
   return (
     <View style={styles.fact}>
-      <Ionicons name={icon} size={14} color={colors.textMuted} />
+      <Icon name={icon} size={14} color={colors.textMuted} />
       <Text style={styles.factText}>{label}</Text>
     </View>
   );
@@ -122,7 +120,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
                   accessibilityRole="link"
                   onPress={() => WebBrowser.openBrowserAsync(c.website!)}
                   style={styles.link}>
-                  <Ionicons name="globe-outline" size={16} color={colors.primary} />
+                  <Icon name="globe" size={16} color={colors.primary} />
                   <Text style={styles.linkText}>Visit website</Text>
                 </Pressable>
               ) : null}
@@ -147,7 +145,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
         {tab === 'programs' ? (
           <View style={styles.section}>
             {c.programs.length === 0 ? (
-              <EmptyState icon="book-outline" title="No programs yet" />
+              <EmptyState icon="book" title="No programs yet" />
             ) : (
               c.programs.map((p) => (
                 <Card key={p.id}>
@@ -162,20 +160,13 @@ export function CollegeDetailScreen({ id }: { id: string }) {
                   ) : null}
                   <View style={styles.facts}>
                     {p.deadline ? (
-                      <Fact
-                        icon="calendar-outline"
-                        label={deadlineLabel(p.deadline) ?? p.deadline}
-                      />
+                      <Fact icon="calendar" label={deadlineLabel(p.deadline) ?? p.deadline} />
                     ) : null}
                     {p.tuition_per_year !== null ? (
-                      <Fact icon="cash-outline" label={`${peso.format(p.tuition_per_year)}/yr`} />
+                      <Fact icon="cash" label={`${peso.format(p.tuition_per_year)}/yr`} />
                     ) : null}
-                    {p.min_gpa !== null ? (
-                      <Fact icon="ribbon-outline" label={`Min. ${p.min_gpa}`} />
-                    ) : null}
-                    {p.strands.length ? (
-                      <Fact icon="school-outline" label={p.strands.join(', ')} />
-                    ) : null}
+                    {p.min_gpa !== null ? <Fact icon="ribbon" label={`Min. ${p.min_gpa}`} /> : null}
+                    {p.strands.length ? <Fact icon="school" label={p.strands.join(', ')} /> : null}
                   </View>
                   {p.prerequisites ? (
                     <Text style={styles.meta} numberOfLines={2}>
@@ -194,8 +185,8 @@ export function CollegeDetailScreen({ id }: { id: string }) {
             {generalRequirements.map((r) => (
               <Card key={r.id}>
                 <View style={styles.reqRow}>
-                  <Ionicons
-                    name={r.kind === 'essay' ? 'create-outline' : 'document-text-outline'}
+                  <Icon
+                    name={r.kind === 'essay' ? 'create' : 'document-text'}
                     size={20}
                     color={colors.primary}
                   />
@@ -223,11 +214,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
           disabled={toggleFollow.isPending}
           onPress={handleSave}
           style={[styles.iconAction, isSaved && styles.iconActionActive]}>
-          <Ionicons
-            name={isSaved ? 'bookmark' : 'bookmark-outline'}
-            size={22}
-            color={colors.primary}
-          />
+          <Icon name={isSaved ? 'bookmark-filled' : 'bookmark'} size={22} color={colors.primary} />
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -236,7 +223,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
           disabled={startThread.isPending}
           onPress={handleMessage}
           style={styles.iconAction}>
-          <Ionicons name="chatbubble-ellipses-outline" size={22} color={colors.primary} />
+          <Icon name="chatbubble-ellipses" size={22} color={colors.primary} />
         </Pressable>
         <View style={styles.flex}>
           {existing && existing.status !== 'draft' ? (

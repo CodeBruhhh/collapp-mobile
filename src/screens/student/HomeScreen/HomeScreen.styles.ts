@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { CONTROL_HEIGHT, fontSize, fontWeight, radius, spacing, type ThemeColors } from '@/styles';
+import { CONTROL_HEIGHT, fonts, fontSize, radius, spacing, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -8,8 +8,8 @@ export const createStyles = (c: ThemeColors) =>
     // Wider gaps between sections than inside them, so each group reads as one block.
     content: { padding: spacing.md, paddingBottom: spacing.xl, gap: spacing.lg },
     flex: { flex: 1 },
-    greeting: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: c.text },
-    meta: { fontSize: fontSize.sm, color: c.textMuted },
+    greeting: { fontSize: fontSize.xl, fontFamily: fonts.semibold, color: c.text },
+    meta: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
     search: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -21,7 +21,7 @@ export const createStyles = (c: ThemeColors) =>
       borderColor: c.border,
       backgroundColor: c.surface,
     },
-    searchText: { fontSize: fontSize.md, color: c.textMuted },
+    searchText: { fontFamily: fonts.regular, fontSize: fontSize.md, color: c.textMuted },
     stats: { flexDirection: 'row', gap: spacing.sm },
     stat: {
       flex: 1,
@@ -32,11 +32,11 @@ export const createStyles = (c: ThemeColors) =>
       borderColor: c.border,
       backgroundColor: c.surface,
     },
-    statValue: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: c.text },
-    statLabel: { fontSize: fontSize.xs, color: c.textMuted },
+    statValue: { fontSize: fontSize.xl, fontFamily: fonts.semibold, color: c.text },
+    statLabel: { fontFamily: fonts.regular, fontSize: fontSize.xs, color: c.textMuted },
     section: { gap: spacing.sm },
-    sectionTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: c.text },
-    cardTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: c.text },
+    sectionTitle: { fontSize: fontSize.lg, fontFamily: fonts.semibold, color: c.text },
+    cardTitle: { fontSize: fontSize.md, fontFamily: fonts.semibold, color: c.text },
     row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
     rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     featuredRow: { gap: spacing.sm, paddingRight: spacing.md },
@@ -51,7 +51,7 @@ export const createStyles = (c: ThemeColors) =>
     },
     link: {
       fontSize: fontSize.sm,
-      fontWeight: fontWeight.semibold,
+      fontFamily: fonts.semibold,
       color: c.primary,
       padding: spacing.sm,
     },

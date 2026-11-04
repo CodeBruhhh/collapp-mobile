@@ -17,7 +17,7 @@ import { pickPhoto } from '@/lib/pickers';
 import { publicUrl, removeFile, type LocalFile } from '@/lib/storage';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
-import { createRepStyles } from '../repStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 const TYPES = Object.entries(POST_TYPE_LABELS) as [PostType, string][];
 
@@ -33,7 +33,7 @@ export function PostEditorScreen({ id }: { id: string }) {
 
 function PostForm({ post }: { post: Post | null }) {
   const { colors } = useTheme();
-  const styles = createRepStyles(colors);
+  const styles = createScreenStyles(colors);
   const collegeId = useCollegeId();
   const actions = useRepActions();
 

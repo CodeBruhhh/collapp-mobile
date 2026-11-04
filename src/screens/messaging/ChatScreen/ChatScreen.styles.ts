@@ -1,8 +1,16 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import { fonts, fontSize, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
 
 const THUMB = 40;
+
+export const createHeaderStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
+    text: { flexShrink: 1 },
+    title: { fontFamily: fonts.medium, fontSize: 16, color: c.onPrimary },
+    subtitle: { fontFamily: fonts.regular, fontSize: 12, color: c.onPrimary, opacity: 0.85 },
+  });
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -17,7 +25,7 @@ export const createStyles = (c: ThemeColors) =>
       borderRadius: radius.pill,
       overflow: 'hidden',
       fontSize: fontSize.xs,
-      fontWeight: fontWeight.medium,
+      fontFamily: fonts.medium,
       color: c.textMuted,
       backgroundColor: c.surfaceMuted,
     },
@@ -45,6 +53,7 @@ export const createStyles = (c: ThemeColors) =>
       borderRadius: 20,
       backgroundColor: c.surfaceMuted,
       color: c.text,
+      fontFamily: fonts.regular,
       fontSize: fontSize.md,
     },
     iconButton: {
@@ -77,10 +86,11 @@ export const createStyles = (c: ThemeColors) =>
       justifyContent: 'center',
       backgroundColor: c.primarySoft,
     },
-    pendingName: { flex: 1, fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.text },
+    pendingName: { flex: 1, fontSize: fontSize.sm, fontFamily: fonts.medium, color: c.text },
 
     readOnlyNotice: { paddingVertical: spacing.md },
     notice: {
+      fontFamily: fonts.regular,
       fontSize: fontSize.xs,
       color: c.textMuted,
       textAlign: 'center',

@@ -16,8 +16,8 @@ type CardProps = {
 
 /** Surface container; pressable when `onPress` is given. */
 export function Card({ children, onPress, onLongPress, accessibilityLabel, style }: CardProps) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   if (!onPress) return <View style={[styles.card, style]}>{children}</View>;
   return (

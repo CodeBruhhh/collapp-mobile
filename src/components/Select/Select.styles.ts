@@ -2,18 +2,18 @@ import { StyleSheet } from 'react-native';
 
 import {
   CONTROL_HEIGHT,
+  fonts,
   fontSize,
-  fontWeight,
+  radius,
   spacing,
   TOUCH_TARGET,
   type ThemeColors,
-  type ThemeTokens,
 } from '@/styles';
 
-export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
+export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { gap: spacing.xs },
-    label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: c.text },
+    label: { fontSize: fontSize.sm, fontFamily: fonts.medium, color: c.text },
     field: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -23,14 +23,14 @@ export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
       paddingHorizontal: spacing.md,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: t.radius.md,
+      borderRadius: radius.md,
       backgroundColor: c.surface,
     },
     fieldError: { borderColor: c.danger },
     disabled: { opacity: 0.5 },
-    value: { flex: 1, fontSize: fontSize.md, color: c.text },
+    value: { flex: 1, fontFamily: fonts.regular, fontSize: fontSize.md, color: c.text },
     placeholder: { color: c.textMuted },
-    error: { fontSize: fontSize.sm, color: c.danger },
+    error: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.danger },
     modal: { flex: 1, backgroundColor: c.background },
     modalHeader: {
       flexDirection: 'row',
@@ -40,7 +40,7 @@ export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: c.border,
     },
-    modalTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: c.text },
+    modalTitle: { fontSize: fontSize.lg, fontFamily: fonts.semibold, color: c.text },
     close: {
       width: TOUCH_TARGET,
       height: TOUCH_TARGET,
@@ -53,8 +53,9 @@ export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
       paddingHorizontal: spacing.md,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: t.radius.md,
+      borderRadius: radius.md,
       backgroundColor: c.surface,
+      fontFamily: fonts.regular,
       fontSize: fontSize.md,
       color: c.text,
     },
@@ -69,6 +70,11 @@ export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
       borderBottomColor: c.border,
     },
     optionPressed: { backgroundColor: c.surface },
-    optionText: { flex: 1, fontSize: fontSize.md, color: c.text },
-    empty: { padding: spacing.md, fontSize: fontSize.md, color: c.textMuted },
+    optionText: { flex: 1, fontFamily: fonts.regular, fontSize: fontSize.md, color: c.text },
+    empty: {
+      padding: spacing.md,
+      fontFamily: fonts.regular,
+      fontSize: fontSize.md,
+      color: c.textMuted,
+    },
   });

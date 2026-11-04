@@ -1,8 +1,8 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
+import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
 import {
@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Icon } from '@/components/Icon';
 import { ImageViewer } from '@/components/ImageViewer';
 import { ChatSkeleton } from '@/components/Skeleton';
 import { EmptyState, ErrorState } from '@/components/StateView';
@@ -38,6 +39,7 @@ import type { LocalFile } from '@/lib/storage';
 import { getErrorMessage } from '@/lib/validation';
 import type { Role } from '@/types/roles';
 
+import { ChatHeader } from './ChatHeader';
 import { createStyles } from './ChatScreen.styles';
 import { MessageBubble } from './MessageBubble';
 
@@ -45,17 +47,19 @@ const MAX_LENGTH = 4000;
 /** Messages closer together than this from the same sender form one group. */
 const GROUP_GAP_MS = 5 * 60 * 1000;
 
-function chatTitle(role: Role | null, thread: ThreadDetail | undefined): string {
-  if (!thread) return 'Conversation';
+function chatHeader(role: Role | null, thread: ThreadDetail | undefined) {
+  if (!thread) return { title: 'Conversation' };
   const studentName =
     [thread.student?.first_name, thread.student?.last_name].filter(Boolean).join(' ') || 'Student';
   if (role === 'school_rep') {
-    return thread.kind === 'rep_admin' ? 'CollApp Administrator' : studentName;
+    return thread.kind === 'rep_admin'
+      ? { title: 'CollApp Administrator', icon: 'shield-checkmark' as const }
+      : { title: studentName };
   }
   if (role === 'admin' && thread.kind === 'student_rep') {
-    return `${studentName} · ${thread.college?.name ?? 'College'}`;
+    return { title: studentName, subtitle: thread.college?.name ?? 'College' };
   }
-  return thread.college?.name ?? 'Conversation';
+  return { title: thread.college?.name ?? 'Conversation', logoPath: thread.college?.logo_path };
 }
 
 const sameDay = (a: string, b: string) => new Date(a).toDateString() === new Date(b).toDateString();
@@ -81,7 +85,7 @@ type Draft = { body: string; attachment: LocalFile | null };
 
 /** SDD screens 16 / 26 — a formal conversation with realtime delivery and read receipts. */
 export function ChatScreen({ id }: { id: string }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = createStyles(colors);
   const { role, session } = useAuth();
   const userId = session?.user.id;
@@ -184,13 +188,22 @@ export function ChatScreen({ id }: { id: string }) {
 
   const canSend = online && Boolean(body.trim() || attachment);
   const attachingPhoto = attachment?.mimeType.startsWith('image/');
+  const header = chatHeader(role, thread.data);
 
   return (
     <KeyboardAvoidingView
       style={styles.root}
       behavior="padding"
       keyboardVerticalOffset={headerHeight}>
-      <Stack.Screen options={{ title: chatTitle(role, thread.data) }} />
+      <Stack.Screen
+        options={{
+          title: header.title,
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
+          headerTitle: () => <ChatHeader {...header} />,
+        }}
+      />
+      <StatusBar style={isDark ? 'dark' : 'light'} />
       {messages.isPending ? (
         <View style={styles.list}>
           <ChatSkeleton />
@@ -209,7 +222,7 @@ export function ChatScreen({ id }: { id: string }) {
               <ErrorState error={messages.error} onRetry={messages.refetch} />
             ) : (
               <EmptyState
-                icon="chatbubble-ellipses-outline"
+                icon="chatbubble-ellipses"
                 title="Start the conversation"
                 body="Messages here are formal and visible to your college's representatives and the administrator."
               />
@@ -272,7 +285,7 @@ export function ChatScreen({ id }: { id: string }) {
                 />
               ) : (
                 <View style={styles.pendingIcon}>
-                  <Ionicons name="document-text-outline" size={20} color={colors.primary} />
+                  <Icon name="document-text" size={20} color={colors.primary} />
                 </View>
               )}
               <Text style={styles.pendingName} numberOfLines={1}>
@@ -283,7 +296,7 @@ export function ChatScreen({ id }: { id: string }) {
                 accessibilityLabel="Remove attachment"
                 onPress={() => setAttachment(null)}
                 style={styles.iconButton}>
-                <Ionicons name="close-circle" size={22} color={colors.textMuted} />
+                <Icon name="close-circle-filled" size={22} color={colors.textMuted} />
               </Pressable>
             </View>
           ) : null}
@@ -293,7 +306,7 @@ export function ChatScreen({ id }: { id: string }) {
               accessibilityLabel="Attach a photo or file"
               onPress={attach}
               style={styles.iconButton}>
-              <Ionicons name="add-circle-outline" size={26} color={colors.primary} />
+              <Icon name="add-circle" size={26} color={colors.primary} />
             </Pressable>
             <TextInput
               value={body}
@@ -312,7 +325,7 @@ export function ChatScreen({ id }: { id: string }) {
               disabled={!canSend}
               onPress={submit}
               style={[styles.iconButton, styles.sendButton, !canSend && styles.disabled]}>
-              <Ionicons name="arrow-up" size={20} color={colors.onPrimary} />
+              <Icon name="arrow-up" size={20} color={colors.onPrimary} />
             </Pressable>
           </View>
         </SafeAreaView>

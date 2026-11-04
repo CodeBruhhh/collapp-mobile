@@ -1,9 +1,9 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { FormScreen } from '@/components/FormScreen';
+import { Icon } from '@/components/Icon';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -36,12 +36,7 @@ export function BiometricLockScreen() {
   return (
     <FormScreen centered>
       <View style={[styles.header, { alignItems: 'center' }]}>
-        <Ionicons
-          name="finger-print"
-          size={72}
-          color={colors.primary}
-          accessibilityElementsHidden
-        />
+        <Icon name="finger-print" size={72} color={colors.primary} />
         <Text accessibilityRole="header" style={[styles.title, styles.centeredText]}>
           Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}
         </Text>

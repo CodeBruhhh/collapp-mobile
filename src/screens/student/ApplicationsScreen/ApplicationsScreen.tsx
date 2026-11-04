@@ -97,10 +97,10 @@ export function ApplicationsScreen() {
         ) : applications.isError ? (
           <ErrorState error={applications.error} onRetry={applications.refetch} />
         ) : all.length ? (
-          <EmptyState icon="filter-outline" title="Nothing in this filter" />
+          <EmptyState icon="filter" title="Nothing in this filter" />
         ) : (
           <EmptyState
-            icon="document-text-outline"
+            icon="document-text"
             title="No applications yet"
             body="Find a university you like and apply in a few steps."
             actionLabel="Explore universities"

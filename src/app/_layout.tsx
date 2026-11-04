@@ -1,4 +1,7 @@
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { LibreBaskerville_400Regular } from '@expo-google-fonts/libre-baskerville';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -22,16 +25,18 @@ import { MaintenanceScreen } from '@/screens/MaintenanceScreen';
 // Keep the splash screen up until the stored session has been restored.
 SplashScreen.preventAutoHideAsync();
 
-function RootNavigator() {
+function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   const { role, needsOnboarding, isLoading, isLocked } = useAuth();
   // Administrators are never locked out by maintenance mode.
   const platform = usePlatformSettings(role !== null && role !== 'admin');
 
-  useEffect(() => {
-    if (!isLoading) SplashScreen.hide();
-  }, [isLoading]);
+  const ready = fontsReady && !isLoading;
 
-  if (isLoading) return null;
+  useEffect(() => {
+    if (ready) SplashScreen.hide();
+  }, [ready]);
+
+  if (!ready) return null;
   if (isLocked) return <BiometricLockScreen />;
   if (role && role !== 'admin' && platform.data?.maintenance_mode) return <MaintenanceScreen />;
 
@@ -63,6 +68,13 @@ function RootNavigator() {
 
 export default function RootLayout() {
   const { isDark } = useTheme();
+  // A failed font load falls back to the system face rather than blocking the app.
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    LibreBaskerville_400Regular,
+  });
 
   return (
     <PreferencesProvider>
@@ -77,7 +89,7 @@ export default function RootLayout() {
           <SyncProvider>
             <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
               <StatusBar style="auto" />
-              <RootNavigator />
+              <RootNavigator fontsReady={fontsLoaded || Boolean(fontError)} />
             </ThemeProvider>
           </SyncProvider>
         </AuthProvider>

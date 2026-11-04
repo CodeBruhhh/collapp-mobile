@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { CONTROL_HEIGHT, fontSize, fontWeight, radius, spacing, type ThemeColors } from '@/styles';
+import { CONTROL_HEIGHT, fonts, fontSize, radius, spacing, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -18,12 +18,18 @@ export const createStyles = (c: ThemeColors) =>
       borderColor: c.border,
       backgroundColor: c.surface,
     },
-    searchInput: { flex: 1, minHeight: CONTROL_HEIGHT, fontSize: fontSize.md, color: c.text },
+    searchInput: {
+      flex: 1,
+      minHeight: CONTROL_HEIGHT,
+      fontFamily: fonts.regular,
+      fontSize: fontSize.md,
+      color: c.text,
+    },
     clear: { padding: spacing.xs },
     filters: { gap: spacing.sm },
-    count: { fontSize: fontSize.sm, color: c.textMuted },
+    count: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
     row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
     info: { flex: 1, gap: 2 },
-    name: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: c.text },
-    meta: { fontSize: fontSize.sm, color: c.textMuted },
+    name: { fontSize: fontSize.md, fontFamily: fonts.semibold, color: c.text },
+    meta: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
   });

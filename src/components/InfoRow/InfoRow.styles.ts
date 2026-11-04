@@ -1,28 +1,36 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, fontWeight, spacing, type ThemeColors } from '@/styles';
+import { fonts, fontSize, spacing, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
-    row: { gap: 2 },
-    label: { fontSize: fontSize.sm, color: c.textMuted },
-    value: { fontSize: fontSize.md, fontWeight: fontWeight.medium, color: c.text },
-    empty: { fontSize: fontSize.md, color: c.textMuted, fontStyle: 'italic' },
-    // Editorial: label and value share one ruled line; the value carries the accent.
-    ledgerRow: {
+    row: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
       gap: spacing.md,
       paddingVertical: 14,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: c.border,
     },
-    ledgerValue: {
-      flexShrink: 1,
+    label: {
+      maxWidth: '45%',
+      fontFamily: fonts.regular,
       fontSize: fontSize.sm,
-      fontWeight: fontWeight.medium,
+      color: c.textMuted,
+    },
+    value: {
+      flex: 1,
+      fontSize: fontSize.sm,
+      fontFamily: fonts.medium,
       color: c.primary,
+      textAlign: 'right',
+    },
+    empty: {
+      flex: 1,
+      fontFamily: fonts.regular,
+      fontSize: fontSize.sm,
+      color: c.textMuted,
       textAlign: 'right',
     },
   });

@@ -15,7 +15,7 @@ import { createCollegeSchema } from '@/features/admin/schemas';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
-import { createAdminStyles } from '../adminStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 const REGION_NAMES = PH_REGIONS.map((r) => r.region_name);
 const PASSWORD_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
@@ -41,8 +41,8 @@ type Form = {
 
 /** SDD screen 28 — add a college (tenant) and its first representative. Reps never self-register. */
 export function CreateCollegeScreen() {
-  const { colors, tokens } = useTheme();
-  const styles = createAdminStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createScreenStyles(colors);
   const { addCollege } = useAdminActions();
   const [form, setForm] = useState<Form>(() => ({
     name: '',

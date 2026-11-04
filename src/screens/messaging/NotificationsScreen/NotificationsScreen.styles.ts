@@ -1,13 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import {
-  fontSize,
-  fontWeight,
-  lineHeight,
-  spacing,
-  TOUCH_TARGET,
-  type ThemeColors,
-} from '@/styles';
+import { fonts, fontSize, lineHeight, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -34,9 +27,14 @@ export const createStyles = (c: ThemeColors) =>
     iconUnread: { backgroundColor: c.primarySoft },
     info: { flex: 1, gap: 2 },
     topLine: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm },
-    title: { flex: 1, fontSize: fontSize.md, fontWeight: fontWeight.medium, color: c.text },
-    unreadTitle: { fontWeight: fontWeight.semibold },
-    body: { fontSize: fontSize.sm, lineHeight: lineHeight.sm, color: c.textMuted },
-    time: { fontSize: fontSize.xs, color: c.textMuted },
+    title: { flex: 1, fontSize: fontSize.md, fontFamily: fonts.medium, color: c.text },
+    unreadTitle: { fontFamily: fonts.semibold },
+    body: {
+      fontFamily: fonts.regular,
+      fontSize: fontSize.sm,
+      lineHeight: lineHeight.sm,
+      color: c.textMuted,
+    },
+    time: { fontFamily: fonts.regular, fontSize: fontSize.xs, color: c.textMuted },
     dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: c.primary },
   });

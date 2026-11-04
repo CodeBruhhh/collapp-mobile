@@ -5,6 +5,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { publicUrl } from '@/lib/storage';
 
 import { createStyles } from './CollegeLogo.styles';
+import { fonts } from '@/styles';
 
 type CollegeLogoProps = {
   name: string;
@@ -38,7 +39,9 @@ export function CollegeLogo({ name, logoPath, size = 48 }: CollegeLogoProps) {
   }
   return (
     <View style={[styles.fallback, box]} accessible={false}>
-      <Text style={[styles.initials, { fontSize: size * 0.36 }]}>{initials || '?'}</Text>
+      <Text style={[styles.initials, { fontFamily: fonts.regular, fontSize: size * 0.36 }]}>
+        {initials || '?'}
+      </Text>
     </View>
   );
 }

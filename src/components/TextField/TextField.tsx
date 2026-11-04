@@ -1,7 +1,7 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View, type TextInputProps } from 'react-native';
 
+import { Icon } from '@/components/Icon';
 import { useTheme } from '@/hooks/useTheme';
 
 import { createStyles } from './TextField.styles';
@@ -23,8 +23,8 @@ export function TextField({
   onBlur,
   ...inputProps
 }: TextFieldProps) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [revealed, setRevealed] = useState(false);
   const [focused, setFocused] = useState(false);
   const isSecret = Boolean(secureTextEntry);
@@ -61,11 +61,7 @@ export function TextField({
             hitSlop={8}
             onPress={() => setRevealed((v) => !v)}
             style={styles.reveal}>
-            <Ionicons
-              name={revealed ? 'eye-off-outline' : 'eye-outline'}
-              size={20}
-              color={colors.textMuted}
-            />
+            <Icon name={revealed ? 'eye-off' : 'eye'} size={20} color={colors.textMuted} />
           </Pressable>
         ) : null}
       </View>

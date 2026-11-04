@@ -12,7 +12,7 @@ import { useAdminActions, useAuditLogs } from '@/features/admin/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { shortTime } from '@/lib/time';
 
-import { createAdminStyles } from '../adminStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 const AUDIENCES: Record<string, Audience> = {
   Everyone: 'all',
@@ -29,8 +29,8 @@ const BODY_MAX = 1000;
 
 /** SDD screen 31 — send an announcement to everyone or one role (in-app plus push). */
 export function BroadcastScreen() {
-  const { colors, tokens } = useTheme();
-  const styles = createAdminStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createScreenStyles(colors);
   const { broadcast } = useAdminActions();
   const history = useAuditLogs('notification.broadcast');
 

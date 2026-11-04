@@ -49,8 +49,8 @@ function usePulse() {
 
 /** One placeholder block. Use inside <SkeletonGroup> so blocks pulse in sync. */
 export function Skeleton({ width = '100%', height = 14, radius = 6, style }: SkeletonProps) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return <View style={[styles.block, { width, height, borderRadius: radius }, style]} />;
 }
 
@@ -78,8 +78,8 @@ export function SkeletonGroup({
 
 /** Placeholder for a conversation: alternating message bubbles. */
 export function ChatSkeleton() {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const bubbles: { mine: boolean; width: DimensionValue; height: number }[] = [
     { mine: false, width: '62%', height: 44 },
     { mine: true, width: '48%', height: 36 },
@@ -107,8 +107,8 @@ export function ListSkeleton({
   avatar?: boolean;
   label?: string;
 }) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <SkeletonGroup style={styles.list} label={label}>
       {Array.from({ length: rows }, (_, i) => (
@@ -127,8 +127,8 @@ export function ListSkeleton({
 
 /** Placeholder for a detail screen: heading, a summary card and a few sections. */
 export function DetailSkeleton({ label }: { label?: string }) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <SkeletonGroup style={styles.detail} label={label}>
       <View style={styles.lines}>
@@ -154,8 +154,8 @@ export function DetailSkeleton({ label }: { label?: string }) {
 
 /** A few short lines, for loading content inside an existing card. */
 export function InlineSkeleton({ lines = 3, label }: { lines?: number; label?: string }) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <SkeletonGroup style={styles.lines} label={label}>
       {Array.from({ length: lines }, (_, i) => (

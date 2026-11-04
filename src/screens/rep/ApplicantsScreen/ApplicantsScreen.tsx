@@ -1,10 +1,10 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, RefreshControl, Text, TextInput, View } from 'react-native';
 
 import { Card } from '@/components/Card';
 import { FilterTabs } from '@/components/FilterTabs';
+import { Icon } from '@/components/Icon';
 import { StatusBadge } from '@/components/StatusBadge';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
@@ -12,7 +12,7 @@ import { APPLICANT_FILTERS, firstOf, studentName, type ApplicantFilter } from '@
 import { useApplicants } from '@/features/rep/hooks';
 import { useTheme } from '@/hooks/useTheme';
 
-import { createRepStyles } from '../repStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 const FILTER_LABELS: Record<ApplicantFilter, string> = {
   all: 'All',
@@ -26,7 +26,7 @@ const FILTER_LABELS: Record<ApplicantFilter, string> = {
 /** SDD screen 20 — applicant queue with the web dashboard's filters and counts. */
 export function ApplicantsScreen() {
   const { colors } = useTheme();
-  const styles = createRepStyles(colors);
+  const styles = createScreenStyles(colors);
   const [filter, setFilter] = useState<ApplicantFilter>('all');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'newest' | 'fit'>('newest');
@@ -56,7 +56,7 @@ export function ApplicantsScreen() {
       ListHeaderComponent={
         <View style={styles.section}>
           <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color={colors.textMuted} />
+            <Icon name="search" size={18} color={colors.textMuted} />
             <TextInput
               value={search}
               onChangeText={setSearch}
@@ -92,7 +92,7 @@ export function ApplicantsScreen() {
           <ErrorState error={applicants.error} onRetry={applicants.refetch} />
         ) : (
           <EmptyState
-            icon="people-outline"
+            icon="people"
             title={all.length ? 'No applicants in this filter' : 'No applications yet'}
             body={all.length ? undefined : 'Submitted applications will appear here.'}
           />
@@ -119,7 +119,7 @@ export function ApplicantsScreen() {
                   {Math.round(fit)}% fit
                 </Text>
               ) : null}
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              <Icon name="chevron-forward" size={18} color={colors.textMuted} />
             </View>
             <View style={styles.rowBetween}>
               <StatusBadge

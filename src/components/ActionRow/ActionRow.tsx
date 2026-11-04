@@ -1,14 +1,13 @@
-import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, Text } from 'react-native';
 
+import { Icon, type IconName } from '@/components/Icon';
 import { useTheme } from '@/hooks/useTheme';
 
 import { createStyles } from './ActionRow.styles';
 
 type ActionRowProps = {
   label: string;
-  /** A 16pt line glyph, e.g. require('@/assets/images/editorial/lock.svg'). */
-  icon: number;
+  icon: IconName;
   onPress: () => void;
   loading?: boolean;
 };
@@ -26,16 +25,12 @@ export function ActionRow({ label, icon, onPress, loading }: ActionRowProps) {
       disabled={loading}
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && styles.pressed, loading && styles.inactive]}>
-      <Image source={icon} style={styles.icon} tintColor={colors.primary} />
+      <Icon name={icon} size={16} color={colors.primary} />
       <Text style={styles.label}>{label}</Text>
       {loading ? (
         <ActivityIndicator size="small" color={colors.primary} />
       ) : (
-        <Image
-          source={require('@/assets/images/editorial/chevron.svg')}
-          style={styles.icon}
-          tintColor={colors.textMuted}
-        />
+        <Icon name="chevron-forward" size={16} color={colors.textMuted} />
       )}
     </Pressable>
   );

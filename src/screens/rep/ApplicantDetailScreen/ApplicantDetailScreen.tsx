@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useState } from 'react';
@@ -15,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { Icon } from '@/components/Icon';
 import { ProgressBar } from '@/components/ProgressBar';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ErrorState, LoadingState } from '@/components/StateView';
@@ -26,14 +26,14 @@ import { useApplicant, useMyCollege, useRepActions } from '@/features/rep/hooks'
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage } from '@/lib/validation';
 
-import { createRepStyles } from '../repStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 import { DecisionSheet } from './DecisionSheet';
 import { DocumentReviewCard } from './DocumentReviewCard';
 
 /** SDD screen 21 — applicant profile, advisory AI fit, document review and final decision. */
 export function ApplicantDetailScreen({ id }: { id: string }) {
   const { colors } = useTheme();
-  const styles = createRepStyles(colors);
+  const styles = createScreenStyles(colors);
   const headerHeight = useHeaderHeight();
   const applicant = useApplicant(id);
   const college = useMyCollege();
@@ -81,7 +81,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
               disabled={startThread.isPending}
               onPress={openChat}
               style={styles.headerIcon}>
-              <Ionicons name="chatbubble-ellipses-outline" size={22} color={colors.primary} />
+              <Icon name="chatbubble-ellipses" size={22} color={colors.primary} />
             </Pressable>
           ),
         }}
@@ -141,7 +141,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
                 {score.explanation
                   ? score.explanation.split(' · ').map((reason) => (
                       <View key={reason} style={styles.reason}>
-                        <Ionicons name="checkmark" size={14} color={colors.status.accepted} />
+                        <Icon name="checkmark" size={14} color={colors.status.accepted} />
                         <Text style={[styles.meta, styles.flex]}>{reason}</Text>
                       </View>
                     ))

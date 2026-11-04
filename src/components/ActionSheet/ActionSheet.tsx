@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage } from '@/lib/validation';
 
@@ -58,8 +58,8 @@ export function ActionSheet({
   actions = [],
   cancelLabel = 'Cancel',
 }: ActionSheetProps) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   // Core Animated: Reanimated layout animations inside a Modal swallowed taps on Android.
   const [rise] = useState(() => new Animated.Value(48));
 
@@ -126,11 +126,7 @@ export function ActionSheet({
             color={action.destructive ? colors.danger : colors.primary}
           />
         ) : (
-          <Image
-            source={require('@/assets/images/editorial/chevron.svg')}
-            style={styles.icon}
-            tintColor={colors.textMuted}
-          />
+          <Icon name="chevron-forward" size={16} color={colors.textMuted} />
         )}
       </Pressable>
     );

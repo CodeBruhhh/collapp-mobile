@@ -39,10 +39,10 @@ export function notificationTarget(role: Role, type: string, raw: unknown): Href
 }
 
 export const NOTIFICATION_ICONS: Record<string, string> = {
-  new_message: 'chatbubble-ellipses-outline',
-  application_status: 'school-outline',
-  document_review: 'document-attach-outline',
-  deadline_reminder: 'alarm-outline',
-  new_application: 'person-add-outline',
-  broadcast: 'megaphone-outline',
+  new_message: 'chatbubble-ellipses',
+  application_status: 'school',
+  document_review: 'document-attach',
+  deadline_reminder: 'alarm',
+  new_application: 'person-add',
+  broadcast: 'megaphone',
 };

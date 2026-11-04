@@ -1,17 +1,17 @@
 import { StyleSheet } from 'react-native';
 
 import {
-  editorialSpace,
+  fonts,
   fontSize,
-  fontWeight,
+  radius,
+  rhythm,
   spacing,
   TOUCH_TARGET,
   withAlpha,
   type ThemeColors,
-  type ThemeTokens,
 } from '@/styles';
 
-export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
+export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     backdrop: {
       flex: 1,
@@ -23,11 +23,11 @@ export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
     shrink: { flexShrink: 1 },
     sheet: {
       flexShrink: 1,
-      paddingHorizontal: editorialSpace.gutter,
+      paddingHorizontal: rhythm.gutter,
       paddingTop: spacing.sm,
       backgroundColor: c.surface,
-      borderTopLeftRadius: t.editorial ? t.radius.lg : 20,
-      borderTopRightRadius: t.editorial ? t.radius.lg : 20,
+      borderTopLeftRadius: radius.lg,
+      borderTopRightRadius: radius.lg,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
     },
@@ -42,21 +42,27 @@ export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
     header: { gap: 6, paddingBottom: spacing.md },
     eyebrow: {
       fontSize: 10,
-      fontWeight: fontWeight.semibold,
+      fontFamily: fonts.semibold,
       letterSpacing: 1,
       color: c.primary,
       textTransform: 'uppercase',
     },
     title: {
-      fontFamily: t.headingFont,
+      fontFamily: fonts.serif,
       fontSize: 22,
       lineHeight: 28,
       letterSpacing: -0.6,
       color: c.text,
     },
     titleDanger: { color: c.danger },
-    subtitle: { fontSize: 13, lineHeight: 19, color: c.textMuted },
-    message: { fontSize: 14, lineHeight: 21, color: c.text, paddingBottom: spacing.md },
+    subtitle: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 19, color: c.textMuted },
+    message: {
+      fontFamily: fonts.regular,
+      fontSize: 14,
+      lineHeight: 21,
+      color: c.text,
+      paddingBottom: spacing.md,
+    },
     details: {
       paddingBottom: spacing.sm,
       borderTopWidth: StyleSheet.hairlineWidth,
@@ -72,12 +78,16 @@ export const createStyles = (c: ThemeColors, t: ThemeTokens) =>
       borderBottomColor: c.border,
     },
     actionText: { flex: 1, gap: 2, paddingVertical: 12 },
-    actionLabel: { fontSize: 15, fontWeight: fontWeight.medium, color: c.primary },
+    actionLabel: { fontSize: 15, fontFamily: fonts.medium, color: c.primary },
     actionDanger: { color: c.danger },
-    actionHint: { fontSize: 12, lineHeight: 17, color: c.textMuted },
+    actionHint: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, color: c.textMuted },
     actionPressed: { backgroundColor: c.surfaceMuted },
     actionDisabled: { opacity: 0.45 },
-    icon: { width: 16, height: 16 },
-    error: { paddingTop: spacing.md, fontSize: fontSize.sm, color: c.danger },
+    error: {
+      paddingTop: spacing.md,
+      fontFamily: fonts.regular,
+      fontSize: fontSize.sm,
+      color: c.danger,
+    },
     footer: { paddingTop: spacing.lg, paddingBottom: spacing.md },
   });

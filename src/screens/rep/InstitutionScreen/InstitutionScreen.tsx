@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
@@ -6,6 +5,7 @@ import { Alert, ScrollView, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
+import { Icon } from '@/components/Icon';
 import { Select } from '@/components/Select';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { TextField } from '@/components/TextField';
@@ -19,7 +19,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { pickPhoto } from '@/lib/pickers';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 
-import { createRepStyles } from '../repStyles';
+import { createScreenStyles } from '@/screens/screenStyles';
 
 const REGION_NAMES = PH_REGIONS.map((r) => r.region_name);
 
@@ -34,7 +34,7 @@ export function InstitutionScreen() {
 
 function InstitutionForm({ college }: { college: RepCollege }) {
   const { colors } = useTheme();
-  const styles = createRepStyles(colors);
+  const styles = createScreenStyles(colors);
   const actions = useRepActions();
 
   const [form, setForm] = useState({
@@ -203,7 +203,7 @@ function InstitutionForm({ college }: { college: RepCollege }) {
                     {p.deadline ? ` · Deadline ${p.deadline} (${deadlineLabel(p.deadline)})` : ''}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                <Icon name="chevron-forward" size={18} color={colors.textMuted} />
               </View>
             </Card>
           ))
@@ -219,7 +219,7 @@ function InstitutionForm({ college }: { college: RepCollege }) {
               {college.requirements.length === 1 ? '' : 's'} · documents and essays
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          <Icon name="chevron-forward" size={18} color={colors.textMuted} />
         </View>
       </Card>
     </ScrollView>

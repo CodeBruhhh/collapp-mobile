@@ -60,9 +60,8 @@ const CHANGE_PASSWORD_ROUTE: Record<Role, Href> = {
  * appearance, push preferences, security, data export/deletion and sign-out.
  */
 export function AccountSettingsSections({ role }: { role: Role }) {
-  const { colors, tokens } = useTheme();
+  const { colors } = useTheme();
   const styles = createAccountStyles(colors);
-  const editorial = tokens.editorial;
   const { session, signOut } = useAuth();
   const userId = session?.user.id ?? '';
   const { themeMode, setThemeMode } = usePreferences();
@@ -96,14 +95,6 @@ export function AccountSettingsSections({ role }: { role: Role }) {
       Alert.alert('Could not update biometric unlock', getErrorMessage(e));
     }
   }
-
-  const confirmSignOut = () =>
-    editorial
-      ? setSignOutSheet(true)
-      : Alert.alert('Sign out?', 'You will need to sign in again to use CollApp.', [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Sign out', style: 'destructive', onPress: signOut },
-        ]);
 
   async function downloadData() {
     setExporting(true);
@@ -168,39 +159,24 @@ export function AccountSettingsSections({ role }: { role: Role }) {
           disabled={!biometrics.data?.available}
           onChange={toggleBiometrics}
         />
-        {!hasPassword ? (
-          <Text style={editorial ? styles.ledgerHint : styles.hint}>Signed in with Google</Text>
-        ) : editorial ? (
+        {hasPassword ? (
           <ActionRow
             label="Change password"
-            icon={require('@/assets/images/editorial/lock.svg')}
+            icon="lock"
             onPress={() => router.push(CHANGE_PASSWORD_ROUTE[role])}
           />
         ) : (
-          <Button
-            variant="secondary"
-            label="Change password"
-            onPress={() => router.push(CHANGE_PASSWORD_ROUTE[role])}
-          />
+          <Text style={styles.hint}>Signed in with Google</Text>
         )}
       </SettingsSection>
 
       <SettingsSection title="Your data" band>
-        {editorial ? (
-          <ActionRow
-            label="Download my data"
-            icon={require('@/assets/images/editorial/download.svg')}
-            onPress={downloadData}
-            loading={exporting}
-          />
-        ) : (
-          <Button
-            variant="secondary"
-            label="Download my data"
-            onPress={downloadData}
-            loading={exporting}
-          />
-        )}
+        <ActionRow
+          label="Download my data"
+          icon="download"
+          onPress={downloadData}
+          loading={exporting}
+        />
         {role === 'student' ? (
           <Button
             variant="link"
@@ -208,31 +184,25 @@ export function AccountSettingsSections({ role }: { role: Role }) {
             onPress={() => router.push('/student/delete-account')}
           />
         ) : (
-          <Text style={editorial ? styles.ledgerHint : styles.hint}>
-            To close this account, contact an administrator.
-          </Text>
+          <Text style={styles.hint}>To close this account, contact an administrator.</Text>
         )}
       </SettingsSection>
 
-      {editorial ? (
-        <View style={styles.signOut}>
-          <Button
-            label="Sign out"
-            variant="secondary"
-            icon={require('@/assets/images/editorial/sign-out.svg')}
-            onPress={confirmSignOut}
-          />
-          <ActionSheet
-            visible={signOutSheet}
-            onClose={() => setSignOutSheet(false)}
-            title="Sign out?"
-            message="You will need to sign in again to use CollApp."
-            actions={[{ label: 'Sign out', destructive: true, onPress: signOut }]}
-          />
-        </View>
-      ) : (
-        <Button label="Sign out" variant="secondary" onPress={confirmSignOut} />
-      )}
+      <View style={styles.signOut}>
+        <Button
+          label="Sign out"
+          variant="secondary"
+          icon="sign-out"
+          onPress={() => setSignOutSheet(true)}
+        />
+        <ActionSheet
+          visible={signOutSheet}
+          onClose={() => setSignOutSheet(false)}
+          title="Sign out?"
+          message="You will need to sign in again to use CollApp."
+          actions={[{ label: 'Sign out', destructive: true, onPress: signOut }]}
+        />
+      </View>
     </>
   );
 }

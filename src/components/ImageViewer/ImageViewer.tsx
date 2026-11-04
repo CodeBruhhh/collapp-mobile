@@ -1,10 +1,11 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { createStyles } from './ImageViewer.styles';
+
+import { Icon } from '@/components/Icon';
 
 type ImageViewerProps = {
   /** Image to show; the viewer is open while this is set. */
@@ -55,7 +56,7 @@ export function ImageViewer({ uri, title, onClose }: ImageViewerProps) {
             onPress={onClose}
             hitSlop={8}
             style={styles.close}>
-            <Ionicons name="close" size={26} color="#FFFFFF" />
+            <Icon name="close" size={26} color="#FFFFFF" />
           </Pressable>
         </SafeAreaView>
       </View>

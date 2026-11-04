@@ -1,15 +1,12 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import type { ComponentProps } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { Icon, type IconName } from '@/components/Icon';
 import { DetailSkeleton, InlineSkeleton, ListSkeleton } from '@/components/Skeleton';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage } from '@/lib/validation';
 
 import { createStyles } from './StateView.styles';
-
-type IconName = ComponentProps<typeof Ionicons>['name'];
 
 type LoadingStateProps = {
   /**
@@ -32,16 +29,16 @@ export function LoadingState({ variant = 'list', rows, label }: LoadingStateProp
 const NETWORK_ERROR = /network request failed|failed to fetch|network ?error|timed? ?out/i;
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const message = getErrorMessage(error);
   const offline = NETWORK_ERROR.test(message);
 
   return (
     <View style={styles.root}>
       <View style={styles.iconCircle}>
-        <Ionicons
-          name={offline ? 'cloud-offline-outline' : 'alert-circle-outline'}
+        <Icon
+          name={offline ? 'cloud-offline' : 'alert-circle'}
           size={28}
           color={colors.textMuted}
         />
@@ -68,12 +65,12 @@ type EmptyStateProps = {
 };
 
 export function EmptyState({ icon, title, body, actionLabel, onAction }: EmptyStateProps) {
-  const { colors, tokens } = useTheme();
-  const styles = createStyles(colors, tokens);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <View style={styles.root}>
       <View style={styles.iconCircle}>
-        <Ionicons name={icon} size={28} color={colors.textMuted} />
+        <Icon name={icon} size={28} color={colors.textMuted} />
       </View>
       <Text style={styles.title}>{title}</Text>
       {body ? <Text style={styles.body}>{body}</Text> : null}

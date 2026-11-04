@@ -1,7 +1,7 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { Icon } from '@/components/Icon';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage } from '@/lib/validation';
@@ -46,7 +46,7 @@ export function GoogleButton({ onError }: { onError: (message: string | null) =>
           <ActivityIndicator color={colors.text} />
         ) : (
           <>
-            <Ionicons name="logo-google" size={20} color={colors.text} />
+            <Icon name="logo-google" size={20} color={colors.text} />
             <Text style={styles.googleLabel}>Continue with Google</Text>
           </>
         )}

@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { fontWeight, type ThemeColors } from '@/styles';
+import { fonts, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -10,5 +10,5 @@ export const createStyles = (c: ThemeColors) =>
       justifyContent: 'center',
       backgroundColor: c.primary,
     },
-    initials: { color: c.onPrimary, fontWeight: fontWeight.bold },
+    initials: { color: c.onPrimary, fontFamily: fonts.semibold },
   });

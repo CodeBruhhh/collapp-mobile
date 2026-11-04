@@ -73,7 +73,7 @@ export function RecommendationsScreen() {
           <ErrorState error={refresh.error} onRetry={regenerate} />
         ) : (
           <EmptyState
-            icon="sparkles-outline"
+            icon="sparkles"
             title="No matches yet"
             body="No open programs fit right now. Check back as colleges publish programs."
           />

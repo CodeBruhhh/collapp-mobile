@@ -1,8 +1,8 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
 import { useAuth } from '@/context/AuthContext';
 import { usePlatformSettings } from '@/features/admin/hooks';
 import { useTheme } from '@/hooks/useTheme';
@@ -19,7 +19,7 @@ export function MaintenanceScreen() {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.content}>
-        <Ionicons name="construct-outline" size={56} color={colors.primary} />
+        <Icon name="construct" size={56} color={colors.primary} />
         <Text accessibilityRole="header" style={styles.title}>
           CollApp is under maintenance
         </Text>
