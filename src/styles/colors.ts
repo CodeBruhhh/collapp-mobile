@@ -12,6 +12,7 @@ export interface ThemeColors {
   primarySoft: string;
   onPrimary: string;
   danger: string;
+  onDanger: string;
   /** Application milestone badges (SRS 3.2.2). */
   status: {
     draft: string;
@@ -37,6 +38,7 @@ export const lightColors: ThemeColors = {
   primarySoft: '#E6ECE5',
   onPrimary: '#FDFCF8',
   danger: '#A23B2C',
+  onDanger: '#FFFFFF',
   status: {
     draft: '#5F6C65',
     submitted: '#2F5D7C',
@@ -58,6 +60,7 @@ export const darkColors: ThemeColors = {
   primarySoft: '#1E3532',
   onPrimary: '#0F1514',
   danger: '#E57F6E',
+  onDanger: '#1F0E0B',
   status: {
     draft: '#9AA59F',
     submitted: '#86B4D4',
@@ -67,6 +70,9 @@ export const darkColors: ThemeColors = {
     rejected: '#B8C0BB',
   },
 };
+
+/** Theme-independent: the photo viewer, overlays on photos, and sheet backdrops. */
+export const fixedColors = { black: '#000000', white: '#FFFFFF', scrim: '#0B1211' } as const;
 
 /** `#RRGGBB` plus alpha (0-1) as `#RRGGBBAA`, for tinted badge backgrounds. */
 export function withAlpha(hex: string, alpha: number): string {

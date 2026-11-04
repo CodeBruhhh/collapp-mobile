@@ -1,12 +1,12 @@
 import { StyleSheet } from 'react-native';
 
-import { fonts, fontSize, lineHeight, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import { rhythm, spacing, TOUCH_TARGET, type, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.md, gap: spacing.sm, flexGrow: 1 },
-    header: { marginBottom: spacing.sm },
+    content: { padding: rhythm.gutter, paddingTop: spacing.sm, flexGrow: 1 },
+    header: { marginBottom: spacing.xs },
     headerActions: { flexDirection: 'row' },
     headerButton: {
       width: TOUCH_TARGET,
@@ -15,7 +15,12 @@ export const createStyles = (c: ThemeColors) =>
       justifyContent: 'center',
     },
     headerButtonDisabled: { opacity: 0.35 },
-    row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    day: {
+      ...type.overline,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.sm,
+      color: c.textMuted,
+    },
     icon: {
       width: 36,
       height: 36,
@@ -25,16 +30,7 @@ export const createStyles = (c: ThemeColors) =>
       backgroundColor: c.surfaceMuted,
     },
     iconUnread: { backgroundColor: c.primarySoft },
-    info: { flex: 1, gap: 2 },
-    topLine: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm },
-    title: { flex: 1, fontSize: fontSize.md, fontFamily: fonts.medium, color: c.text },
-    unreadTitle: { fontFamily: fonts.semibold },
-    body: {
-      fontFamily: fonts.regular,
-      fontSize: fontSize.sm,
-      lineHeight: lineHeight.sm,
-      color: c.textMuted,
-    },
-    time: { fontFamily: fonts.regular, fontSize: fontSize.xs, color: c.textMuted },
+    side: { alignItems: 'flex-end', gap: spacing.sm },
+    time: { ...type.caption, fontSize: 12, color: c.textMuted },
     dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: c.primary },
   });

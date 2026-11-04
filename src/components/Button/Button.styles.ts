@@ -25,6 +25,6 @@ export const createStyles = (c: ThemeColors) =>
     label: { fontSize: 15, fontFamily: fonts.semibold },
     labelPrimary: { color: c.onPrimary },
     labelSecondary: { color: c.text },
-    labelDanger: { color: '#FFFFFF' },
+    labelDanger: { color: c.onDanger },
     labelLink: { color: c.primary },
   });

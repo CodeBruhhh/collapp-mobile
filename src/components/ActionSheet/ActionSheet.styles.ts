@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import {
+  fixedColors,
   fonts,
   fontSize,
   radius,
@@ -16,7 +17,7 @@ export const createStyles = (c: ThemeColors) =>
     backdrop: {
       flex: 1,
       justifyContent: 'flex-end',
-      backgroundColor: withAlpha('#0B1211', 0.45),
+      backgroundColor: withAlpha(fixedColors.scrim, 0.45),
     },
     // Cap against the full-height backdrop; inner layers shrink so long content scrolls.
     frame: { maxHeight: '88%' },

@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { Icon } from '@/components/Icon';
 import { useAttachmentUrl, type ChatMessage } from '@/features/messaging/hooks';
 import { useTheme } from '@/hooks/useTheme';
+import { fixedColors } from '@/styles';
 import { clockTime } from '@/lib/time';
 
 import { createStyles, PHOTO_WIDTH } from './MessageBubble.styles';
@@ -96,7 +97,7 @@ function PhotoAttachment({
       )}
       {message.delivery === 'sending' ? (
         <View style={styles.photoOverlay}>
-          <ActivityIndicator color="#FFFFFF" />
+          <ActivityIndicator color={fixedColors.white} />
         </View>
       ) : null}
     </Pressable>

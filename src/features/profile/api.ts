@@ -1,3 +1,4 @@
+import { objectPath, removeFile, uploadFile, type LocalFile } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import type { Tables, TablesUpdate } from '@/types/database';
 
@@ -31,6 +32,24 @@ export async function saveFullName(userId: string, fullName: string) {
     .update({ full_name: fullName.trim() })
     .eq('id', userId);
   if (error) throw error;
+}
+
+/**
+ * Set or clear the account's photo (profiles.avatar_path, in the avatars bucket).
+ * The new file is saved before the old one is removed, so a failure keeps the old photo.
+ */
+export async function saveProfilePhoto(
+  userId: string,
+  file: LocalFile | null,
+  previousPath: string | null,
+) {
+  const path = file ? await uploadFile('avatars', objectPath(userId, file.mimeType), file) : null;
+  const { error } = await supabase.from('profiles').update({ avatar_path: path }).eq('id', userId);
+  if (error) {
+    if (path) await removeFile('avatars', path);
+    throw error;
+  }
+  if (previousPath) await removeFile('avatars', previousPath);
 }
 
 /** Push categories a user can turn off (profiles.notification_prefs, SRS 3.1.4.4). */

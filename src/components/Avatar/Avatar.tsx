@@ -9,7 +9,9 @@ import { createStyles } from './Avatar.styles';
 
 type AvatarProps = {
   name: string;
-  /** Path in the public college media bucket, when the person or college has a picture. */
+  /** The person's own photo, from the avatars bucket. */
+  avatarPath?: string | null;
+  /** A college logo, from the public college media bucket. */
   logoPath?: string | null;
   /** Shown instead of initials, e.g. the shield for the CollApp administrator. */
   icon?: IconName;
@@ -28,12 +30,11 @@ export function initialsOf(name: string): string {
 }
 
 /** Round picture, glyph or initials; decorative, so the row around it carries the name. */
-export function Avatar({ name, logoPath, icon, size = 56, onAccent }: AvatarProps) {
+export function Avatar({ name, avatarPath, logoPath, icon, size = 56, onAccent }: AvatarProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
-  const uri = publicUrl('college-media', logoPath);
+  const uri = publicUrl('avatars', avatarPath) ?? publicUrl('college-media', logoPath);
   const circle = { width: size, height: size, borderRadius: size / 2 };
-  const ink = onAccent ? colors.primary : colors.primary;
 
   if (uri) {
     return (
@@ -52,7 +53,7 @@ export function Avatar({ name, logoPath, icon, size = 56, onAccent }: AvatarProp
       accessibilityElementsHidden
       importantForAccessibility="no">
       {icon ? (
-        <Icon name={icon} size={size * 0.5} color={ink} />
+        <Icon name={icon} size={size * 0.5} color={colors.primary} />
       ) : (
         <Text style={[styles.initials, { fontSize: size * 0.32 }]}>{initialsOf(name)}</Text>
       )}

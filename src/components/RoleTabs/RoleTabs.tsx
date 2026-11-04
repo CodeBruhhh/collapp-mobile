@@ -6,7 +6,7 @@ import { Icon, type IconName } from '@/components/Icon';
 import { NotificationBell } from '@/components/NotificationBell';
 import { useUnreadMessageCount } from '@/features/messaging/hooks';
 import { useTheme } from '@/hooks/useTheme';
-import { fonts, radius, type, type ThemeColors } from '@/styles';
+import { fonts, radius, type, withAlpha, type ThemeColors } from '@/styles';
 
 export type TabConfig = {
   /** Must match the route file name, e.g. "home" -> home.tsx */
@@ -19,15 +19,15 @@ const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     actions: { flexDirection: 'row', alignItems: 'center' },
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    title: { fontFamily: fonts.regular, fontSize: 19, letterSpacing: -0.6, color: c.text },
+    title: { fontFamily: fonts.regular, fontSize: 19, letterSpacing: -0.6, color: c.onPrimary },
     badge: {
       paddingHorizontal: 7,
       paddingVertical: 4,
       borderRadius: radius.md,
       borderWidth: 1,
-      borderColor: c.border,
+      borderColor: withAlpha(c.onPrimary, 0.5),
     },
-    badgeText: { ...type.overline, fontSize: 9, color: c.primary },
+    badgeText: { ...type.overline, fontSize: 9, color: c.onPrimary },
     tabButton: { flex: 1 },
     // Full-width track so flexbox centers the bar over the glyph (no offset math).
     indicatorTrack: { position: 'absolute', top: 0, left: 0, right: 0, alignItems: 'center' },
@@ -79,11 +79,7 @@ export function RoleTabs({ tabs, badge }: RoleTabsProps) {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.background,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: colors.border,
-        },
+        headerStyle: { backgroundColor: colors.primary },
         headerShadowVisible: false,
         headerTitleAlign: 'left',
         headerRight: () => <HeaderActions />,
@@ -98,6 +94,7 @@ export function RoleTabs({ tabs, badge }: RoleTabsProps) {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarBadgeStyle: {
           backgroundColor: colors.danger,
+          color: colors.onDanger,
           fontFamily: fonts.medium,
           fontSize: 11,
         },

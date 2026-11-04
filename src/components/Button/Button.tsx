@@ -32,7 +32,7 @@ export function Button({
   const labelColor = {
     primary: colors.onPrimary,
     secondary: colors.text,
-    danger: '#FFFFFF',
+    danger: colors.onDanger,
     link: colors.primary,
   }[variant];
 
@@ -50,7 +50,7 @@ export function Button({
         inactive && styles.inactive,
       ]}>
       {loading ? (
-        <ActivityIndicator color={solid ? colors.onPrimary : colors.primary} />
+        <ActivityIndicator color={solid ? labelColor : colors.primary} />
       ) : (
         <View style={styles.content}>
           {icon ? <Icon name={icon} size={16} color={labelColor} /> : null}

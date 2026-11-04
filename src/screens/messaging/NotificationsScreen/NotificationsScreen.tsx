@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card } from '@/components/Card';
 import { FilterTabs } from '@/components/FilterTabs';
 import { Icon, type IconName } from '@/components/Icon';
+import { LedgerRow } from '@/components/LedgerRow';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { useAuth } from '@/context/AuthContext';
 import type { AppNotification } from '@/features/notifications/api';
@@ -13,7 +13,7 @@ import { useNotificationActions, useNotifications } from '@/features/notificatio
 import { NOTIFICATION_ICONS, notificationTarget } from '@/features/notifications/routing';
 import { useTheme } from '@/hooks/useTheme';
 import { ask, notify } from '@/lib/feedback';
-import { shortTime } from '@/lib/time';
+import { dayLabel, shortTime } from '@/lib/time';
 import { getErrorMessage } from '@/lib/validation';
 
 import { createStyles } from './NotificationsScreen.styles';
@@ -88,7 +88,12 @@ export function NotificationsScreen() {
       data={visible}
       keyExtractor={(n) => n.id}
       refreshControl={
-        <RefreshControl refreshing={notifications.isRefetching} onRefresh={notifications.refetch} />
+        <RefreshControl
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+          refreshing={notifications.isRefetching}
+          onRefresh={notifications.refetch}
+        />
       }
       ListHeaderComponent={
         <View style={styles.header}>
@@ -107,14 +112,14 @@ export function NotificationsScreen() {
                         markRead.mutate(undefined, { onError: fail('Could not update') })
                       }
                       style={[styles.headerButton, !unread && styles.headerButtonDisabled]}>
-                      <Icon name="checkmark-done" size={22} color={colors.primary} />
+                      <Icon name="checkmark-done" size={22} color={colors.onPrimary} />
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Clear notifications"
                       onPress={confirmClear}
                       style={styles.headerButton}>
-                      <Icon name="trash" size={21} color={colors.text} />
+                      <Icon name="trash" size={21} color={colors.onPrimary} />
                     </Pressable>
                   </View>
                 ) : null,
@@ -147,37 +152,42 @@ export function NotificationsScreen() {
           />
         )
       }
-      renderItem={({ item }) => {
+      renderItem={({ item, index }) => {
         const isUnread = !item.read_at;
+        const day = dayLabel(item.created_at);
+        const newDay = index === 0 || dayLabel(visible[index - 1].created_at) !== day;
         return (
-          <Card
-            onPress={() => open(item)}
-            onLongPress={() => itemOptions(item)}
-            accessibilityLabel={`${isUnread ? 'Unread. ' : ''}${item.title}. ${item.body}`}>
-            <View style={styles.row}>
-              <View style={[styles.icon, isUnread && styles.iconUnread]}>
-                <Icon
-                  name={(NOTIFICATION_ICONS[item.type] ?? 'notifications') as IconName}
-                  size={18}
-                  color={isUnread ? colors.primary : colors.textMuted}
-                />
-              </View>
-              <View style={styles.info}>
-                <View style={styles.topLine}>
-                  <Text style={[styles.title, isUnread && styles.unreadTitle]} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.time}>{shortTime(item.created_at)}</Text>
+          <View>
+            {newDay ? (
+              <Text accessibilityRole="header" style={styles.day}>
+                {day}
+              </Text>
+            ) : null}
+            <LedgerRow
+              first={newDay}
+              emphasis={isUnread}
+              title={item.title}
+              subtitle={item.body || undefined}
+              onPress={() => open(item)}
+              onLongPress={() => itemOptions(item)}
+              accessibilityLabel={`${isUnread ? 'Unread. ' : ''}${item.title}. ${item.body}`}
+              leading={
+                <View style={[styles.icon, isUnread && styles.iconUnread]}>
+                  <Icon
+                    name={(NOTIFICATION_ICONS[item.type] ?? 'notifications') as IconName}
+                    size={18}
+                    color={isUnread ? colors.primary : colors.textMuted}
+                  />
                 </View>
-                {item.body ? (
-                  <Text style={styles.body} numberOfLines={2}>
-                    {item.body}
-                  </Text>
-                ) : null}
-              </View>
-              {isUnread ? <View style={styles.dot} accessibilityElementsHidden /> : null}
-            </View>
-          </Card>
+              }
+              trailing={
+                <View style={styles.side}>
+                  <Text style={styles.time}>{shortTime(item.created_at)}</Text>
+                  {isUnread ? <View style={styles.dot} accessibilityElementsHidden /> : null}
+                </View>
+              }
+            />
+          </View>
         );
       }}
     />

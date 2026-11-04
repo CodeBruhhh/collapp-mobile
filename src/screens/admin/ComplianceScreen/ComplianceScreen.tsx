@@ -1,8 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, RefreshControl, Text, View } from 'react-native';
 
 import { FilterTabs } from '@/components/FilterTabs';
+import { LedgerRow } from '@/components/LedgerRow';
+import { PageHeading } from '@/components/PageHeading';
 import { Icon } from '@/components/Icon';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -77,12 +79,10 @@ export function ComplianceScreen() {
 
   const header = (
     <View style={[styles.section, styles.listHeader]}>
-      <View style={styles.heading}>
-        <Text accessibilityRole="header" style={styles.title}>
-          Oversight
-        </Text>
-        <Text style={styles.subtitle}>Audit trail, blocked files and data-access policies.</Text>
-      </View>
+      <PageHeading
+        title="Oversight"
+        subtitle="Audit trail, blocked files and data-access policies."
+      />
       <FilterTabs<Section>
         value={section}
         onChange={setSection}
@@ -125,7 +125,12 @@ export function ComplianceScreen() {
         keyExtractor={(e) => String(e.id)}
         ListHeaderComponent={header}
         refreshControl={
-          <RefreshControl refreshing={audit.isRefetching} onRefresh={audit.refetch} />
+          <RefreshControl
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+            refreshing={audit.isRefetching}
+            onRefresh={audit.refetch}
+          />
         }
         ListEmptyComponent={
           audit.isPending ? (
@@ -137,18 +142,15 @@ export function ComplianceScreen() {
           )
         }
         renderItem={({ item, index }) => (
-          <View style={[styles.ledgerRow, index === 0 && styles.ledgerTop]}>
-            <View style={styles.rowBetween}>
-              <Text style={[styles.cardTitle, styles.flex]}>
-                {ACTION_LABELS[item.action] ?? item.action}
-              </Text>
-              <Text style={styles.meta}>{shortTime(item.created_at)}</Text>
-            </View>
+          <LedgerRow
+            first={index === 0}
+            title={ACTION_LABELS[item.action] ?? item.action}
+            trailing={<Text style={styles.meta}>{shortTime(item.created_at)}</Text>}>
             {describe(item) ? <Text style={styles.body}>{describe(item)}</Text> : null}
             <Text style={styles.meta}>
               By {item.actor ? item.actor.full_name || item.actor.email : 'the system'}
             </Text>
-          </View>
+          </LedgerRow>
         )}
       />
     );
@@ -163,7 +165,12 @@ export function ComplianceScreen() {
         keyExtractor={(m) => m.id}
         ListHeaderComponent={header}
         refreshControl={
-          <RefreshControl refreshing={blocked.isRefetching} onRefresh={blocked.refetch} />
+          <RefreshControl
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+            refreshing={blocked.isRefetching}
+            onRefresh={blocked.refetch}
+          />
         }
         ListEmptyComponent={
           blocked.isPending ? (
@@ -175,31 +182,16 @@ export function ComplianceScreen() {
           )
         }
         renderItem={({ item, index }) => (
-          <Pressable
-            accessibilityRole="button"
+          <LedgerRow
+            first={index === 0}
+            title={item.attachment_name ?? 'Attachment'}
+            subtitle={`${item.sender ? item.sender.full_name || item.sender.email : 'Unknown sender'} · ${shortTime(item.created_at)}`}
+            leading={<Icon name="alert-circle" size={20} color={colors.danger} />}
             onPress={() =>
               router.push({ pathname: '/admin/thread/[id]', params: { id: item.thread_id } })
             }
             accessibilityLabel={`Blocked file ${item.attachment_name}. Open conversation`}
-            style={({ pressed }) => [
-              styles.ledgerRow,
-              index === 0 && styles.ledgerTop,
-              pressed && styles.pressed,
-            ]}>
-            <View style={styles.row}>
-              <Icon name="alert-circle" size={20} color={colors.danger} />
-              <View style={styles.flex}>
-                <Text style={styles.cardTitle} numberOfLines={1}>
-                  {item.attachment_name}
-                </Text>
-                <Text style={styles.meta}>
-                  {item.sender ? item.sender.full_name || item.sender.email : 'Unknown sender'} ·{' '}
-                  {shortTime(item.created_at)}
-                </Text>
-              </View>
-              <Icon name="chevron-forward" size={18} color={colors.textMuted} />
-            </View>
-          </Pressable>
+          />
         )}
       />
     );
@@ -212,7 +204,14 @@ export function ComplianceScreen() {
       data={rls.data ?? []}
       keyExtractor={(t) => t.table_name}
       ListHeaderComponent={header}
-      refreshControl={<RefreshControl refreshing={rls.isRefetching} onRefresh={rls.refetch} />}
+      refreshControl={
+        <RefreshControl
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+          refreshing={rls.isRefetching}
+          onRefresh={rls.refetch}
+        />
+      }
       ListEmptyComponent={
         rls.isPending ? (
           <LoadingState />
@@ -221,25 +220,26 @@ export function ComplianceScreen() {
         ) : null
       }
       renderItem={({ item, index }) => (
-        <View style={[styles.ledgerRow, index === 0 && styles.ledgerTop]}>
-          <View style={styles.rowBetween}>
-            <Text style={[styles.cardTitle, styles.flex]}>{item.table_name}</Text>
+        <LedgerRow
+          first={index === 0}
+          title={item.table_name}
+          subtitle={
+            item.policy_count === 0
+              ? 'No policies: only the server can access it'
+              : `${item.policy_count} ${item.policy_count === 1 ? 'policy' : 'policies'}`
+          }
+          trailing={
             <StatusBadge
               label={item.rls_enabled ? 'RLS on' : 'RLS OFF'}
               color={item.rls_enabled ? colors.status.accepted : colors.danger}
             />
-          </View>
-          <Text style={styles.meta}>
-            {item.policy_count === 0
-              ? 'No policies: only the server can access it'
-              : `${item.policy_count} ${item.policy_count === 1 ? 'policy' : 'policies'}`}
-          </Text>
+          }>
           {item.policies.map((p) => (
             <Text key={p} style={styles.meta}>
               • {p}
             </Text>
           ))}
-        </View>
+        </LedgerRow>
       )}
     />
   );

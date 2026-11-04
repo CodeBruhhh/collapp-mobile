@@ -2,7 +2,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
-import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
 import {
@@ -85,7 +84,7 @@ type Draft = { body: string; attachment: LocalFile | null };
 
 /** SDD screens 16 / 26 — a formal conversation with realtime delivery and read receipts. */
 export function ChatScreen({ id }: { id: string }) {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const styles = createStyles(colors);
   const { role, session } = useAuth();
   const userId = session?.user.id;
@@ -198,12 +197,9 @@ export function ChatScreen({ id }: { id: string }) {
       <Stack.Screen
         options={{
           title: header.title,
-          headerStyle: { backgroundColor: colors.primary },
-          headerTintColor: colors.onPrimary,
           headerTitle: () => <ChatHeader {...header} />,
         }}
       />
-      <StatusBar style={isDark ? 'dark' : 'light'} />
       {messages.isPending ? (
         <View style={styles.list}>
           <ChatSkeleton />

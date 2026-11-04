@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { radius, rhythm, spacing, type, type ThemeColors } from '@/styles';
+import { fixedColors, radius, rhythm, spacing, type, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -16,7 +16,7 @@ export const createStyles = (c: ThemeColors) =>
       borderColor: c.border,
       backgroundColor: c.surface,
       elevation: 3,
-      shadowColor: '#000',
+      shadowColor: fixedColors.black,
       shadowOpacity: 0.08,
       shadowRadius: 8,
       shadowOffset: { width: 0, height: 2 },

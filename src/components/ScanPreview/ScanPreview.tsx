@@ -2,6 +2,7 @@ import { File } from 'expo-file-system';
 import { Image } from 'expo-image';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
 import { Modal, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -55,6 +56,7 @@ export function ScanPreview({ file, title, onRetake, onCancel, onConfirm }: Scan
 
   return (
     <Modal visible={Boolean(file)} animationType="slide" onRequestClose={() => close(onCancel)}>
+      <StatusBar style="auto" />
       <SafeAreaView style={styles.root}>
         <Text accessibilityRole="header" style={styles.title}>
           {title}

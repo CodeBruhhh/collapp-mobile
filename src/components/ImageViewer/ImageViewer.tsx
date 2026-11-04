@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { createStyles } from './ImageViewer.styles';
 
 import { Icon } from '@/components/Icon';
+import { fixedColors } from '@/styles';
 
 type ImageViewerProps = {
   /** Image to show; the viewer is open while this is set. */
@@ -56,7 +57,7 @@ export function ImageViewer({ uri, title, onClose }: ImageViewerProps) {
             onPress={onClose}
             hitSlop={8}
             style={styles.close}>
-            <Icon name="close" size={26} color="#FFFFFF" />
+            <Icon name="close" size={26} color={fixedColors.white} />
           </Pressable>
         </SafeAreaView>
       </View>

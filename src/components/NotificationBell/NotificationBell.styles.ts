@@ -22,5 +22,5 @@ export const createStyles = (c: ThemeColors) =>
       justifyContent: 'center',
       backgroundColor: c.danger,
     },
-    badgeText: { fontSize: 11, fontFamily: fonts.semibold, color: '#FFFFFF' },
+    badgeText: { fontSize: 11, fontFamily: fonts.semibold, color: c.onDanger },
   });

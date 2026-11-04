@@ -13,6 +13,7 @@ const ICONS = {
   'bookmark-filled': require('@/assets/images/editorial/bookmark-filled.svg'),
   broadcast: require('@/assets/images/editorial/broadcast.svg'),
   calendar: require('@/assets/images/editorial/calendar.svg'),
+  camera: require('@/assets/images/editorial/camera.svg'),
   cash: require('@/assets/images/editorial/cash.svg'),
   'chatbubble-ellipses': require('@/assets/images/editorial/chatbubble-ellipses.svg'),
   chatbubbles: require('@/assets/images/editorial/chatbubbles.svg'),

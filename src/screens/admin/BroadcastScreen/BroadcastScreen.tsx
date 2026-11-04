@@ -5,6 +5,8 @@ import { ActionSheet } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
 import { ChipGroup } from '@/components/ChipGroup';
 import { FormScreen } from '@/components/FormScreen';
+import { LedgerRow } from '@/components/LedgerRow';
+import { PageHeading } from '@/components/PageHeading';
 import { LoadingState } from '@/components/StateView';
 import { TextField } from '@/components/TextField';
 import type { Audience } from '@/features/admin/api';
@@ -65,15 +67,11 @@ export function BroadcastScreen() {
   }
 
   return (
-    <FormScreen underHeader>
-      <View style={styles.heading}>
-        <Text accessibilityRole="header" style={styles.title}>
-          Announcements
-        </Text>
-        <Text style={styles.subtitle}>
-          Platform announcements such as maintenance windows or application deadlines.
-        </Text>
-      </View>
+    <FormScreen underHeader inTab>
+      <PageHeading
+        title="Announcements"
+        subtitle="Platform announcements such as maintenance windows or application deadlines."
+      />
 
       <ChipGroup
         label="Send to"
@@ -131,17 +129,17 @@ export function BroadcastScreen() {
               recipients?: number;
             };
             return (
-              <View key={entry.id} style={[styles.ledgerRow, index === 0 && styles.ledgerTop]}>
-                <View style={styles.rowBetween}>
-                  <Text style={[styles.cardTitle, styles.flex]}>{m.title}</Text>
-                  <Text style={styles.meta}>{shortTime(entry.created_at)}</Text>
-                </View>
+              <LedgerRow
+                key={entry.id}
+                first={index === 0}
+                title={m.title ?? ''}
+                trailing={<Text style={styles.meta}>{shortTime(entry.created_at)}</Text>}>
                 <Text style={styles.body}>{m.body}</Text>
                 <Text style={styles.meta}>
                   {m.audience ? AUDIENCE_LABELS[m.audience] : 'Unknown audience'} ·{' '}
                   {m.recipients ?? 0} recipients
                 </Text>
-              </View>
+              </LedgerRow>
             );
           })
         ) : (

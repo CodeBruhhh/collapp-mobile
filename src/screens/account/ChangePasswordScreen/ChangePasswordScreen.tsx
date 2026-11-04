@@ -1,9 +1,11 @@
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { FormScreen } from '@/components/FormScreen';
+import { PageHeading } from '@/components/PageHeading';
+import { StickyActionBar } from '@/components/StickyActionBar';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { changePasswordSchema } from '@/features/auth/schemas';
@@ -48,10 +50,21 @@ export function ChangePasswordScreen() {
   }
 
   return (
-    <FormScreen underHeader>
+    <FormScreen
+      underHeader
+      footer={
+        <StickyActionBar>
+          <View style={styles.action}>
+            <Button label="Change password" onPress={submit} loading={saving} />
+          </View>
+        </StickyActionBar>
+      }>
       <Stack.Screen options={{ title: 'Change password' }} />
       <View style={styles.form}>
-        <Text style={styles.hint}>Use at least 8 characters with a letter and a number.</Text>
+        <PageHeading
+          title="Choose a new password"
+          subtitle="Use at least 8 characters with a letter and a number."
+        />
         <TextField
           label="Current password"
           value={form.currentPassword}
@@ -76,7 +89,6 @@ export function ChangePasswordScreen() {
           secureTextEntry
           autoComplete="new-password"
         />
-        <Button label="Change password" onPress={submit} loading={saving} />
       </View>
     </FormScreen>
   );

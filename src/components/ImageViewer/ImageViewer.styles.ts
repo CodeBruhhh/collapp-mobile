@@ -1,11 +1,11 @@
 import { StyleSheet } from 'react-native';
 
-import { fonts, fontSize, spacing, TOUCH_TARGET } from '@/styles';
+import { fixedColors, fonts, fontSize, spacing, TOUCH_TARGET } from '@/styles';
 
 // Always dark, whatever the theme: photos read best on black.
 export const createStyles = () =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: '#000000' },
+    root: { flex: 1, backgroundColor: fixedColors.black },
     zoom: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' },
     image: { width: '100%', height: '100%' },
     bar: {
@@ -20,7 +20,7 @@ export const createStyles = () =>
       paddingBottom: spacing.sm,
       backgroundColor: 'rgba(0,0,0,0.45)',
     },
-    title: { flex: 1, fontSize: fontSize.md, fontFamily: fonts.medium, color: '#FFFFFF' },
+    title: { flex: 1, fontSize: fontSize.md, fontFamily: fonts.medium, color: fixedColors.white },
     close: {
       width: TOUCH_TARGET,
       height: TOUCH_TARGET,

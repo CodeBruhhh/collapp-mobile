@@ -4,6 +4,8 @@ import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { FormScreen } from '@/components/FormScreen';
+import { Icon } from '@/components/Icon';
+import { PageHeading } from '@/components/PageHeading';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { useIsOnline } from '@/hooks/useIsOnline';
@@ -16,7 +18,7 @@ import { createAccountStyles } from '../accountStyles';
 const CONFIRMATION = 'DELETE';
 
 const DELETED_DATA = [
-  'Your account, name and email',
+  'Your account, name, email and profile photo',
   'Your academic profile and AI matches',
   'All applications, including submitted ones, and every uploaded document',
   'Your messages, attachments and notifications',
@@ -59,15 +61,15 @@ export function DeleteAccountScreen() {
     <FormScreen underHeader>
       <Stack.Screen options={{ title: 'Delete account' }} />
       <View style={styles.form}>
-        <Text accessibilityRole="header" style={styles.title}>
-          Delete your CollApp account
-        </Text>
-        <Text style={styles.body}>This permanently removes:</Text>
-        {DELETED_DATA.map((item) => (
-          <Text key={item} style={styles.body}>
-            • {item}
-          </Text>
-        ))}
+        <PageHeading title="Delete your CollApp account" subtitle="This permanently removes:" />
+        <View>
+          {DELETED_DATA.map((item) => (
+            <View key={item} style={styles.loss}>
+              <Icon name="close-circle" size={18} color={colors.danger} />
+              <Text style={styles.lossText}>{item}</Text>
+            </View>
+          ))}
+        </View>
         <Text style={styles.hint}>Want a copy first? Go back and choose Download my data.</Text>
         <TextField
           label={`Type ${CONFIRMATION} to confirm`}

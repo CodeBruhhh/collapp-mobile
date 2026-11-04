@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -64,6 +65,7 @@ export function Select({
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
+        <StatusBar style="auto" />
         <SafeAreaView style={styles.modal}>
           <View style={styles.modalHeader}>
             <Text accessibilityRole="header" style={styles.modalTitle}>

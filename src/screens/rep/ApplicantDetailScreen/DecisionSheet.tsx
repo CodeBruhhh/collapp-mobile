@@ -1,3 +1,4 @@
+import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -95,6 +96,7 @@ export function DecisionSheet({
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={onClose}>
+      <StatusBar style="auto" />
       <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
         {/* Keeps the message box and Send button above the keyboard. */}
         <KeyboardAvoidingView style={styles.flex} behavior="padding">

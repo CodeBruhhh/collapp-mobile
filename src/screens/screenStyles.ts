@@ -18,9 +18,7 @@ import {
 export const createScreenStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: c.background },
-    content: { padding: rhythm.gutter, gap: spacing.lg },
     flex: { flex: 1 },
-    title: { ...type.display, color: c.text },
     pageName: { ...type.display, fontSize: 24, lineHeight: 30, letterSpacing: -0.8, color: c.text },
     subtitle: { ...type.body, color: c.textMuted },
     section: { gap: spacing.sm },
@@ -61,14 +59,11 @@ export const createScreenStyles = (c: ThemeColors) =>
       color: c.textMuted,
       textAlign: 'center',
     },
-    heading: { gap: 10 },
     /** Full-width pages: sections bring their own gutter. */
     page: { paddingBottom: spacing.xl },
     overview: { gap: 22, padding: rhythm.gutter, paddingBottom: 0 },
     totals: { flexDirection: 'row', gap: rhythm.gutter },
     form: { gap: 18, paddingTop: spacing.sm },
-    /** A destructive link at the end of a form. */
-    endLink: { alignItems: 'center' },
     identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
     metaLine: {
       flexDirection: 'row',
@@ -101,15 +96,6 @@ export const createScreenStyles = (c: ThemeColors) =>
     badges: { alignItems: 'flex-end', gap: 6 },
     /** Muted count above a ledger, e.g. "12 people". */
     tally: { ...type.caption, fontSize: 12, letterSpacing: 0.4, color: c.textMuted },
-    /** One ruled line of a ledger; the list's first row adds `ledgerTop`. */
-    ledgerRow: {
-      gap: 6,
-      paddingVertical: 14,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: c.border,
-    },
-    ledgerTop: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border },
-    pressed: { backgroundColor: c.surfaceMuted },
     notice: { ...type.caption, fontFamily: fonts.medium, color: c.primary, textAlign: 'center' },
     dangerText: { color: c.danger },
   });

@@ -8,6 +8,7 @@ import { Button } from '@/components/Button';
 import { FormScreen } from '@/components/FormScreen';
 import { InfoRow } from '@/components/InfoRow';
 import { Select } from '@/components/Select';
+import { StickyActionBar } from '@/components/StickyActionBar';
 import { TextField } from '@/components/TextField';
 import { getCities, getProvinces, PH_REGIONS } from '@/data/ph-address';
 import { useAdminActions } from '@/features/admin/hooks';
@@ -96,7 +97,13 @@ export function CreateCollegeScreen() {
   }
 
   return (
-    <FormScreen underHeader>
+    <FormScreen
+      underHeader
+      footer={
+        <StickyActionBar>
+          <View style={styles.flex}></View>
+        </StickyActionBar>
+      }>
       <Stack.Screen options={{ title: 'Add college' }} />
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.sectionTitle}>

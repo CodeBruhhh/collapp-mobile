@@ -74,7 +74,10 @@ export async function pickAttachmentFile(): Promise<LocalFile | null> {
 }
 
 /** Take or choose a photo; it is compressed before upload. Returns null when cancelled. */
-export async function pickPhoto(source: 'camera' | 'library'): Promise<LocalFile | null> {
+export async function pickPhoto(
+  source: 'camera' | 'library',
+  { square }: { square?: boolean } = {},
+): Promise<LocalFile | null> {
   const permission =
     source === 'camera'
       ? await ImagePicker.requestCameraPermissionsAsync()
@@ -86,7 +89,12 @@ export async function pickPhoto(source: 'camera' | 'library'): Promise<LocalFile
         : 'Photo access is off. Enable it in Settings to attach photos.',
     );
   }
-  const options: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 1 };
+  const options: ImagePicker.ImagePickerOptions = {
+    mediaTypes: ['images'],
+    quality: 1,
+    // Profile photos are cropped by the person, not guessed at.
+    ...(square && { allowsEditing: true, aspect: [1, 1] as [number, number] }),
+  };
   const res =
     source === 'camera'
       ? await ImagePicker.launchCameraAsync(options)

@@ -31,7 +31,9 @@ export async function buildDataExport(userId: string, role: Role) {
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, role, full_name, email, status, push_enabled, notification_prefs, created_at')
+      .select(
+        'id, role, full_name, email, avatar_path, status, push_enabled, notification_prefs, created_at',
+      )
       .eq('id', userId)
       .single(),
     isStudent

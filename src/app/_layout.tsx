@@ -89,7 +89,7 @@ export default function RootLayout() {
         <AuthProvider>
           <SyncProvider>
             <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-              <StatusBar style="auto" />
+              <StatusBar style={isDark ? 'dark' : 'light'} />
               <RootNavigator fontsReady={fontsLoaded || Boolean(fontError)} />
               <FeedbackHost />
             </ThemeProvider>

@@ -1,12 +1,14 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, RefreshControl, Text, View } from 'react-native';
 
 import { ActionSheet, type SheetAction } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
 import { InfoRow } from '@/components/InfoRow';
+import { LedgerRow } from '@/components/LedgerRow';
+import { PageHeading } from '@/components/PageHeading';
 import { SearchField } from '@/components/SearchField';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -189,12 +191,10 @@ export function AccountsScreen() {
 
   const header = (
     <View style={[styles.section, styles.listHeader]}>
-      <View style={styles.heading}>
-        <Text accessibilityRole="header" style={styles.title}>
-          Directory
-        </Text>
-        <Text style={styles.subtitle}>Who can sign in, and which colleges students can see.</Text>
-      </View>
+      <PageHeading
+        title="Directory"
+        subtitle="Who can sign in, and which colleges students can see."
+      />
       <FilterTabs<Section>
         value={section}
         onChange={setSection}
@@ -246,7 +246,12 @@ export function AccountsScreen() {
           keyExtractor={(u) => u.id}
           ListHeaderComponent={header}
           refreshControl={
-            <RefreshControl refreshing={users.isRefetching} onRefresh={users.refetch} />
+            <RefreshControl
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+              refreshing={users.isRefetching}
+              onRefresh={users.refetch}
+            />
           }
           ListEmptyComponent={
             users.isPending ? (
@@ -258,35 +263,24 @@ export function AccountsScreen() {
             )
           }
           renderItem={({ item, index }) => (
-            <Pressable
-              accessibilityRole="button"
+            <LedgerRow
+              first={index === 0}
+              numberOfLines={1}
+              title={`${item.full_name || 'No name'}${item.id === session?.user.id ? ' (you)' : ''}`}
+              subtitle={item.email}
               onPress={() => setSelectedUser(item)}
               accessibilityLabel={`${item.full_name || item.email}, ${ROLE_LABELS[item.role]}, ${item.status}`}
-              style={({ pressed }) => [
-                styles.ledgerRow,
-                index === 0 && styles.ledgerTop,
-                pressed && styles.pressed,
-              ]}>
-              <View style={styles.rowBetween}>
-                <View style={styles.flex}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>
-                    {item.full_name || 'No name'}
-                    {item.id === session?.user.id ? ' (you)' : ''}
-                  </Text>
-                  <Text style={styles.meta} numberOfLines={1}>
-                    {item.email}
-                  </Text>
-                  <Text style={styles.meta} numberOfLines={1}>
-                    {ROLE_LABELS[item.role]}
-                    {item.college ? ` · ${item.college.name}` : ''}
-                  </Text>
-                </View>
+              trailing={
                 <StatusBadge
                   label={item.status === 'active' ? 'Active' : 'Suspended'}
                   color={item.status === 'active' ? colors.status.accepted : colors.danger}
                 />
-              </View>
-            </Pressable>
+              }>
+              <Text style={styles.meta} numberOfLines={1}>
+                {ROLE_LABELS[item.role]}
+                {item.college ? ` · ${item.college.name}` : ''}
+              </Text>
+            </LedgerRow>
           )}
         />
         {sheets}
@@ -303,7 +297,12 @@ export function AccountsScreen() {
         keyExtractor={(c) => c.id}
         ListHeaderComponent={header}
         refreshControl={
-          <RefreshControl refreshing={colleges.isRefetching} onRefresh={colleges.refetch} />
+          <RefreshControl
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+            refreshing={colleges.isRefetching}
+            onRefresh={colleges.refetch}
+          />
         }
         ListEmptyComponent={
           colleges.isPending ? (
@@ -318,25 +317,15 @@ export function AccountsScreen() {
           const isFeatured = featured.includes(item.id);
           const published = item.profile_status === 'published';
           return (
-            <Pressable
-              accessibilityRole="button"
+            <LedgerRow
+              first={index === 0}
+              numberOfLines={1}
+              title={item.name}
+              subtitle={collegeLocation(item)}
+              leading={<CollegeLogo name={item.name} logoPath={item.logo_path} size={40} />}
               onPress={() => setSelectedCollege(item)}
               accessibilityLabel={`${item.name}, ${published ? 'published' : 'draft'}${isFeatured ? ', featured' : ''}`}
-              style={({ pressed }) => [
-                styles.ledgerRow,
-                index === 0 && styles.ledgerTop,
-                pressed && styles.pressed,
-              ]}>
-              <View style={styles.row}>
-                <CollegeLogo name={item.name} logoPath={item.logo_path} size={40} />
-                <View style={styles.flex}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  <Text style={styles.meta} numberOfLines={1}>
-                    {collegeLocation(item)}
-                  </Text>
-                </View>
+              trailing={
                 <View style={styles.badges}>
                   <StatusBadge
                     label={published ? 'Published' : 'Draft'}
@@ -344,8 +333,8 @@ export function AccountsScreen() {
                   />
                   {isFeatured ? <StatusBadge label="Featured" color={colors.primary} /> : null}
                 </View>
-              </View>
-            </Pressable>
+              }
+            />
           );
         }}
       />

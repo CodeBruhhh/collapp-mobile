@@ -20,6 +20,8 @@ type LedgerRowProps = {
   onLongPress?: () => void;
   accessibilityLabel?: string;
   numberOfLines?: number;
+  /** Stronger text, e.g. for something unread. */
+  emphasis?: boolean;
 };
 
 /** One ruled line of a list; shows a chevron when it opens something. */
@@ -34,6 +36,7 @@ export function LedgerRow({
   onLongPress,
   accessibilityLabel,
   numberOfLines = 2,
+  emphasis,
 }: LedgerRowProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
@@ -42,11 +45,13 @@ export function LedgerRow({
     <>
       {leading}
       <View style={styles.text}>
-        <Text style={styles.title} numberOfLines={numberOfLines}>
+        <Text style={[styles.title, emphasis && styles.titleStrong]} numberOfLines={numberOfLines}>
           {title}
         </Text>
         {subtitle ? (
-          <Text style={styles.subtitle} numberOfLines={numberOfLines}>
+          <Text
+            style={[styles.subtitle, emphasis && styles.subtitleStrong]}
+            numberOfLines={numberOfLines}>
             {subtitle}
           </Text>
         ) : null}

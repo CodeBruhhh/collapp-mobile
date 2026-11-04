@@ -19,7 +19,7 @@ export const createStyles = (c: ThemeColors) =>
     markDone: { backgroundColor: c.primary, borderColor: c.primary },
     markCurrent: { borderColor: c.primary },
     markAlert: { backgroundColor: c.danger, borderColor: c.danger },
-    markText: { fontFamily: fonts.semibold, fontSize: 12, color: c.onPrimary },
+    markText: { fontFamily: fonts.semibold, fontSize: 12, color: c.onDanger },
     line: { flex: 1, width: 1.5, minHeight: 20, backgroundColor: c.border },
     lineDone: { backgroundColor: c.primary },
     body: {

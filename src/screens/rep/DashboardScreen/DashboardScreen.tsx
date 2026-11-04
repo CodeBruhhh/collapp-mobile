@@ -3,7 +3,6 @@ import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { ActionRow } from '@/components/ActionRow';
 import { Button } from '@/components/Button';
-import { CollegeLogo } from '@/components/CollegeLogo';
 import { LedgerRow } from '@/components/LedgerRow';
 import { MetricPanel } from '@/components/MetricPanel';
 import { MetricRows } from '@/components/MetricRow';
@@ -50,11 +49,7 @@ export function DashboardScreen() {
         />
       }>
       <View style={styles.overview}>
-        <PageHeading
-          title="Welcome back"
-          subtitle={c.name}
-          action={<CollegeLogo name={c.name} logoPath={c.logo_path} size={44} />}
-        />
+        <PageHeading title="Welcome back" subtitle={c.name} />
 
         {isDraft ? (
           <View style={styles.section}>

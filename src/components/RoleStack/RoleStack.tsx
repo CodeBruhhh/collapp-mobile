@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import { StyleSheet } from 'react-native';
 
 import { useTheme } from '@/hooks/useTheme';
 import { fonts } from '@/styles';
@@ -15,17 +14,12 @@ export function RoleStack() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
+        headerStyle: { backgroundColor: colors.primary },
         headerShadowVisible: false,
-        headerTintColor: colors.primary,
-        headerTitleStyle: { color: colors.text, fontFamily: fonts.regular, fontSize: 19 },
+        headerTintColor: colors.onPrimary,
+        headerTitleStyle: { color: colors.onPrimary, fontFamily: fonts.regular, fontSize: 19 },
         headerBackButtonDisplayMode: 'minimal',
-        contentStyle: {
-          backgroundColor: colors.background,
-          // Native stack headers take no border, so the rule sits on top of the page.
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: colors.border,
-        },
+        contentStyle: { backgroundColor: colors.background },
       }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>

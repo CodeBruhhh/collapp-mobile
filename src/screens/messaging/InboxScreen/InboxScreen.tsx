@@ -3,11 +3,11 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 
+import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
-import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
-import { Icon } from '@/components/Icon';
+import { LedgerRow } from '@/components/LedgerRow';
+import { PageHeading } from '@/components/PageHeading';
 import { Select } from '@/components/Select';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { useAuth } from '@/context/AuthContext';
@@ -72,28 +72,29 @@ export function InboxScreen() {
     }
   }
 
-  const header =
-    role === 'school_rep' ? (
-      <View style={styles.header}>
-        <FilterTabs<RepFilter>
-          value={repFilter}
-          onChange={setRepFilter}
-          options={[
-            { value: 'students', label: 'Students', count: unreadIn('student_rep') || undefined },
-            { value: 'admin', label: 'Administrator', count: unreadIn('rep_admin') || undefined },
-          ]}
-        />
-        {repFilter === 'admin' ? (
-          <Button
-            variant="secondary"
-            label="Message the CollApp administrator"
-            loading={startThread.isPending}
-            onPress={() => open({})}
+  const header = (
+    <View style={styles.header}>
+      <PageHeading title="Conversations" />
+      {role === 'school_rep' ? (
+        <>
+          <FilterTabs<RepFilter>
+            value={repFilter}
+            onChange={setRepFilter}
+            options={[
+              { value: 'students', label: 'Students', count: unreadIn('student_rep') || undefined },
+              { value: 'admin', label: 'Administrator', count: unreadIn('rep_admin') || undefined },
+            ]}
           />
-        ) : null}
-      </View>
-    ) : role === 'admin' ? (
-      <View style={styles.header}>
+          {repFilter === 'admin' ? (
+            <Button
+              variant="secondary"
+              label="Message the CollApp administrator"
+              loading={startThread.isPending}
+              onPress={() => open({})}
+            />
+          ) : null}
+        </>
+      ) : role === 'admin' ? (
         <Select
           label="Message a college's representatives"
           value={null}
@@ -105,8 +106,9 @@ export function InboxScreen() {
             if (college) open({ collegeId: college.id });
           }}
         />
-      </View>
-    ) : null;
+      ) : null}
+    </View>
+  );
 
   return (
     <FlatList
@@ -115,7 +117,12 @@ export function InboxScreen() {
       data={visible}
       keyExtractor={(t) => t.id}
       refreshControl={
-        <RefreshControl refreshing={threads.isRefetching} onRefresh={threads.refetch} />
+        <RefreshControl
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+          refreshing={threads.isRefetching}
+          onRefresh={threads.refetch}
+        />
       }
       ListHeaderComponent={header}
       ListEmptyComponent={
@@ -141,47 +148,43 @@ export function InboxScreen() {
           <EmptyState icon="chatbubbles" title="No conversations yet" />
         )
       }
-      renderItem={({ item }) => {
+      renderItem={({ item, index }) => {
         const name = counterpart(role, item);
         const unread = item.unread_count > 0;
         const preview = item.last_message
           ? `${item.last_sender_id === userId ? 'You: ' : ''}${item.last_message}`
           : (item.subject ?? 'No messages yet');
         return (
-          <Card
+          <LedgerRow
+            first={index === 0}
+            emphasis={unread}
+            numberOfLines={1}
+            title={name}
+            subtitle={preview}
             onPress={() => router.push(threadRoute(role, item.id))}
-            accessibilityLabel={`${name}${unread ? `, ${item.unread_count} unread` : ''}`}>
-            <View style={styles.row}>
-              {role === 'school_rep' && item.kind === 'rep_admin' ? (
-                <View style={styles.adminAvatar}>
-                  <Icon name="shield-checkmark" size={24} color={colors.text} />
-                </View>
+            accessibilityLabel={`${name}${unread ? `, ${item.unread_count} unread` : ''}`}
+            leading={
+              role === 'school_rep' && item.kind === 'rep_admin' ? (
+                <Avatar name={name} icon="shield-checkmark" size={44} />
               ) : (
-                <CollegeLogo
+                <Avatar
                   name={name}
                   logoPath={role === 'school_rep' ? null : item.college_logo_path}
+                  size={44}
                 />
-              )}
-              <View style={styles.info}>
-                <View style={styles.topLine}>
-                  <Text style={[styles.title, unread && styles.unreadTitle]} numberOfLines={1}>
-                    {name}
-                  </Text>
-                  <Text style={styles.time}>{shortTime(item.last_message_at)}</Text>
-                </View>
-                <View style={styles.topLine}>
-                  <Text style={[styles.preview, unread && styles.unreadPreview]} numberOfLines={1}>
-                    {preview}
-                  </Text>
-                  {unread ? (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{item.unread_count}</Text>
-                    </View>
-                  ) : null}
-                </View>
+              )
+            }
+            trailing={
+              <View style={styles.side}>
+                <Text style={styles.time}>{shortTime(item.last_message_at)}</Text>
+                {unread ? (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{item.unread_count}</Text>
+                  </View>
+                ) : null}
               </View>
-            </View>
-          </Card>
+            }
+          />
         );
       }}
     />

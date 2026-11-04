@@ -16,3 +16,11 @@ export function shortTime(iso: string, now = new Date()): string {
 export function clockTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
+
+/** Group heading for a list: "Today", "Yesterday", or "Oct 3". */
+export function dayLabel(iso: string, now = new Date()): string {
+  const date = new Date(iso);
+  if (date.toDateString() === now.toDateString()) return 'Today';
+  if (date.toDateString() === new Date(now.getTime() - DAY_MS).toDateString()) return 'Yesterday';
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}

@@ -9,6 +9,7 @@ import { Section } from '@/components/Section';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { useAuth } from '@/context/AuthContext';
 import { useStudentProfile } from '@/features/profile/hooks';
+import { useProfilePhoto } from '@/hooks/useProfilePhoto';
 import { AccountSettingsSections } from '@/screens/account/AccountSettingsSections';
 import { spacing } from '@/styles';
 
@@ -18,13 +19,20 @@ const list = (values: string[] | undefined) => values?.join(', ');
 export function ProfileScreen() {
   const { profile } = useAuth();
   const student = useStudentProfile();
+  const photo = useProfilePhoto('Colleges you apply to can see this photo.');
 
   const s = student.data;
   const address = (s?.address ?? {}) as Record<string, string | undefined>;
 
   return (
     <Screen>
-      <ProfileHeader name={profile?.full_name || 'Student'} email={profile?.email ?? ''} />
+      <ProfileHeader
+        name={profile?.full_name || 'Student'}
+        email={profile?.email ?? ''}
+        avatarPath={profile?.avatar_path}
+        onEditPhoto={photo.editPhoto}
+        photoBusy={photo.saving}
+      />
 
       <Section title="Academic profile">
         {student.isPending ? (

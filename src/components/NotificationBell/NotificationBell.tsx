@@ -23,7 +23,7 @@ export function NotificationBell() {
       accessibilityLabel={unread ? `Notifications, ${unread} unread` : 'Notifications'}
       onPress={() => router.push(notificationsRoute(role))}
       style={styles.button}>
-      <Icon name="notifications" size={19} color={colors.text} />
+      <Icon name="notifications" size={19} color={colors.onPrimary} />
       {unread ? (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{unread > 99 ? '99+' : unread}</Text>

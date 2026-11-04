@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { type, type ThemeColors } from '@/styles';
+import { fonts, type, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -16,5 +16,7 @@ export const createStyles = (c: ThemeColors) =>
     pressed: { backgroundColor: c.surfaceMuted },
     text: { flex: 1, gap: 2 },
     title: { ...type.title, color: c.text },
+    titleStrong: { fontFamily: fonts.semibold },
     subtitle: { ...type.caption, color: c.textMuted },
+    subtitleStrong: { fontFamily: fonts.medium, color: c.text },
   });

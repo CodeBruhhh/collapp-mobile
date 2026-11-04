@@ -86,7 +86,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
               disabled={startThread.isPending}
               onPress={openChat}
               style={styles.headerIcon}>
-              <Icon name="chatbubble-ellipses" size={22} color={colors.primary} />
+              <Icon name="chatbubble-ellipses" size={22} color={colors.onPrimary} />
             </Pressable>
           ),
         }}
@@ -111,7 +111,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
           }>
           <View style={styles.overview}>
             <View style={styles.identity}>
-              <Avatar name={name} />
+              <Avatar name={name} avatarPath={s?.profile?.avatar_path} />
               <View style={[styles.flex, styles.headerBlock]}>
                 <Text accessibilityRole="header" style={styles.pageName}>
                   {name}
