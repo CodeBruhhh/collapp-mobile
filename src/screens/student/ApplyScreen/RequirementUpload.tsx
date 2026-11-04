@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { Icon } from '@/components/Icon';
 import { ScanPreview } from '@/components/ScanPreview';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -88,11 +87,11 @@ export function RequirementUpload({
   }
 
   return (
-    <Card>
+    <View style={styles.req}>
       <View style={styles.reqHeader}>
         <Icon
           name={document ? 'checkmark-circle-filled' : 'ellipse'}
-          size={22}
+          size={20}
           color={document ? colors.status.accepted : colors.textMuted}
         />
         <View style={styles.reqText}>
@@ -183,6 +182,6 @@ export function RequirementUpload({
           save(file);
         }}
       />
-    </Card>
+    </View>
   );
 }

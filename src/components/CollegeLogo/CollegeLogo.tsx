@@ -3,9 +3,9 @@ import { Text, View } from 'react-native';
 
 import { useTheme } from '@/hooks/useTheme';
 import { publicUrl } from '@/lib/storage';
+import { radius } from '@/styles';
 
 import { createStyles } from './CollegeLogo.styles';
-import { fonts } from '@/styles';
 
 type CollegeLogoProps = {
   name: string;
@@ -25,7 +25,7 @@ export function CollegeLogo({ name, logoPath, size = 48 }: CollegeLogoProps) {
     .map((w) => w[0])
     .join('');
 
-  const box = { width: size, height: size, borderRadius: size / 4 };
+  const box = { width: size, height: size, borderRadius: radius.md };
   if (uri) {
     return (
       <Image
@@ -39,9 +39,7 @@ export function CollegeLogo({ name, logoPath, size = 48 }: CollegeLogoProps) {
   }
   return (
     <View style={[styles.fallback, box]} accessible={false}>
-      <Text style={[styles.initials, { fontFamily: fonts.regular, fontSize: size * 0.36 }]}>
-        {initials || '?'}
-      </Text>
+      <Text style={[styles.initials, { fontSize: size * 0.36 }]}>{initials || '?'}</Text>
     </View>
   );
 }

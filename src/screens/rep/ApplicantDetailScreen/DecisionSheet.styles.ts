@@ -4,8 +4,10 @@ import {
   fonts,
   fontSize,
   radius,
+  rhythm,
   spacing,
   TOUCH_TARGET,
+  type,
   withAlpha,
   type ThemeColors,
 } from '@/styles';
@@ -26,13 +28,12 @@ export const createDecisionStyles = (c: ThemeColors) =>
     headerSide: { width: 72, minHeight: TOUCH_TARGET, justifyContent: 'center' },
     cancel: { fontFamily: fonts.regular, fontSize: fontSize.md, color: c.primary },
     title: {
+      ...type.heading,
       flex: 1,
       textAlign: 'center',
-      fontSize: fontSize.md,
-      fontFamily: fonts.semibold,
       color: c.text,
     },
-    content: { padding: spacing.md, gap: spacing.lg },
+    content: { padding: rhythm.gutter, gap: spacing.lg },
 
     options: { flexDirection: 'row', gap: spacing.sm },
     option: {

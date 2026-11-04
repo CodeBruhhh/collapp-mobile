@@ -1,10 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { FlatList, RefreshControl, View } from 'react-native';
 
-import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
+import { DeadlineMark } from '@/components/DeadlineMark';
 import { FilterTabs } from '@/components/FilterTabs';
+import { LedgerRow } from '@/components/LedgerRow';
+import { MetricPanel } from '@/components/MetricPanel';
+import { MetricRows } from '@/components/MetricRow';
 import { ProgressBar } from '@/components/ProgressBar';
 import { StatusBadge } from '@/components/StatusBadge';
 import { SyncBanner } from '@/components/SyncBanner';
@@ -15,7 +18,6 @@ import {
   APPLICATION_STATUS_LABELS,
   applicationProgress,
   applicationStatusColor,
-  deadlineLabel,
 } from '@/features/applications/status';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -64,15 +66,20 @@ export function ApplicationsScreen() {
         all.length ? (
           <View style={styles.header}>
             <SyncBanner />
-            <Card>
-              <View style={styles.rowBetween}>
-                <Text style={styles.title}>Overall progress</Text>
-                <Text style={styles.meta}>
-                  {decided} of {all.length} decided
-                </Text>
-              </View>
-              <ProgressBar value={all.length ? decided / all.length : 0} />
-            </Card>
+            <View style={styles.totals}>
+              <MetricPanel
+                label="Overall progress"
+                value={`${decided}/${all.length}`}
+                caption="decided"
+              />
+              <MetricRows
+                metrics={[
+                  { label: 'Drafts', value: count('draft') },
+                  { label: 'In review', value: count('in_progress') },
+                  { label: 'Action needed', value: count('action_required') },
+                ]}
+              />
+            </View>
             <FilterTabs<Filter>
               value={filter}
               onChange={setFilter}
@@ -108,36 +115,37 @@ export function ApplicationsScreen() {
           />
         )
       }
-      renderItem={({ item }) => {
+      renderItem={({ item, index }) => {
         const color = applicationStatusColor(item.status, colors);
-        const deadline = item.status === 'draft' ? deadlineLabel(item.program?.deadline) : null;
         return (
-          <Card
+          <LedgerRow
+            first={index === 0}
+            title={item.college?.name ?? ''}
+            subtitle={item.program?.name}
+            numberOfLines={1}
+            leading={
+              <CollegeLogo
+                name={item.college?.name ?? ''}
+                logoPath={item.college?.logo_path}
+                size={44}
+              />
+            }
             onPress={() => openApplication(item)}
             accessibilityLabel={`${item.college?.name}, ${APPLICATION_STATUS_LABELS[item.status]}`}>
-            <View style={styles.row}>
-              <CollegeLogo name={item.college?.name ?? ''} logoPath={item.college?.logo_path} />
-              <View style={styles.info}>
-                <Text style={styles.title} numberOfLines={1}>
-                  {item.college?.name}
-                </Text>
-                <Text style={styles.meta} numberOfLines={1}>
-                  {item.program?.name}
-                </Text>
+            <View style={styles.progress}>
+              <View style={styles.statusLine}>
+                <StatusBadge label={APPLICATION_STATUS_LABELS[item.status]} color={color} />
+                {item.status === 'draft' ? (
+                  <DeadlineMark date={item.program?.deadline} showDate />
+                ) : null}
               </View>
+              <ProgressBar
+                value={applicationProgress(item.status)}
+                color={color}
+                accessibilityLabel="Application progress"
+              />
             </View>
-            <StatusBadge label={APPLICATION_STATUS_LABELS[item.status]} color={color} />
-            <ProgressBar
-              value={applicationProgress(item.status)}
-              color={color}
-              accessibilityLabel="Application progress"
-            />
-            {deadline ? (
-              <Text style={styles.meta}>
-                Deadline {item.program?.deadline} · {deadline}
-              </Text>
-            ) : null}
-          </Card>
+          </LedgerRow>
         );
       }}
     />

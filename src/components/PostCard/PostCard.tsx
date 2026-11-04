@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import type { FeedPost } from '@/features/feed/api';
 import { POST_TYPE_LABELS } from '@/features/rep/posts';
@@ -21,7 +20,7 @@ export function PostCard({ post }: { post: FeedPost }) {
   const long = post.body.length > 180;
 
   return (
-    <Card>
+    <View style={styles.post}>
       <Pressable
         accessibilityRole="link"
         accessibilityLabel={`Open ${post.college?.name}`}
@@ -32,11 +31,11 @@ export function PostCard({ post }: { post: FeedPost }) {
         style={styles.header}>
         <CollegeLogo name={post.college?.name ?? ''} logoPath={post.college?.logo_path} size={32} />
         <View style={styles.flex}>
-          <Text style={styles.college} numberOfLines={1}>
-            {post.college?.name}
+          <Text style={styles.eyebrow} numberOfLines={1}>
+            {POST_TYPE_LABELS[post.type]}
           </Text>
-          <Text style={styles.meta}>
-            {POST_TYPE_LABELS[post.type]} ·{' '}
+          <Text style={styles.meta} numberOfLines={1}>
+            {post.college?.name} ·{' '}
             {new Date(post.published_at ?? post.created_at).toLocaleDateString()}
           </Text>
         </View>
@@ -60,10 +59,10 @@ export function PostCard({ post }: { post: FeedPost }) {
         {post.body}
       </Text>
       {long ? (
-        <Pressable accessibilityRole="button" onPress={() => setExpanded((v) => !v)}>
+        <Pressable accessibilityRole="button" hitSlop={12} onPress={() => setExpanded((v) => !v)}>
           <Text style={styles.more}>{expanded ? 'Show less' : 'Read more'}</Text>
         </Pressable>
       ) : null}
-    </Card>
+    </View>
   );
 }

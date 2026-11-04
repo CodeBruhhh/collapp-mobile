@@ -1,15 +1,22 @@
 import { StyleSheet } from 'react-native';
 
-import { fonts, fontSize, spacing, type ThemeColors } from '@/styles';
+import { fonts, rhythm, spacing, type, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.md, gap: spacing.md },
-    title: { fontSize: fontSize.lg, fontFamily: fonts.semibold, color: c.text },
-    meta: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
-    body: { fontFamily: fonts.regular, fontSize: fontSize.md, color: c.text, lineHeight: 22 },
-    section: { gap: spacing.sm },
-    sectionTitle: { fontSize: fontSize.md, fontFamily: fonts.semibold, color: c.text },
-    rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    heading: { paddingHorizontal: rhythm.gutter, paddingTop: rhythm.gutter },
+    status: { gap: spacing.sm, paddingTop: spacing.sm, paddingBottom: spacing.lg },
+    meta: { ...type.caption, color: c.textMuted },
+    body: { ...type.body, color: c.text },
+    essay: { ...type.body, paddingTop: spacing.sm, color: c.text },
+    admitted: { ...type.title, fontFamily: fonts.semibold, color: c.primary },
+    sectionTitle: { ...type.heading, color: c.text },
+    decision: {
+      gap: spacing.sm,
+      marginHorizontal: rhythm.gutter,
+      marginTop: rhythm.section,
+      paddingTop: spacing.md,
+      borderTopWidth: 2,
+    },
   });

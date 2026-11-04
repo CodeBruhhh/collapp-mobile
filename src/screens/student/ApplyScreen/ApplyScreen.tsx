@@ -2,17 +2,19 @@ import { useQuery } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
+import { DeadlineMark } from '@/components/DeadlineMark';
+import { InfoRow } from '@/components/InfoRow';
+import { Notice } from '@/components/Notice';
 import { Select } from '@/components/Select';
 import { ErrorState, LoadingState } from '@/components/StateView';
+import { Stepper } from '@/components/Stepper';
+import { StickyActionBar } from '@/components/StickyActionBar';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { useSync } from '@/context/SyncContext';
 import { useOfflineDraft } from '@/features/applications/offline';
-import { deadlineLabel } from '@/features/applications/status';
 import { requirementsFor } from '@/features/colleges/api';
 import { useCollege } from '@/features/colleges/hooks';
 import { fetchStudentProfile } from '@/features/profile/api';
@@ -152,21 +154,12 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
     : null;
 
   return (
-    <SafeAreaView style={styles.root} edges={['bottom']}>
+    <View style={styles.root}>
       <Stack.Screen options={{ title: 'Application' }} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View
-          style={styles.stepper}
-          accessibilityLabel={`Step ${step + 1} of ${STEPS.length}: ${STEPS[step]}`}>
-          {STEPS.map((label, i) => (
-            <View key={label} style={styles.stepItem}>
-              <View style={[styles.stepBar, i <= step && styles.stepBarActive]} />
-              <Text style={[styles.stepLabel, i === step && styles.stepLabelActive]}>{label}</Text>
-            </View>
-          ))}
-        </View>
+        <Stepper steps={STEPS} current={step} named />
 
-        <View>
+        <View style={styles.heading}>
           <Text accessibilityRole="header" style={styles.title}>
             {c.name}
           </Text>
@@ -176,12 +169,12 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
         </View>
 
         {draft?.conflict ? (
-          <View style={styles.warning} accessibilityLiveRegion="polite">
-            <Text style={styles.warningText}>
-              This draft was changed on another device while you were offline (saved version:{' '}
-              {conflictProgram ?? 'a different program'}). Which version should we keep?
-            </Text>
-            <View style={styles.footerRow}>
+          <View style={styles.section}>
+            <Notice
+              tone="danger"
+              title={`This draft was changed on another device while you were offline (saved version: ${conflictProgram ?? 'a different program'}). Which version should we keep?`}
+            />
+            <View style={styles.choiceRow}>
               <View style={styles.flex}>
                 <Button label="Keep mine" onPress={() => offline.resolveConflict('mine')} />
               </View>
@@ -200,13 +193,11 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
             </View>
           </View>
         ) : draft?.syncError ? (
-          <View style={styles.warning}>
-            <Text style={styles.warningText}>Couldn&apos;t sync yet: {draft.syncError}</Text>
-          </View>
+          <Notice tone="danger" title={`Couldn't sync yet: ${draft.syncError}`} />
         ) : null}
 
         {step === 0 ? (
-          <View style={styles.section}>
+          <View style={styles.form}>
             <Select
               label="First-choice program"
               value={program?.name ?? null}
@@ -216,11 +207,7 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
                 if (second?.name === name) setSecondName(NO_SECOND_CHOICE);
               }}
             />
-            {program?.deadline ? (
-              <Text style={styles.meta}>
-                Deadline {program.deadline} · {deadlineLabel(program.deadline)}
-              </Text>
-            ) : null}
+            <DeadlineMark date={program?.deadline} showDate />
             <Select
               label="Second-choice program (optional)"
               value={second?.name ?? NO_SECOND_CHOICE}
@@ -235,23 +222,27 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
 
         {step === 1 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Supporting documents</Text>
+            <Text accessibilityRole="header" style={styles.sectionTitle}>
+              Supporting documents
+            </Text>
             <Text style={styles.meta}>
               Scan with your camera or attach a PDF/photo (up to 5 MB). Scans are compressed under 2
               MB. You can do this offline.
             </Text>
-            {documentReqs.map((req) => (
-              <RequirementUpload
-                key={req.id}
-                requirement={req}
-                document={docFor(req.id)}
-                onUpload={(file) => offline.attach(req, file, docFor(req.id))}
-                onRemove={async () => {
-                  const doc = docFor(req.id);
-                  if (doc) await offline.removeDocument(doc);
-                }}
-              />
-            ))}
+            <View>
+              {documentReqs.map((req) => (
+                <RequirementUpload
+                  key={req.id}
+                  requirement={req}
+                  document={docFor(req.id)}
+                  onUpload={(file) => offline.attach(req, file, docFor(req.id))}
+                  onRemove={async () => {
+                    const doc = docFor(req.id);
+                    if (doc) await offline.removeDocument(doc);
+                  }}
+                />
+              ))}
+            </View>
             {needsEssay ? (
               <TextField
                 label="Essay"
@@ -266,83 +257,85 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
         ) : null}
 
         {step === 2 ? (
-          <View style={styles.section}>
-            <Card>
-              <Text style={styles.sectionTitle}>From your profile</Text>
-              {[
-                ['Name', [s?.first_name, s?.middle_name, s?.last_name].filter(Boolean).join(' ')],
-                ['Senior high school', s?.senior_high_school],
-                ['Strand', s?.strand],
-                ['General average', s?.gpa?.toString()],
-                ['Address', [address.city, address.province].filter(Boolean).join(', ')],
-              ].map(([label, value]) => (
-                <View key={label} style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>{label}</Text>
-                  <Text style={styles.summaryValue}>{value || '—'}</Text>
-                </View>
-              ))}
-            </Card>
-            <Card>
-              <Text style={styles.sectionTitle}>Application</Text>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>First choice</Text>
-                <Text style={styles.summaryValue}>{program?.name ?? '—'}</Text>
+          <View style={styles.review}>
+            <View style={styles.section}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>
+                From your profile
+              </Text>
+              <View>
+                <InfoRow
+                  label="Name"
+                  value={[s?.first_name, s?.middle_name, s?.last_name].filter(Boolean).join(' ')}
+                />
+                <InfoRow label="Senior high school" value={s?.senior_high_school ?? undefined} />
+                <InfoRow label="Strand" value={s?.strand ?? undefined} />
+                <InfoRow label="General average" value={s?.gpa?.toString()} />
+                <InfoRow
+                  label="Address"
+                  value={[address.city, address.province].filter(Boolean).join(', ')}
+                />
               </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Second choice</Text>
-                <Text style={styles.summaryValue}>{second?.name ?? 'None'}</Text>
+            </View>
+            <View style={styles.section}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>
+                Application
+              </Text>
+              <View>
+                <InfoRow label="First choice" value={program?.name} />
+                <InfoRow label="Second choice" value={second?.name ?? 'None'} />
+                <InfoRow
+                  label="Documents"
+                  value={`${documentReqs.filter((r) => docFor(r.id)).length} of ${documentReqs.length} added`}
+                />
               </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Documents</Text>
-                <Text style={styles.summaryValue}>
-                  {documentReqs.filter((r) => docFor(r.id)).length} of {documentReqs.length} added
-                </Text>
-              </View>
-            </Card>
+            </View>
             {missing.length ? (
-              <View style={styles.warning} accessibilityLiveRegion="polite">
-                <Text style={styles.warningText}>Still needed: {missing.join(', ')}</Text>
-              </View>
+              <Notice tone="danger" title={`Still needed: ${missing.join(', ')}`} />
             ) : null}
             {!sync.isOnline ? (
-              <View style={styles.warning} accessibilityLiveRegion="polite">
-                <Text style={styles.warningText}>
-                  You&apos;re offline. Everything is saved on this device — reconnect to submit.
-                </Text>
-              </View>
+              <Notice
+                icon="cloud-offline"
+                title="You're offline. Everything is saved on this device — reconnect to submit."
+              />
             ) : null}
+          </View>
+        ) : null}
+
+        {draft ? (
+          <View style={styles.deleteDraft}>
+            <Button variant="link" label="Delete draft" onPress={handleDelete} />
           </View>
         ) : null}
       </ScrollView>
 
-      <View style={styles.footer}>
-        {step === 0 ? (
-          <Button label="Next" onPress={() => saveDraft(1)} loading={saving} disabled={!program} />
+      <StickyActionBar>
+        {step > 0 ? (
+          <View style={styles.flex}>
+            <Button variant="secondary" label="Back" onPress={() => setStep((v) => v - 1)} />
+          </View>
         ) : null}
-        {step === 1 ? (
-          <Button label="Review" onPress={() => saveDraft(2)} loading={saving} />
-        ) : null}
-        {step === 2 ? (
-          <Button
-            label="Submit application"
-            onPress={handleSubmit}
-            loading={saving}
-            disabled={missing.length > 0 || !sync.isOnline || Boolean(draft?.conflict)}
-          />
-        ) : null}
-        <View style={styles.footerRow}>
-          {step > 0 ? (
-            <View style={styles.flex}>
-              <Button variant="secondary" label="Back" onPress={() => setStep((v) => v - 1)} />
-            </View>
+        <View style={styles.main}>
+          {step === 0 ? (
+            <Button
+              label="Next"
+              onPress={() => saveDraft(1)}
+              loading={saving}
+              disabled={!program}
+            />
           ) : null}
-          {draft ? (
-            <View style={styles.flex}>
-              <Button variant="link" label="Delete draft" onPress={handleDelete} />
-            </View>
+          {step === 1 ? (
+            <Button label="Review" onPress={() => saveDraft(2)} loading={saving} />
+          ) : null}
+          {step === 2 ? (
+            <Button
+              label="Submit application"
+              onPress={handleSubmit}
+              loading={saving}
+              disabled={missing.length > 0 || !sync.isOnline || Boolean(draft?.conflict)}
+            />
           ) : null}
         </View>
-      </View>
-    </SafeAreaView>
+      </StickyActionBar>
+    </View>
   );
 }

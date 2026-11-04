@@ -2,15 +2,16 @@ import { router } from 'expo-router';
 import { useDeferredValue, useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 
-import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
+import { DeadlineMark } from '@/components/DeadlineMark';
 import { FilterTabs } from '@/components/FilterTabs';
 import { Icon } from '@/components/Icon';
+import { LedgerRow } from '@/components/LedgerRow';
+import { PageHeading } from '@/components/PageHeading';
 import { SearchField } from '@/components/SearchField';
 import { Select } from '@/components/Select';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { PH_REGIONS } from '@/data/ph-address';
-import { deadlineLabel } from '@/features/applications/status';
 import { collegeLocation, type CollegeListItem } from '@/features/colleges/api';
 import { useColleges, useFollowedColleges } from '@/features/colleges/hooks';
 import { useTheme } from '@/hooks/useTheme';
@@ -59,10 +60,16 @@ export function ExploreScreen() {
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
       refreshControl={
-        <RefreshControl refreshing={colleges.isRefetching} onRefresh={colleges.refetch} />
+        <RefreshControl
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+          refreshing={colleges.isRefetching}
+          onRefresh={colleges.refetch}
+        />
       }
       ListHeaderComponent={
         <View style={styles.header}>
+          <PageHeading title="Find your university" />
           <SearchField
             value={search}
             onChangeText={setSearch}
@@ -110,35 +117,26 @@ export function ExploreScreen() {
           <EmptyState icon="school" title="No matches" body="Try another name or region." />
         )
       }
-      renderItem={({ item }) => {
-        const deadline = nextDeadline(item);
-        const programs = `${item.programs.length} program${item.programs.length === 1 ? '' : 's'}`;
-        return (
-          <Card
-            onPress={() =>
-              router.push({ pathname: '/student/college/[id]', params: { id: item.id } })
-            }
-            accessibilityLabel={`${item.name}, ${collegeLocation(item)}${savedIds.has(item.id) ? ', saved' : ''}`}>
-            <View style={styles.row}>
-              <CollegeLogo name={item.name} logoPath={item.logo_path} />
-              <View style={styles.info}>
-                <Text style={styles.name} numberOfLines={2}>
-                  {item.name}
-                </Text>
-                <Text style={styles.meta} numberOfLines={1}>
-                  {collegeLocation(item)}
-                </Text>
-                <Text style={styles.meta} numberOfLines={1}>
-                  {deadline ? `${programs} · ${deadlineLabel(deadline)}` : programs}
-                </Text>
-              </View>
-              {savedIds.has(item.id) ? (
-                <Icon name="bookmark-filled" size={18} color={colors.primary} />
-              ) : null}
-            </View>
-          </Card>
-        );
-      }}
+      renderItem={({ item, index }) => (
+        <LedgerRow
+          first={index === 0}
+          title={item.name}
+          subtitle={`${collegeLocation(item)} · ${item.programs.length} program${item.programs.length === 1 ? '' : 's'}`}
+          leading={<CollegeLogo name={item.name} logoPath={item.logo_path} size={44} />}
+          trailing={
+            savedIds.has(item.id) ? (
+              <Icon name="bookmark-filled" size={18} color={colors.primary} />
+            ) : undefined
+          }
+          onPress={() =>
+            router.push({ pathname: '/student/college/[id]', params: { id: item.id } })
+          }
+          accessibilityLabel={`${item.name}, ${collegeLocation(item)}${savedIds.has(item.id) ? ', saved' : ''}`}>
+          <View style={styles.deadline}>
+            <DeadlineMark date={nextDeadline(item)} />
+          </View>
+        </LedgerRow>
+      )}
     />
   );
 }

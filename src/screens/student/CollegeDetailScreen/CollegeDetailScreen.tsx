@@ -2,16 +2,19 @@ import { router, Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
 import { Icon, type IconName } from '@/components/Icon';
+import { InfoRow } from '@/components/InfoRow';
+import { LedgerRow } from '@/components/LedgerRow';
+import { Masthead } from '@/components/Masthead';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
+import { StatusBadge } from '@/components/StatusBadge';
+import { StickyActionBar } from '@/components/StickyActionBar';
 import { useApplicationsWithLocal } from '@/features/applications/offline';
-import { deadlineLabel } from '@/features/applications/status';
+import { daysUntil, deadlineLabel } from '@/features/applications/status';
 import { collegeLocation, requirementsFor } from '@/features/colleges/api';
 import { useCollege, useFollowedColleges, useToggleFollow } from '@/features/colleges/hooks';
 import { useStartThread } from '@/features/messaging/hooks';
@@ -52,8 +55,30 @@ export function CollegeDetailScreen({ id }: { id: string }) {
   const startThread = useStartThread();
   const applications = useApplicationsWithLocal();
 
-  if (college.isPending) return <LoadingState variant="detail" />;
-  if (college.isError) return <ErrorState error={college.error} onRetry={college.refetch} />;
+  const back = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Back"
+      onPress={() => router.back()}
+      style={styles.navButton}>
+      <Icon name="chevron-back" size={22} color={colors.onPrimary} />
+    </Pressable>
+  );
+
+  // The masthead replaces the navigation bar, so every state keeps a way back.
+  if (college.isPending || college.isError) {
+    return (
+      <View style={styles.root}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <Masthead top={back} />
+        {college.isPending ? (
+          <LoadingState variant="detail" />
+        ) : (
+          <ErrorState error={college.error} onRetry={college.refetch} />
+        )}
+      </View>
+    );
+  }
 
   const c = college.data;
   const isSaved = followed.data?.includes(c.id) ?? false;
@@ -86,60 +111,75 @@ export function CollegeDetailScreen({ id }: { id: string }) {
   const apply = () =>
     router.push({ pathname: '/student/apply/[collegeId]', params: { collegeId: c.id } });
 
-  return (
-    <SafeAreaView style={styles.root} edges={['bottom']}>
-      <Stack.Screen options={{ title: '' }} />
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.hero}>
-          <CollegeLogo name={c.name} logoPath={c.logo_path} size={64} />
-          <View style={styles.heroText}>
-            <Text accessibilityRole="header" style={styles.name}>
-              {c.name}
-            </Text>
-            <Text style={styles.meta}>{collegeLocation(c)}</Text>
-          </View>
-        </View>
+  const nextDays = daysUntil(upcoming[0]?.deadline);
 
-        <FilterTabs<Tab>
-          value={tab}
-          onChange={setTab}
-          options={[
-            { value: 'about', label: 'About' },
-            { value: 'programs', label: 'Programs', count: c.programs.length },
-            { value: 'requirements', label: 'Requirements' },
+  return (
+    <View style={styles.root}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScrollView contentContainerStyle={styles.content}>
+        <Masthead
+          title={c.name}
+          subtitle={collegeLocation(c)}
+          logo={<CollegeLogo name={c.name} logoPath={c.logo_path} size={56} />}
+          top={
+            <>
+              {back}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={isSaved ? 'Remove from saved' : 'Save university'}
+                accessibilityState={{ selected: isSaved, busy: toggleFollow.isPending }}
+                disabled={toggleFollow.isPending}
+                onPress={handleSave}
+                style={styles.navButton}>
+                <Icon
+                  name={isSaved ? 'bookmark-filled' : 'bookmark'}
+                  size={22}
+                  color={colors.onPrimary}
+                />
+              </Pressable>
+            </>
+          }
+          stats={[
+            { label: 'Programs', value: c.programs.length },
+            { label: 'Open now', value: openPrograms.length },
+            ...(nextDays !== null && nextDays >= 0
+              ? [{ label: 'Next deadline', value: `${nextDays}d` }]
+              : []),
           ]}
         />
 
+        <View style={styles.tabs}>
+          <FilterTabs<Tab>
+            value={tab}
+            onChange={setTab}
+            options={[
+              { value: 'about', label: 'About' },
+              { value: 'programs', label: 'Programs', count: c.programs.length },
+              { value: 'requirements', label: 'Requirements' },
+            ]}
+          />
+        </View>
+
         {tab === 'about' ? (
           <View style={styles.section}>
-            <Card>
-              <Text style={c.description ? styles.body : styles.meta}>
-                {c.description || 'No description yet.'}
-              </Text>
-              {c.website ? (
-                <Pressable
-                  accessibilityRole="link"
-                  onPress={() => WebBrowser.openBrowserAsync(c.website!)}
-                  style={styles.link}>
-                  <Icon name="globe" size={16} color={colors.primary} />
-                  <Text style={styles.linkText}>Visit website</Text>
-                </Pressable>
-              ) : null}
-            </Card>
-            <Card>
-              <View style={styles.kv}>
-                <Text style={styles.kvLabel}>Open programs</Text>
-                <Text style={styles.kvValue}>{openPrograms.length}</Text>
-              </View>
+            <Text style={c.description ? styles.body : styles.meta}>
+              {c.description || 'No description yet.'}
+            </Text>
+            {c.website ? (
+              <Pressable
+                accessibilityRole="link"
+                onPress={() => WebBrowser.openBrowserAsync(c.website!)}
+                style={styles.link}>
+                <Icon name="globe" size={16} color={colors.primary} />
+                <Text style={styles.linkText}>Visit website</Text>
+              </Pressable>
+            ) : null}
+            <View style={styles.ledger}>
+              <InfoRow label="Open programs" value={String(openPrograms.length)} />
               {upcoming.map((p) => (
-                <View key={p.id} style={styles.kv}>
-                  <Text style={styles.kvLabel} numberOfLines={1}>
-                    {p.name}
-                  </Text>
-                  <Text style={styles.kvValue}>{deadlineLabel(p.deadline)}</Text>
-                </View>
+                <InfoRow key={p.id} label={p.name} value={deadlineLabel(p.deadline) ?? undefined} />
               ))}
-            </Card>
+            </View>
           </View>
         ) : null}
 
@@ -149,13 +189,16 @@ export function CollegeDetailScreen({ id }: { id: string }) {
               <EmptyState icon="book" title="No programs yet" />
             ) : (
               c.programs.map((p) => (
-                <Card key={p.id}>
+                <View key={p.id} style={styles.program}>
                   <View style={styles.rowBetween}>
                     <Text style={styles.cardTitle}>{p.name}</Text>
-                    {!p.is_open ? <Text style={styles.closed}>Closed</Text> : null}
+                    <StatusBadge
+                      label={p.is_open ? 'Open' : 'Closed'}
+                      color={p.is_open ? colors.primary : colors.textMuted}
+                    />
                   </View>
                   {p.description ? (
-                    <Text style={styles.body} numberOfLines={3}>
+                    <Text style={styles.meta} numberOfLines={3}>
                       {p.description}
                     </Text>
                   ) : null}
@@ -174,7 +217,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
                       {p.prerequisites}
                     </Text>
                   ) : null}
-                </Card>
+                </View>
               ))
             )}
           </View>
@@ -183,40 +226,28 @@ export function CollegeDetailScreen({ id }: { id: string }) {
         {tab === 'requirements' ? (
           <View style={styles.section}>
             <Text style={styles.meta}>For every program</Text>
-            {generalRequirements.map((r) => (
-              <Card key={r.id}>
-                <View style={styles.reqRow}>
-                  <Icon
-                    name={r.kind === 'essay' ? 'create' : 'document-text'}
-                    size={20}
-                    color={colors.primary}
-                  />
-                  <View style={styles.flex}>
-                    <Text style={styles.cardTitle}>{r.label}</Text>
-                    {r.description ? (
-                      <Text style={styles.meta} numberOfLines={2}>
-                        {r.description}
-                      </Text>
-                    ) : null}
-                  </View>
-                  {!r.is_required ? <Text style={styles.optional}>Optional</Text> : null}
-                </View>
-              </Card>
-            ))}
+            <View>
+              {generalRequirements.map((r) => (
+                <LedgerRow
+                  key={r.id}
+                  title={r.label}
+                  subtitle={r.description ?? undefined}
+                  leading={
+                    <Icon
+                      name={r.kind === 'essay' ? 'create' : 'document-text'}
+                      size={18}
+                      color={colors.primary}
+                    />
+                  }
+                  trailing={!r.is_required ? <Text style={styles.optional}>Optional</Text> : null}
+                />
+              ))}
+            </View>
           </View>
         ) : null}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={isSaved ? 'Remove from saved' : 'Save university'}
-          accessibilityState={{ selected: isSaved, busy: toggleFollow.isPending }}
-          disabled={toggleFollow.isPending}
-          onPress={handleSave}
-          style={[styles.iconAction, isSaved && styles.iconActionActive]}>
-          <Icon name={isSaved ? 'bookmark-filled' : 'bookmark'} size={22} color={colors.primary} />
-        </Pressable>
+      <StickyActionBar>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Message admissions"
@@ -224,7 +255,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
           disabled={startThread.isPending}
           onPress={handleMessage}
           style={styles.iconAction}>
-          <Icon name="chatbubble-ellipses" size={22} color={colors.primary} />
+          <Icon name="chatbubble-ellipses" size={20} color={colors.text} />
         </Pressable>
         <View style={styles.flex}>
           {existing && existing.status !== 'draft' ? (
@@ -240,7 +271,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
             <Button label="Apply now" disabled={openPrograms.length === 0} onPress={apply} />
           )}
         </View>
-      </View>
-    </SafeAreaView>
+      </StickyActionBar>
+    </View>
   );
 }

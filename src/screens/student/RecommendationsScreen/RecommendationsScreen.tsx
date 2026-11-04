@@ -1,15 +1,18 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { FilterTabs } from '@/components/FilterTabs';
 import { MatchCard } from '@/components/MatchCard';
+import { PageHeading } from '@/components/PageHeading';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { useRecommendations } from '@/features/ai/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
+import { spacing } from '@/styles';
 
 import { createStyles } from './RecommendationsScreen.styles';
 
@@ -22,6 +25,7 @@ export function RecommendationsScreen() {
   const [sort, setSort] = useState<Sort>('match');
   const recommendations = useRecommendations();
   const { refresh } = recommendations;
+  const insets = useSafeAreaInsets();
 
   const list = [...(recommendations.data ?? [])].sort((a, b) =>
     sort === 'match'
@@ -41,13 +45,14 @@ export function RecommendationsScreen() {
   return (
     <FlatList
       style={styles.root}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.lg }]}
       data={list}
       keyExtractor={(r) => r.id}
       refreshControl={<RefreshControl refreshing={refresh.isPending} onRefresh={regenerate} />}
       ListHeaderComponent={
         <View style={styles.header}>
           <Stack.Screen options={{ title: 'AI recommendations' }} />
+          <PageHeading title="Your matches" />
           <Text style={styles.subtitle}>
             Programs matched to your strand, average, preferred courses, locations and interests.
             Matches are suggestions — explore every option.
@@ -80,15 +85,23 @@ export function RecommendationsScreen() {
           />
         )
       }
-      renderItem={({ item }) => <MatchCard recommendation={item} showReasons />}
+      renderItem={({ item, index }) => (
+        <MatchCard
+          recommendation={item}
+          showReasons
+          rank={sort === 'match' ? index + 1 : undefined}
+        />
+      )}
       ListFooterComponent={
         list.length ? (
-          <Button
-            variant="secondary"
-            label="Update recommendations"
-            onPress={regenerate}
-            loading={refresh.isPending}
-          />
+          <View style={styles.footer}>
+            <Button
+              variant="secondary"
+              label="Update recommendations"
+              onPress={regenerate}
+              loading={refresh.isPending}
+            />
+          </View>
         ) : null
       }
     />

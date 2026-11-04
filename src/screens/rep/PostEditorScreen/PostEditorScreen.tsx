@@ -1,11 +1,13 @@
 import { Image } from 'expo-image';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { ChipGroup } from '@/components/ChipGroup';
+import { FormScreen } from '@/components/FormScreen';
 import { ErrorState, LoadingState } from '@/components/StateView';
+import { StickyActionBar } from '@/components/StickyActionBar';
 import { TextField } from '@/components/TextField';
 import type { Post } from '@/features/rep/api';
 import { uploadPostImage } from '@/features/rep/api';
@@ -111,10 +113,27 @@ function PostForm({ post }: { post: Post | null }) {
   }
 
   return (
-    <ScrollView
-      style={styles.root}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled">
+    <FormScreen
+      underHeader
+      footer={
+        <StickyActionBar>
+          <View style={styles.flex}>
+            <Button
+              variant="secondary"
+              label="Save as draft"
+              onPress={() => save(false)}
+              disabled={saving}
+            />
+          </View>
+          <View style={styles.flex}>
+            <Button
+              label={post?.status === 'published' ? 'Update post' : 'Publish'}
+              onPress={() => save(true)}
+              loading={saving}
+            />
+          </View>
+        </StickyActionBar>
+      }>
       <Stack.Screen options={{ title: post ? 'Edit post' : 'New post' }} />
       <ChipGroup
         label="Post type"
@@ -185,18 +204,7 @@ function PostForm({ post }: { post: Post | null }) {
         </View>
       </View>
 
-      <Button
-        label={post?.status === 'published' ? 'Update post' : 'Publish'}
-        onPress={() => save(true)}
-        loading={saving}
-      />
-      <Button
-        variant="secondary"
-        label="Save as draft"
-        onPress={() => save(false)}
-        disabled={saving}
-      />
       {post ? <Button variant="link" label="Delete post" onPress={remove} /> : null}
-    </ScrollView>
+    </FormScreen>
   );
 }

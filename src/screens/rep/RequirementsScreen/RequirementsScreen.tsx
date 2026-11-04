@@ -1,10 +1,11 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { ChipGroup } from '@/components/ChipGroup';
+import { FormScreen } from '@/components/FormScreen';
+import { PageHeading } from '@/components/PageHeading';
 import { Select } from '@/components/Select';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { TextField } from '@/components/TextField';
@@ -94,21 +95,19 @@ export function RequirementsScreen() {
   }
 
   return (
-    <ScrollView
-      style={styles.root}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled">
+    <FormScreen underHeader>
       <Stack.Screen options={{ title: 'Admission requirements' }} />
-      <Text style={styles.subtitle}>
-        Students must provide every required item before they can submit.
-      </Text>
+      <PageHeading
+        title="What students must provide"
+        subtitle="Students must provide every required item before they can submit."
+      />
 
-      <View style={styles.section}>
+      <View>
         {requirements.length === 0 ? (
           <Text style={styles.meta}>No requirements yet. Start with the standard ones below.</Text>
         ) : (
           requirements.map((r) => (
-            <Card key={r.id}>
+            <View key={r.id} style={styles.block}>
               <View style={styles.rowBetween}>
                 <View style={styles.flex}>
                   <Text style={styles.cardTitle}>{r.label}</Text>
@@ -117,21 +116,23 @@ export function RequirementsScreen() {
                   </Text>
                   {r.description ? <Text style={styles.meta}>{r.description}</Text> : null}
                 </View>
+                <Button variant="link" label="Remove" onPress={() => remove(r)} />
               </View>
               <ToggleRow
                 label="Required"
                 value={r.is_required}
                 onChange={(v) => toggleRequired(r, v)}
               />
-              <Button variant="link" label="Remove" onPress={() => remove(r)} />
-            </Card>
+            </View>
           ))
         )}
       </View>
 
       {missingStandard.length ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Standard requirements</Text>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>
+            Standard requirements
+          </Text>
           <Text style={styles.meta}>Tap to add for all programs.</Text>
           <ChipGroup
             label="Add a standard requirement"
@@ -152,8 +153,10 @@ export function RequirementsScreen() {
         </View>
       ) : null}
 
-      <Card>
-        <Text style={styles.cardTitle}>Custom requirement</Text>
+      <View style={styles.form}>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>
+          Custom requirement
+        </Text>
         <TextField
           label="Name"
           value={form.label}
@@ -201,7 +204,7 @@ export function RequirementsScreen() {
           onPress={addCustom}
           loading={actions.saveRequirement.isPending}
         />
-      </Card>
-    </ScrollView>
+      </View>
+    </FormScreen>
   );
 }

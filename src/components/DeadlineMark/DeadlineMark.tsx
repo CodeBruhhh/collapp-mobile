@@ -9,7 +9,14 @@ const URGENT_DAYS = 7;
 const SOON_DAYS = 30;
 
 /** Days left, colored by urgency; the words carry the meaning, not just the color. */
-export function DeadlineMark({ date }: { date: string | null | undefined }) {
+export function DeadlineMark({
+  date,
+  showDate,
+}: {
+  date: string | null | undefined;
+  /** Also print the date itself, e.g. "Nov 10 · 6 days left". */
+  showDate?: boolean;
+}) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const label = deadlineLabel(date);
@@ -28,7 +35,11 @@ export function DeadlineMark({ date }: { date: string | null | undefined }) {
   return (
     <View style={styles.row}>
       <View style={[styles.mark, { backgroundColor: color }]} />
-      <Text style={[styles.label, { color }]}>{label}</Text>
+      <Text style={[styles.label, { color }]}>
+        {showDate
+          ? `${new Date(`${date}T00:00:00`).toLocaleDateString([], { month: 'short', day: 'numeric' })} · ${label}`
+          : label}
+      </Text>
     </View>
   );
 }

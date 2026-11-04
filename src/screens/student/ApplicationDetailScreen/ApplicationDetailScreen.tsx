@@ -1,21 +1,20 @@
 import { Stack } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card } from '@/components/Card';
-import { ProgressBar } from '@/components/ProgressBar';
-import { StatusBadge } from '@/components/StatusBadge';
+import { DeadlineMark } from '@/components/DeadlineMark';
+import { PageHeading } from '@/components/PageHeading';
+import { Section } from '@/components/Section';
 import { ErrorState, LoadingState } from '@/components/StateView';
+import { StatusBadge } from '@/components/StatusBadge';
+import { applicationTimeline, StatusTimeline } from '@/components/StatusTimeline';
 import { applicationRequirements } from '@/features/applications/api';
 import { useApplication } from '@/features/applications/hooks';
 import { mergeDocuments, useDocumentQueue } from '@/features/applications/offline';
-import {
-  APPLICATION_STATUS_LABELS,
-  applicationProgress,
-  applicationStatusColor,
-  deadlineLabel,
-} from '@/features/applications/status';
+import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
 import { useTheme } from '@/hooks/useTheme';
 import { RequirementUpload } from '@/screens/student/ApplyScreen/RequirementUpload';
+import { spacing } from '@/styles';
 
 import { createStyles } from './ApplicationDetailScreen.styles';
 
@@ -34,6 +33,7 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
   const styles = createStyles(colors);
   const application = useApplication(id);
   const queue = useDocumentQueue(id);
+  const insets = useSafeAreaInsets();
 
   if (application.isPending) return <LoadingState variant="detail" />;
   if (application.isError) {
@@ -52,62 +52,53 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
   return (
     <ScrollView
       style={styles.root}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xl }}
       refreshControl={
-        <RefreshControl refreshing={application.isRefetching} onRefresh={application.refetch} />
+        <RefreshControl
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+          refreshing={application.isRefetching}
+          onRefresh={application.refetch}
+        />
       }>
       <Stack.Screen options={{ title: 'Application details' }} />
 
-      <View>
-        <Text accessibilityRole="header" style={styles.title}>
-          {app.college?.name}
-        </Text>
-        <Text style={styles.meta}>
-          {app.program?.name}
-          {app.second_program ? ` · 2nd choice: ${app.second_program.name}` : ''}
-        </Text>
+      <View style={styles.heading}>
+        <PageHeading
+          title={app.college?.name ?? ''}
+          subtitle={`${app.program?.name ?? ''}${app.second_program ? ` · 2nd choice: ${app.second_program.name}` : ''}`}
+        />
       </View>
 
-      <Card>
-        <StatusBadge label={APPLICATION_STATUS_LABELS[app.status]} color={color} />
-        <ProgressBar value={applicationProgress(app.status)} color={color} />
-        {STATUS_HELP[app.status] ? (
-          <Text style={styles.body}>{STATUS_HELP[app.status]}</Text>
-        ) : null}
-        {app.submitted_at || (!decided && app.program?.deadline) ? (
-          <Text style={styles.meta}>
-            {[
-              app.submitted_at
-                ? `Submitted ${new Date(app.submitted_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
-                : null,
-              !decided && app.program?.deadline ? deadlineLabel(app.program.deadline) : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-          </Text>
-        ) : null}
-      </Card>
+      <Section band title="Where things stand">
+        <View style={styles.status}>
+          <StatusBadge label={APPLICATION_STATUS_LABELS[app.status]} color={color} />
+          {STATUS_HELP[app.status] ? (
+            <Text style={styles.body}>{STATUS_HELP[app.status]}</Text>
+          ) : null}
+          {!decided ? <DeadlineMark date={app.program?.deadline} showDate /> : null}
+        </View>
+        <StatusTimeline steps={applicationTimeline(app.status, app.submitted_at, app.decided_at)} />
+      </Section>
 
       {decided ? (
-        <Card style={{ borderColor: color }}>
-          <Text style={styles.sectionTitle}>Message from {app.college?.name}</Text>
+        <View style={[styles.decision, { borderTopColor: color }]}>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>
+            Message from {app.college?.name}
+          </Text>
           {app.status === 'accepted' && app.final_program ? (
-            <Text style={styles.body}>Admitted to {app.final_program.name}</Text>
+            <Text style={styles.admitted}>Admitted to {app.final_program.name}</Text>
           ) : null}
           <Text style={styles.body}>{app.decision_message}</Text>
           {app.decided_at ? (
             <Text style={styles.meta}>{new Date(app.decided_at).toLocaleDateString()}</Text>
           ) : null}
-        </Card>
+        </View>
       ) : null}
 
-      <View style={styles.section}>
-        <View style={styles.rowBetween}>
-          <Text style={styles.sectionTitle}>Requirements checklist</Text>
-          <Text style={styles.meta}>
-            {approved} of {requirements.length} approved
-          </Text>
-        </View>
+      <Section
+        title="Requirements checklist"
+        meta={`${approved} of ${requirements.length} approved`}>
         {requirements.map((req) => {
           const doc = docFor(req.id);
           // Only flagged documents can be replaced once submitted.
@@ -124,13 +115,12 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
             />
           );
         })}
-      </View>
+      </Section>
 
       {app.essay ? (
-        <Card>
-          <Text style={styles.sectionTitle}>Your essay</Text>
-          <Text style={styles.body}>{app.essay}</Text>
-        </Card>
+        <Section title="Your essay">
+          <Text style={styles.essay}>{app.essay}</Text>
+        </Section>
       ) : null}
     </ScrollView>
   );

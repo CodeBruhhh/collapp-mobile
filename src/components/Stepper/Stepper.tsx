@@ -9,10 +9,12 @@ type StepperProps = {
   steps: readonly string[];
   /** Zero-based index of the current step. */
   current: number;
+  /** Name the current step in the caption (when no heading already does). */
+  named?: boolean;
 };
 
 /** Numbered progress through a multi-step form, with the current step named underneath. */
-export function Stepper({ steps, current }: StepperProps) {
+export function Stepper({ steps, current, named }: StepperProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
@@ -45,6 +47,7 @@ export function Stepper({ steps, current }: StepperProps) {
       </View>
       <Text style={styles.caption}>
         Step {current + 1} of {steps.length}
+        {named ? ` · ${steps[current]}` : ''}
       </Text>
     </View>
   );

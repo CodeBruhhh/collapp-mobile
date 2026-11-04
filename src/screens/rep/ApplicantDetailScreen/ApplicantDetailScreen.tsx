@@ -9,14 +9,17 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { Icon } from '@/components/Icon';
-import { ProgressBar } from '@/components/ProgressBar';
+import { InfoRow } from '@/components/InfoRow';
+import { Section } from '@/components/Section';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ErrorState, LoadingState } from '@/components/StateView';
+import { StickyActionBar } from '@/components/StickyActionBar';
+import { TickMeter } from '@/components/TickMeter';
 import { useScoreApplication } from '@/features/ai/hooks';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
 import { useStartThread } from '@/features/messaging/hooks';
@@ -25,6 +28,7 @@ import { useApplicant, useMyCollege, useRepActions } from '@/features/rep/hooks'
 import { useTheme } from '@/hooks/useTheme';
 import { notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
+import { spacing } from '@/styles';
 
 import { createScreenStyles } from '@/screens/screenStyles';
 import { DecisionSheet } from './DecisionSheet';
@@ -35,6 +39,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
   const { colors } = useTheme();
   const styles = createScreenStyles(colors);
   const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets();
   const applicant = useApplicant(id);
   const college = useMyCollege();
   const actions = useRepActions();
@@ -70,7 +75,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
   }
 
   return (
-    <SafeAreaView style={styles.root} edges={['bottom']}>
+    <View style={styles.root}>
       <Stack.Screen
         options={{
           title: '',
@@ -93,59 +98,69 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
         keyboardVerticalOffset={headerHeight}>
         <ScrollView
           style={styles.flex}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={{ paddingBottom: spacing.xl + (decided ? insets.bottom : 0) }}
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets
           refreshControl={
-            <RefreshControl refreshing={applicant.isRefetching} onRefresh={applicant.refetch} />
+            <RefreshControl
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+              refreshing={applicant.isRefetching}
+              onRefresh={applicant.refetch}
+            />
           }>
-          <View style={styles.headerBlock}>
-            <Text accessibilityRole="header" style={styles.title}>
-              {name}
-            </Text>
-            <Text style={styles.subtitle}>
-              {a.program?.name}
-              {a.second_program ? ` · 2nd: ${a.second_program.name}` : ''}
-            </Text>
+          <View style={styles.overview}>
+            <View style={styles.identity}>
+              <Avatar name={name} />
+              <View style={[styles.flex, styles.headerBlock]}>
+                <Text accessibilityRole="header" style={styles.pageName}>
+                  {name}
+                </Text>
+                <Text style={styles.subtitle}>
+                  {a.program?.name}
+                  {a.second_program ? ` · 2nd: ${a.second_program.name}` : ''}
+                </Text>
+              </View>
+            </View>
             <StatusBadge label={APPLICATION_STATUS_LABELS[a.status]} color={statusColor} />
           </View>
 
           {decided ? (
-            <Card style={[styles.decisionCard, { borderLeftColor: statusColor }]}>
-              <Text style={styles.cardTitle}>
+            <View style={[styles.decision, { borderTopColor: statusColor }]}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>
                 {a.status === 'accepted'
                   ? `Admitted${a.final_program ? ` to ${a.final_program.name}` : ''}`
                   : 'Application declined'}
               </Text>
               {a.decision_message ? <Text style={styles.body}>{a.decision_message}</Text> : null}
-            </Card>
+            </View>
           ) : null}
 
-          <Card>
-            <View style={styles.rowBetween}>
-              <Text style={styles.cardTitle}>AI fit score</Text>
-              <Text style={styles.meta}>Advisory</Text>
-            </View>
+          <Section band title="AI fit score" meta="Advisory">
             {score ? (
               <>
-                <View style={styles.rowBetween}>
+                <View style={styles.fit}>
+                  <Text style={styles.fitValue}>{Math.round(score.fit_score)}%</Text>
                   <Text style={styles.meta}>Institutional fit</Text>
-                  <Text style={styles.cardTitle}>{Math.round(score.fit_score)}%</Text>
+                  <TickMeter value={score.fit_score} label="Institutional fit" />
                 </View>
-                <ProgressBar value={score.fit_score / 100} />
-                <View style={styles.rowBetween}>
-                  <Text style={styles.meta}>Enrollment likelihood</Text>
-                  <Text style={styles.cardTitle}>{Math.round(score.enrollment_likelihood)}%</Text>
+                <View style={styles.fit}>
+                  <View style={styles.rowBetween}>
+                    <Text style={styles.meta}>Enrollment likelihood</Text>
+                    <Text style={styles.cardTitle}>{Math.round(score.enrollment_likelihood)}%</Text>
+                  </View>
+                  <TickMeter value={score.enrollment_likelihood} label="Enrollment likelihood" />
                 </View>
-                <ProgressBar value={score.enrollment_likelihood / 100} />
-                {score.explanation
-                  ? score.explanation.split(' · ').map((reason) => (
+                {score.explanation ? (
+                  <View style={styles.fit}>
+                    {score.explanation.split(' · ').map((reason) => (
                       <View key={reason} style={styles.reason}>
                         <Icon name="checkmark" size={14} color={colors.status.accepted} />
                         <Text style={[styles.meta, styles.flex]}>{reason}</Text>
                       </View>
-                    ))
-                  : null}
+                    ))}
+                  </View>
+                ) : null}
               </>
             ) : (
               <Text style={styles.meta}>Not scored yet</Text>
@@ -162,41 +177,32 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
                 }
               />
             ) : null}
-          </Card>
+          </Section>
 
-          <Card>
-            <Text style={styles.cardTitle}>Applicant</Text>
-            {[
-              ['Email', s?.profile?.email],
-              ['Senior high school', s?.senior_high_school],
-              ['Strand', s?.strand],
-              ['General average', s?.gpa?.toString()],
-              ['Mobile', s?.mobile],
-              ['Location', [address.city, address.province].filter(Boolean).join(', ')],
-              ['Interested in', s?.target_majors.join(', ')],
-              ['Submitted', a.submitted_at ? new Date(a.submitted_at).toLocaleDateString() : null],
-            ].map(([label, value]) => (
-              <View key={label} style={styles.kv}>
-                <Text style={styles.kvLabel}>{label}</Text>
-                <Text style={styles.kvValue}>{value || '—'}</Text>
-              </View>
-            ))}
-          </Card>
+          <Section title="Applicant">
+            <InfoRow label="Email" value={s?.profile?.email} />
+            <InfoRow label="Senior high school" value={s?.senior_high_school ?? undefined} />
+            <InfoRow label="Strand" value={s?.strand ?? undefined} />
+            <InfoRow label="General average" value={s?.gpa?.toString()} />
+            <InfoRow label="Mobile" value={s?.mobile ?? undefined} />
+            <InfoRow
+              label="Location"
+              value={[address.city, address.province].filter(Boolean).join(', ')}
+            />
+            <InfoRow label="Interested in" value={s?.target_majors.join(', ')} />
+            <InfoRow
+              label="Submitted"
+              value={a.submitted_at ? new Date(a.submitted_at).toLocaleDateString() : undefined}
+            />
+          </Section>
 
           {a.essay ? (
-            <Card>
-              <Text style={styles.cardTitle}>Essay</Text>
-              <Text style={styles.body}>{a.essay}</Text>
-            </Card>
+            <Section title="Essay">
+              <Text style={[styles.body, styles.block]}>{a.essay}</Text>
+            </Section>
           ) : null}
 
-          <View style={styles.section}>
-            <View style={styles.rowBetween}>
-              <Text style={styles.sectionTitle}>Documents</Text>
-              <Text style={styles.meta}>
-                {approvedCount}/{a.documents.length} approved
-              </Text>
-            </View>
+          <Section title="Documents" meta={`${approvedCount}/${a.documents.length} approved`}>
             {a.documents.map((doc) => (
               <DocumentReviewCard
                 key={doc.id}
@@ -207,20 +213,23 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
                 }
               />
             ))}
-          </View>
+          </Section>
         </ScrollView>
       </KeyboardAvoidingView>
 
       {!decided ? (
-        <View style={styles.footer}>
-          {!allApproved ? (
-            <Text style={styles.footerHint}>
-              {a.documents.length - approvedCount} document
-              {a.documents.length - approvedCount === 1 ? '' : 's'} left to approve before admitting
-            </Text>
-          ) : null}
-          <Button label="Make final decision" onPress={() => setDeciding(true)} />
-        </View>
+        <StickyActionBar>
+          <View style={styles.stickyColumn}>
+            {!allApproved ? (
+              <Text style={styles.footerHint}>
+                {a.documents.length - approvedCount} document
+                {a.documents.length - approvedCount === 1 ? '' : 's'} left to approve before
+                admitting
+              </Text>
+            ) : null}
+            <Button label="Make final decision" onPress={() => setDeciding(true)} />
+          </View>
+        </StickyActionBar>
       ) : null}
 
       <DecisionSheet
@@ -242,6 +251,6 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
           });
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }

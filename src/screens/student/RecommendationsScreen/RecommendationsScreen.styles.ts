@@ -1,12 +1,13 @@
 import { StyleSheet } from 'react-native';
 
-import { fonts, fontSize, spacing, type ThemeColors } from '@/styles';
+import { rhythm, spacing, type, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.md, gap: spacing.sm },
-    header: { gap: spacing.sm, marginBottom: spacing.xs },
-    subtitle: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
-    meta: { fontFamily: fonts.regular, fontSize: fontSize.xs, color: c.textMuted },
+    content: { padding: rhythm.gutter, flexGrow: 1 },
+    header: { gap: 12, marginBottom: spacing.xs },
+    subtitle: { ...type.body, color: c.textMuted },
+    meta: { ...type.caption, fontSize: 12, color: c.textMuted },
+    footer: { paddingTop: rhythm.gutter },
   });

@@ -8,7 +8,7 @@ export const createStyles = (c: ThemeColors) =>
     fallback: {
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: c.primary,
+      backgroundColor: c.primarySoft,
     },
-    initials: { color: c.onPrimary, fontFamily: fonts.semibold },
+    initials: { fontFamily: fonts.serif, color: c.primary },
   });

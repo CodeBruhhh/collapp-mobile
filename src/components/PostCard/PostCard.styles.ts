@@ -1,21 +1,27 @@
 import { StyleSheet } from 'react-native';
 
-import { fonts, fontSize, radius, spacing, TOUCH_TARGET, type ThemeColors } from '@/styles';
+import { fonts, radius, spacing, TOUCH_TARGET, type, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
-    flex: { flex: 1 },
+    post: {
+      gap: spacing.sm,
+      paddingVertical: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    flex: { flex: 1, gap: 1 },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
+      gap: 10,
       minHeight: TOUCH_TARGET,
     },
-    college: { fontSize: fontSize.sm, fontFamily: fonts.semibold, color: c.text },
-    meta: { fontFamily: fonts.regular, fontSize: fontSize.xs, color: c.textMuted },
-    title: { fontSize: fontSize.md, fontFamily: fonts.semibold, color: c.text },
-    date: { fontSize: fontSize.sm, fontFamily: fonts.medium, color: c.primary },
+    eyebrow: { ...type.overline, color: c.primary },
+    meta: { ...type.caption, fontSize: 12, color: c.textMuted },
+    title: { fontFamily: fonts.serif, fontSize: 17, lineHeight: 24, color: c.text },
+    date: { ...type.caption, fontFamily: fonts.medium, color: c.primary },
     image: { width: '100%', aspectRatio: 16 / 9, borderRadius: radius.md },
-    body: { fontFamily: fonts.regular, fontSize: fontSize.md, color: c.text, lineHeight: 22 },
-    more: { fontSize: fontSize.sm, fontFamily: fonts.semibold, color: c.primary },
+    body: { ...type.body, color: c.textMuted },
+    more: { ...type.caption, fontFamily: fonts.semibold, color: c.primary },
   });

@@ -1,10 +1,15 @@
 import { router } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
+import { ActionRow } from '@/components/ActionRow';
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
-import { Icon } from '@/components/Icon';
+import { LedgerRow } from '@/components/LedgerRow';
+import { MetricPanel } from '@/components/MetricPanel';
+import { MetricRows } from '@/components/MetricRow';
+import { Notice } from '@/components/Notice';
+import { PageHeading } from '@/components/PageHeading';
+import { Section } from '@/components/Section';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
@@ -26,20 +31,17 @@ export function DashboardScreen() {
 
   const c = college.data;
   const list = applicants.data ?? [];
-  const stats = [
-    { label: 'Applicants', value: list.length },
-    { label: 'New', value: list.filter(APPLICANT_FILTERS.new).length },
-    { label: 'In review', value: list.filter(APPLICANT_FILTERS.review).length },
-    { label: 'Accepted', value: list.filter(APPLICANT_FILTERS.accepted).length },
-  ];
+  const newCount = list.filter(APPLICANT_FILTERS.new).length;
   const isDraft = c.profile_status === 'draft';
 
   return (
     <ScrollView
       style={styles.root}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={styles.page}
       refreshControl={
         <RefreshControl
+          tintColor={colors.primary}
+          colors={[colors.primary]}
           refreshing={college.isRefetching || applicants.isRefetching}
           onRefresh={() => {
             college.refetch();
@@ -47,89 +49,81 @@ export function DashboardScreen() {
           }}
         />
       }>
-      <View style={styles.row}>
-        <CollegeLogo name={c.name} logoPath={c.logo_path} size={56} />
-        <View style={styles.flex}>
-          <Text accessibilityRole="header" style={styles.title}>
-            Welcome back
-          </Text>
-          <Text style={styles.subtitle}>{c.name}</Text>
-        </View>
-      </View>
+      <View style={styles.overview}>
+        <PageHeading
+          title="Welcome back"
+          subtitle={c.name}
+          action={<CollegeLogo name={c.name} logoPath={c.logo_path} size={44} />}
+        />
 
-      {isDraft ? (
-        <View style={styles.banner}>
-          <Text style={styles.cardTitle}>Your profile is not published</Text>
-          <Text style={styles.meta}>
-            Students can&apos;t find or apply to {c.name} until you publish it. Add your programs
-            and requirements first.
-          </Text>
-          <Button label="Finish profile" onPress={() => router.push('/rep/institution')} />
-        </View>
-      ) : null}
-
-      <View style={styles.stats}>
-        {stats.map((s) => (
-          <View key={s.label} style={styles.stat} accessibilityLabel={`${s.label}: ${s.value}`}>
-            <Text style={styles.statValue}>{s.value}</Text>
-            <Text style={styles.statLabel}>{s.label}</Text>
+        {isDraft ? (
+          <View style={styles.section}>
+            <Notice
+              tone="danger"
+              title="Your profile is not published"
+              message={`Students can't find or apply to ${c.name} until you publish it. Add your programs and requirements first.`}
+            />
+            <Button label="Finish profile" onPress={() => router.push('/rep/institution')} />
           </View>
-        ))}
-      </View>
+        ) : null}
 
-      <View style={styles.actions}>
-        <View style={styles.action}>
-          <Button label="Review applicants" onPress={() => router.push('/rep/applicants')} />
-        </View>
-        <View style={styles.action}>
-          <Button
-            variant="secondary"
-            label="Requirements"
-            onPress={() => router.push('/rep/requirements')}
-          />
-        </View>
-        <View style={styles.action}>
-          <Button
-            variant="secondary"
-            label="Create post"
-            onPress={() => router.push({ pathname: '/rep/post/[id]', params: { id: 'new' } })}
-          />
-        </View>
-        <View style={styles.action}>
-          <Button
-            variant="secondary"
-            label="Messages"
-            onPress={() => router.push('/rep/messages')}
+        <View style={styles.totals}>
+          <MetricPanel label="New applicants" value={newCount} icon="people" />
+          <MetricRows
+            metrics={[
+              { label: 'Applicants', value: list.length },
+              { label: 'In review', value: list.filter(APPLICANT_FILTERS.review).length },
+              { label: 'Accepted', value: list.filter(APPLICANT_FILTERS.accepted).length },
+            ]}
           />
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent applicants</Text>
+      <Section band title="Quick actions">
+        <ActionRow
+          label="Review applicants"
+          icon="people"
+          onPress={() => router.push('/rep/applicants')}
+        />
+        <ActionRow
+          label="Requirements"
+          icon="document-text"
+          onPress={() => router.push('/rep/requirements')}
+        />
+        <ActionRow
+          label="Create post"
+          icon="megaphone"
+          onPress={() => router.push({ pathname: '/rep/post/[id]', params: { id: 'new' } })}
+        />
+        <ActionRow
+          label="Messages"
+          icon="chatbubbles"
+          onPress={() => router.push('/rep/messages')}
+        />
+      </Section>
+
+      <Section title="Recent applicants">
         {list.length === 0 ? (
           <Text style={styles.meta}>No applications yet.</Text>
         ) : (
           list.slice(0, 5).map((a) => (
-            <Card
+            <LedgerRow
               key={a.id}
+              title={studentName(a.student)}
+              subtitle={a.program?.name}
               onPress={() =>
                 router.push({ pathname: '/rep/applicant/[id]', params: { id: a.id } })
               }>
-              <View style={styles.rowBetween}>
-                <View style={styles.flex}>
-                  <Text style={styles.cardTitle}>{studentName(a.student)}</Text>
-                  <Text style={styles.meta}>{a.program?.name}</Text>
-                </View>
-                <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+              <View style={styles.metaLine}>
+                <StatusBadge
+                  label={APPLICATION_STATUS_LABELS[a.status]}
+                  color={applicationStatusColor(a.status, colors)}
+                />
               </View>
-              <StatusBadge
-                label={APPLICATION_STATUS_LABELS[a.status]}
-                color={applicationStatusColor(a.status, colors)}
-              />
-            </Card>
+            </LedgerRow>
           ))
         )}
-      </View>
+      </Section>
     </ScrollView>
   );
 }

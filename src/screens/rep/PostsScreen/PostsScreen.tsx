@@ -2,7 +2,8 @@ import { router } from 'expo-router';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
+import { LedgerRow } from '@/components/LedgerRow';
+import { PageHeading } from '@/components/PageHeading';
 import { StatusBadge } from '@/components/StatusBadge';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { POST_TYPE_LABELS } from '@/features/rep/posts';
@@ -22,13 +23,26 @@ export function PostsScreen() {
   return (
     <View style={styles.root}>
       <FlatList
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.listContent}
         data={posts.data ?? []}
         keyExtractor={(p) => p.id}
         refreshControl={
-          <RefreshControl refreshing={posts.isRefetching} onRefresh={posts.refetch} />
+          <RefreshControl
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+            refreshing={posts.isRefetching}
+            onRefresh={posts.refetch}
+          />
         }
-        ListHeaderComponent={<Button label="New post" onPress={() => openEditor('new')} />}
+        ListHeaderComponent={
+          <View style={[styles.section, styles.listHeader]}>
+            <PageHeading
+              title="Campus posts"
+              subtitle="News, events, scholarships and deadlines for student feeds."
+            />
+            <Button label="New post" onPress={() => openEditor('new')} />
+          </View>
+        }
         ListEmptyComponent={
           posts.isPending ? (
             <LoadingState />
@@ -42,25 +56,25 @@ export function PostsScreen() {
             />
           )
         }
-        renderItem={({ item }) => (
-          <Card onPress={() => openEditor(item.id)}>
-            <View style={styles.rowBetween}>
-              <Text style={styles.meta}>{POST_TYPE_LABELS[item.type]}</Text>
+        renderItem={({ item, index }) => (
+          <LedgerRow
+            first={index === 0}
+            title={item.title}
+            subtitle={item.body}
+            onPress={() => openEditor(item.id)}>
+            <View style={styles.metaLine}>
               <StatusBadge
                 label={item.status === 'published' ? 'Published' : 'Draft'}
                 color={item.status === 'published' ? colors.status.accepted : colors.status.draft}
               />
+              <Text style={styles.meta}>
+                {POST_TYPE_LABELS[item.type]} ·{' '}
+                {item.published_at
+                  ? `Published ${new Date(item.published_at).toLocaleDateString()}`
+                  : `Edited ${new Date(item.updated_at).toLocaleDateString()}`}
+              </Text>
             </View>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.meta} numberOfLines={2}>
-              {item.body}
-            </Text>
-            <Text style={styles.meta}>
-              {item.published_at
-                ? `Published ${new Date(item.published_at).toLocaleDateString()}`
-                : `Edited ${new Date(item.updated_at).toLocaleDateString()}`}
-            </Text>
-          </Card>
+          </LedgerRow>
         )}
       />
     </View>

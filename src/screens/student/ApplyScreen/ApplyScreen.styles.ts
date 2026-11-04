@@ -1,51 +1,33 @@
 import { StyleSheet } from 'react-native';
 
-import { fonts, fontSize, radius, spacing, type ThemeColors } from '@/styles';
+import { fonts, rhythm, spacing, type, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.md, gap: spacing.md },
+    content: { padding: rhythm.gutter, gap: rhythm.gutter },
     flex: { flex: 1 },
-    stepper: { flexDirection: 'row', gap: spacing.sm },
-    stepItem: { flex: 1, gap: spacing.xs },
-    stepBar: { height: 4, borderRadius: radius.sm, backgroundColor: c.border },
-    stepBarActive: { backgroundColor: c.primary },
-    stepLabel: { fontFamily: fonts.regular, fontSize: fontSize.xs, color: c.textMuted },
-    stepLabelActive: { color: c.text, fontFamily: fonts.semibold },
-    title: { fontSize: fontSize.lg, fontFamily: fonts.semibold, color: c.text },
-    subtitle: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
+    main: { flex: 2 },
+    heading: { gap: spacing.xs },
+    title: { ...type.display, color: c.text },
+    subtitle: { ...type.body, color: c.textMuted },
+    form: { gap: 18 },
     section: { gap: spacing.sm },
-    sectionTitle: { fontSize: fontSize.md, fontFamily: fonts.semibold, color: c.text },
-    meta: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
-    note: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.status.actionRequired },
-    reqHeader: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
+    review: { gap: rhythm.gutter },
+    sectionTitle: { ...type.heading, color: c.text },
+    meta: { ...type.caption, color: c.textMuted },
+    note: { ...type.caption, color: c.status.actionRequired },
+    choiceRow: { flexDirection: 'row', gap: spacing.sm },
+    deleteDraft: { alignItems: 'center' },
+    // One requirement, ruled off like the other ledgers.
+    req: {
+      gap: 10,
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    reqHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
     reqText: { flex: 1, gap: 2 },
-    reqLabel: { fontSize: fontSize.md, fontFamily: fonts.semibold, color: c.text },
+    reqLabel: { ...type.title, fontFamily: fonts.medium, color: c.text },
     reqActions: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
-    summaryRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
-    summaryLabel: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
-    summaryValue: {
-      flexShrink: 1,
-      fontSize: fontSize.sm,
-      fontFamily: fonts.medium,
-      color: c.text,
-      textAlign: 'right',
-    },
-    warning: {
-      padding: spacing.md,
-      borderRadius: radius.md,
-      borderWidth: 1,
-      borderColor: c.status.actionRequired,
-      backgroundColor: c.surface,
-    },
-    warningText: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.text },
-    footer: {
-      gap: spacing.sm,
-      padding: spacing.md,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: c.border,
-      backgroundColor: c.surface,
-    },
-    footerRow: { flexDirection: 'row', gap: spacing.sm },
   });

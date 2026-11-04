@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { CollegeLogo } from '@/components/CollegeLogo';
-import { Icon } from '@/components/Icon';
+import { LedgerRow } from '@/components/LedgerRow';
+import { PageHeading } from '@/components/PageHeading';
+import { Section } from '@/components/Section';
 import { Select } from '@/components/Select';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { TextField } from '@/components/TextField';
@@ -98,9 +99,27 @@ function InstitutionForm({ college }: { college: RepCollege }) {
   return (
     <ScrollView
       style={styles.root}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={styles.page}
       keyboardShouldPersistTaps="handled">
-      <Card>
+      <View style={styles.overview}>
+        <PageHeading
+          title={college.name}
+          subtitle="What students see when they find your college."
+        />
+        <View style={styles.identity}>
+          <CollegeLogo name={college.name} logoPath={college.logo_path} size={72} />
+          <View style={styles.flex}>
+            <Button
+              variant="secondary"
+              label={college.logo_path ? 'Change logo' : 'Upload logo'}
+              onPress={changeLogo}
+              loading={actions.uploadLogo.isPending}
+            />
+          </View>
+        </View>
+      </View>
+
+      <Section band title="Visibility">
         <ToggleRow
           label={isPublished ? 'Published' : 'Draft'}
           description={
@@ -112,117 +131,90 @@ function InstitutionForm({ college }: { college: RepCollege }) {
           onChange={togglePublished}
           disabled={actions.updateCollege.isPending}
         />
-      </Card>
+      </Section>
 
-      <View style={styles.row}>
-        <CollegeLogo name={college.name} logoPath={college.logo_path} size={72} />
-        <View style={styles.flex}>
-          <Button
-            variant="secondary"
-            label={college.logo_path ? 'Change logo' : 'Upload logo'}
-            onPress={changeLogo}
-            loading={actions.uploadLogo.isPending}
+      <Section title="Profile">
+        <View style={styles.form}>
+          <TextField
+            label="Institution name"
+            value={form.name}
+            onChangeText={set('name')}
+            error={errors.name}
           />
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Profile</Text>
-        <TextField
-          label="Institution name"
-          value={form.name}
-          onChangeText={set('name')}
-          error={errors.name}
-        />
-        <TextField
-          label="Description"
-          value={form.description}
-          onChangeText={set('description')}
-          error={errors.description}
-          multiline
-          maxLength={5000}
-          hint="Campus overview, strengths, and what makes you different."
-        />
-        <TextField
-          label="Website (optional)"
-          value={form.website}
-          onChangeText={set('website')}
-          error={errors.website}
-          placeholder="https://"
-          autoCapitalize="none"
-          keyboardType="url"
-        />
-        <Select
-          label="Region"
-          value={form.region}
-          options={REGION_NAMES}
-          onChange={(region) => setForm((f) => ({ ...f, region, province: null, city: null }))}
-          error={errors.region}
-        />
-        <Select
-          label="Province"
-          value={form.province}
-          options={form.region ? getProvinces(form.region).map((p) => p.province_name) : []}
-          onChange={(province) => setForm((f) => ({ ...f, province, city: null }))}
-          disabled={!form.region}
-        />
-        <Select
-          label="City / Municipality"
-          value={form.city}
-          options={
-            form.region && form.province
-              ? getCities(form.region, form.province).map((c) => c.city_name)
-              : []
-          }
-          onChange={set('city')}
-          disabled={!form.province}
-        />
-        <Button label="Save profile" onPress={save} loading={actions.updateCollege.isPending} />
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.rowBetween}>
-          <Text style={styles.sectionTitle}>Programs</Text>
-          <Button
-            variant="link"
-            label="Add program"
-            onPress={() => router.push({ pathname: '/rep/program/[id]', params: { id: 'new' } })}
+          <TextField
+            label="Description"
+            value={form.description}
+            onChangeText={set('description')}
+            error={errors.description}
+            multiline
+            maxLength={5000}
+            hint="Campus overview, strengths, and what makes you different."
           />
+          <TextField
+            label="Website (optional)"
+            value={form.website}
+            onChangeText={set('website')}
+            error={errors.website}
+            placeholder="https://"
+            autoCapitalize="none"
+            keyboardType="url"
+          />
+          <Select
+            label="Region"
+            value={form.region}
+            options={REGION_NAMES}
+            onChange={(region) => setForm((f) => ({ ...f, region, province: null, city: null }))}
+            error={errors.region}
+          />
+          <Select
+            label="Province"
+            value={form.province}
+            options={form.region ? getProvinces(form.region).map((p) => p.province_name) : []}
+            onChange={(province) => setForm((f) => ({ ...f, province, city: null }))}
+            disabled={!form.region}
+          />
+          <Select
+            label="City / Municipality"
+            value={form.city}
+            options={
+              form.region && form.province
+                ? getCities(form.region, form.province).map((c) => c.city_name)
+                : []
+            }
+            onChange={set('city')}
+            disabled={!form.province}
+          />
+          <Button label="Save profile" onPress={save} loading={actions.updateCollege.isPending} />
         </View>
+      </Section>
+
+      <Section
+        title="Programs"
+        trailing={{
+          label: 'Add program',
+          onPress: () => router.push({ pathname: '/rep/program/[id]', params: { id: 'new' } }),
+        }}>
         {college.programs.length === 0 ? (
           <Text style={styles.meta}>No programs yet.</Text>
         ) : (
           college.programs.map((p) => (
-            <Card
+            <LedgerRow
               key={p.id}
-              onPress={() => router.push({ pathname: '/rep/program/[id]', params: { id: p.id } })}>
-              <View style={styles.rowBetween}>
-                <View style={styles.flex}>
-                  <Text style={styles.cardTitle}>{p.name}</Text>
-                  <Text style={styles.meta}>
-                    {p.is_open ? 'Open' : 'Closed'}
-                    {p.deadline ? ` · Deadline ${p.deadline} (${deadlineLabel(p.deadline)})` : ''}
-                  </Text>
-                </View>
-                <Icon name="chevron-forward" size={18} color={colors.textMuted} />
-              </View>
-            </Card>
+              title={p.name}
+              subtitle={`${p.is_open ? 'Open' : 'Closed'}${p.deadline ? ` · Deadline ${p.deadline} (${deadlineLabel(p.deadline)})` : ''}`}
+              onPress={() => router.push({ pathname: '/rep/program/[id]', params: { id: p.id } })}
+            />
           ))
         )}
-      </View>
+      </Section>
 
-      <Card onPress={() => router.push('/rep/requirements')}>
-        <View style={styles.rowBetween}>
-          <View style={styles.flex}>
-            <Text style={styles.cardTitle}>Admission requirements</Text>
-            <Text style={styles.meta}>
-              {college.requirements.length} requirement
-              {college.requirements.length === 1 ? '' : 's'} · documents and essays
-            </Text>
-          </View>
-          <Icon name="chevron-forward" size={18} color={colors.textMuted} />
-        </View>
-      </Card>
+      <Section title="Admission requirements">
+        <LedgerRow
+          title={`${college.requirements.length} requirement${college.requirements.length === 1 ? '' : 's'}`}
+          subtitle="Documents and essays"
+          onPress={() => router.push('/rep/requirements')}
+        />
+      </Section>
     </ScrollView>
   );
 }

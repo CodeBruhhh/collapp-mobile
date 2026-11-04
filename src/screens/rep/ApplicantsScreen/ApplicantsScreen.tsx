@@ -2,12 +2,13 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 
-import { Card } from '@/components/Card';
 import { FilterTabs } from '@/components/FilterTabs';
-import { Icon } from '@/components/Icon';
+import { LedgerRow } from '@/components/LedgerRow';
+import { PageHeading } from '@/components/PageHeading';
 import { SearchField } from '@/components/SearchField';
 import { StatusBadge } from '@/components/StatusBadge';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
+import { TickMeter } from '@/components/TickMeter';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
 import { APPLICANT_FILTERS, firstOf, studentName, type ApplicantFilter } from '@/features/rep/api';
 import { useApplicants } from '@/features/rep/hooks';
@@ -47,15 +48,21 @@ export function ApplicantsScreen() {
   return (
     <FlatList
       style={styles.root}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={styles.listContent}
       data={visible}
       keyExtractor={(a) => a.id}
       keyboardShouldPersistTaps="handled"
       refreshControl={
-        <RefreshControl refreshing={applicants.isRefetching} onRefresh={applicants.refetch} />
+        <RefreshControl
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+          refreshing={applicants.isRefetching}
+          onRefresh={applicants.refetch}
+        />
       }
       ListHeaderComponent={
-        <View style={styles.section}>
+        <View style={[styles.section, styles.listHeader]}>
+          <PageHeading title="Review queue" subtitle="Everyone who applied to your college." />
           <SearchField
             value={search}
             onChangeText={setSearch}
@@ -94,30 +101,19 @@ export function ApplicantsScreen() {
           />
         )
       }
-      renderItem={({ item }) => {
+      renderItem={({ item, index }) => {
         const pending = item.documents.filter((d) => d.review_status === 'pending').length;
         const fit = firstOf(item.ai_score)?.fit_score;
         return (
-          <Card
+          <LedgerRow
+            first={index === 0}
+            title={studentName(item.student)}
+            subtitle={item.program?.name}
             onPress={() =>
               router.push({ pathname: '/rep/applicant/[id]', params: { id: item.id } })
             }
-            accessibilityLabel={`${studentName(item.student)}, ${APPLICATION_STATUS_LABELS[item.status]}`}>
-            <View style={styles.rowBetween}>
-              <View style={styles.flex}>
-                <Text style={styles.cardTitle}>{studentName(item.student)}</Text>
-                <Text style={styles.meta}>{item.program?.name}</Text>
-              </View>
-              {fit !== undefined ? (
-                <Text
-                  style={styles.cardTitle}
-                  accessibilityLabel={`AI fit ${Math.round(fit)} percent`}>
-                  {Math.round(fit)}% fit
-                </Text>
-              ) : null}
-              <Icon name="chevron-forward" size={18} color={colors.textMuted} />
-            </View>
-            <View style={styles.rowBetween}>
+            accessibilityLabel={`${studentName(item.student)}, ${APPLICATION_STATUS_LABELS[item.status]}${fit !== undefined ? `, AI fit ${Math.round(fit)} percent` : ''}`}>
+            <View style={styles.metaLine}>
               <StatusBadge
                 label={APPLICATION_STATUS_LABELS[item.status]}
                 color={applicationStatusColor(item.status, colors)}
@@ -127,7 +123,13 @@ export function ApplicantsScreen() {
                 {item.submitted_at ? new Date(item.submitted_at).toLocaleDateString() : ''}
               </Text>
             </View>
-          </Card>
+            {fit !== undefined ? (
+              <View style={styles.fit}>
+                <Text style={styles.meta}>{Math.round(fit)}% fit</Text>
+                <TickMeter value={fit} label="AI fit" />
+              </View>
+            ) : null}
+          </LedgerRow>
         );
       }}
     />

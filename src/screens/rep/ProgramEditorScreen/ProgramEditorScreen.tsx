@@ -1,10 +1,12 @@
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { ChipGroup } from '@/components/ChipGroup';
+import { FormScreen } from '@/components/FormScreen';
 import { ErrorState, LoadingState } from '@/components/StateView';
+import { StickyActionBar } from '@/components/StickyActionBar';
 import { TextField } from '@/components/TextField';
 import { ToggleRow } from '@/components/ToggleRow';
 import type { Program } from '@/features/colleges/api';
@@ -90,10 +92,15 @@ function ProgramForm({ program }: { program: Program | null }) {
   }
 
   return (
-    <ScrollView
-      style={styles.root}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled">
+    <FormScreen
+      underHeader
+      footer={
+        <StickyActionBar>
+          <View style={styles.flex}>
+            <Button label="Save program" onPress={save} loading={actions.saveProgram.isPending} />
+          </View>
+        </StickyActionBar>
+      }>
       <Stack.Screen options={{ title: program ? 'Edit program' : 'New program' }} />
       <ToggleRow
         label="Accepting applications"
@@ -180,8 +187,7 @@ function ProgramForm({ program }: { program: Program | null }) {
         error={errors.prerequisites}
         multiline
       />
-      <Button label="Save program" onPress={save} loading={actions.saveProgram.isPending} />
       {program ? <Button variant="link" label="Delete program" onPress={remove} /> : null}
-    </ScrollView>
+    </FormScreen>
   );
 }

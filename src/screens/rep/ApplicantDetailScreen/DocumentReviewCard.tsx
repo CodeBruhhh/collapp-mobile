@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { ImageViewer } from '@/components/ImageViewer';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TextField } from '@/components/TextField';
@@ -78,7 +77,7 @@ export function DocumentReviewCard({ document, locked, onReview }: DocumentRevie
   }
 
   return (
-    <Card>
+    <View style={styles.document}>
       <View style={styles.rowBetween}>
         <Text style={[styles.cardTitle, styles.flex]}>{document.label}</Text>
         <StatusBadge
@@ -165,6 +164,6 @@ export function DocumentReviewCard({ document, locked, onReview }: DocumentRevie
           </View>
         </View>
       ) : null}
-    </Card>
+    </View>
   );
 }
