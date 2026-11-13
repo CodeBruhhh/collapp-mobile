@@ -241,6 +241,7 @@ export type Database = {
           profile_status: Database["public"]["Enums"]["publish_status"]
           province: string | null
           region: string | null
+          results_release_at: string | null
           updated_at: string
           website: string | null
         }
@@ -255,6 +256,7 @@ export type Database = {
           profile_status?: Database["public"]["Enums"]["publish_status"]
           province?: string | null
           region?: string | null
+          results_release_at?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -269,10 +271,95 @@ export type Database = {
           profile_status?: Database["public"]["Enums"]["publish_status"]
           province?: string | null
           region?: string | null
+          results_release_at?: string | null
           updated_at?: string
           website?: string | null
         }
         Relationships: []
+      }
+      document_ai_checks: {
+        Row: {
+          application_id: string | null
+          attempts: number
+          checked_at: string | null
+          complete: boolean | null
+          confidence: number | null
+          detected_type: string | null
+          document_id: string
+          error: string | null
+          issues: Json
+          key_details: Json
+          legible: boolean | null
+          matches_requirement: boolean | null
+          model: string | null
+          name_match: string | null
+          relevant: boolean | null
+          source_path: string | null
+          status: Database["public"]["Enums"]["ai_job_status"]
+          summary: string | null
+          updated_at: string
+          verdict: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          attempts?: number
+          checked_at?: string | null
+          complete?: boolean | null
+          confidence?: number | null
+          detected_type?: string | null
+          document_id: string
+          error?: string | null
+          issues?: Json
+          key_details?: Json
+          legible?: boolean | null
+          matches_requirement?: boolean | null
+          model?: string | null
+          name_match?: string | null
+          relevant?: boolean | null
+          source_path?: string | null
+          status?: Database["public"]["Enums"]["ai_job_status"]
+          summary?: string | null
+          updated_at?: string
+          verdict?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          attempts?: number
+          checked_at?: string | null
+          complete?: boolean | null
+          confidence?: number | null
+          detected_type?: string | null
+          document_id?: string
+          error?: string | null
+          issues?: Json
+          key_details?: Json
+          legible?: boolean | null
+          matches_requirement?: boolean | null
+          model?: string | null
+          name_match?: string | null
+          relevant?: boolean | null
+          source_path?: string | null
+          status?: Database["public"]["Enums"]["ai_job_status"]
+          summary?: string | null
+          updated_at?: string
+          verdict?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_ai_checks_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_ai_checks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: true
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -350,6 +437,68 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      essay_ai_reviews: {
+        Row: {
+          application_id: string
+          attempts: number
+          error: string | null
+          essay_hash: string | null
+          generated_at: string | null
+          improvements: Json
+          key_points: Json
+          model: string | null
+          prompt_fit: string | null
+          prompt_fit_note: string | null
+          status: Database["public"]["Enums"]["ai_job_status"]
+          strengths: Json
+          summary: string | null
+          updated_at: string
+          word_count: number | null
+        }
+        Insert: {
+          application_id: string
+          attempts?: number
+          error?: string | null
+          essay_hash?: string | null
+          generated_at?: string | null
+          improvements?: Json
+          key_points?: Json
+          model?: string | null
+          prompt_fit?: string | null
+          prompt_fit_note?: string | null
+          status?: Database["public"]["Enums"]["ai_job_status"]
+          strengths?: Json
+          summary?: string | null
+          updated_at?: string
+          word_count?: number | null
+        }
+        Update: {
+          application_id?: string
+          attempts?: number
+          error?: string | null
+          essay_hash?: string | null
+          generated_at?: string | null
+          improvements?: Json
+          key_points?: Json
+          model?: string | null
+          prompt_fit?: string | null
+          prompt_fit_note?: string | null
+          status?: Database["public"]["Enums"]["ai_job_status"]
+          strengths?: Json
+          summary?: string | null
+          updated_at?: string
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "essay_ai_reviews_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
             referencedColumns: ["id"]
           },
         ]
@@ -758,6 +907,65 @@ export type Database = {
           },
         ]
       }
+      staged_decisions: {
+        Row: {
+          application_id: string
+          college_id: string
+          decision: Database["public"]["Enums"]["application_status"]
+          decision_message: string
+          final_program_id: string | null
+          staged_at: string
+          staged_by: string | null
+        }
+        Insert: {
+          application_id: string
+          college_id: string
+          decision: Database["public"]["Enums"]["application_status"]
+          decision_message: string
+          final_program_id?: string | null
+          staged_at?: string
+          staged_by?: string | null
+        }
+        Update: {
+          application_id?: string
+          college_id?: string
+          decision?: Database["public"]["Enums"]["application_status"]
+          decision_message?: string
+          final_program_id?: string | null
+          staged_at?: string
+          staged_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staged_decisions_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staged_decisions_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staged_decisions_final_program_id_fkey"
+            columns: ["final_program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staged_decisions_staged_by_fkey"
+            columns: ["staged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           address: Json
@@ -954,6 +1162,45 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      consume_ai_quota: {
+        Args: { p_kind: string; p_limit: number; p_user: string }
+        Returns: boolean
+      }
+      release_decisions: {
+        Args: { p_application_ids?: string[] }
+        Returns: Json
+      }
+      schedule_decision_release: {
+        Args: { p_release_at: string | null }
+        Returns: undefined
+      }
+      stage_decision: {
+        Args: {
+          p_application_id: string
+          p_decision: Database["public"]["Enums"]["application_status"]
+          p_final_program_id: string | null
+          p_message: string
+        }
+        Returns: {
+          application_id: string
+          college_id: string
+          decision: Database["public"]["Enums"]["application_status"]
+          decision_message: string
+          final_program_id: string | null
+          staged_at: string
+          staged_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "staged_decisions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      unstage_decision: {
+        Args: { p_application_id: string }
+        Returns: undefined
+      }
       submit_application: {
         Args: { p_application_id: string }
         Returns: {
@@ -981,6 +1228,7 @@ export type Database = {
     }
     Enums: {
       account_status: "active" | "suspended"
+      ai_job_status: "pending" | "done" | "failed" | "skipped"
       application_status:
         | "draft"
         | "submitted"
@@ -1125,6 +1373,7 @@ export const Constants = {
   public: {
     Enums: {
       account_status: ["active", "suspended"],
+      ai_job_status: ["pending", "done", "failed", "skipped"],
       application_status: [
         "draft",
         "submitted",

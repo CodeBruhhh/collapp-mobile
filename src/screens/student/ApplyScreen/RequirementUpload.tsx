@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
+import { AiDocumentCheck } from '@/components/AiDocumentCheck';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { ScanPreview } from '@/components/ScanPreview';
 import { StatusBadge } from '@/components/StatusBadge';
+import type { DocumentCheck } from '@/features/ai/api';
 import type { DisplayDocument } from '@/features/applications/offline';
 import { REVIEW_STATUS_LABELS, reviewStatusColor } from '@/features/applications/status';
 import type { Requirement } from '@/features/colleges/api';
@@ -24,6 +26,11 @@ type RequirementUploadProps = {
   locked?: boolean;
   onUpload: (file: LocalFile) => Promise<void>;
   onRemove?: () => Promise<void>;
+  /** AI check of the uploaded file (relevant, correct, complete). */
+  aiCheck?: DocumentCheck;
+  aiAwaiting?: boolean;
+  onRecheck?: () => void;
+  rechecking?: boolean;
 };
 
 /** One document requirement: scan, photograph or pick a file; works offline (SRS 3.1.1.3-4). */
@@ -33,6 +40,10 @@ export function RequirementUpload({
   locked,
   onUpload,
   onRemove,
+  aiCheck,
+  aiAwaiting,
+  onRecheck,
+  rechecking,
 }: RequirementUploadProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
@@ -121,6 +132,15 @@ export function RequirementUpload({
             <Text style={styles.meta}>Uploads when you&apos;re online</Text>
           ) : null}
           {document.review_notes ? <Text style={styles.note}>{document.review_notes}</Text> : null}
+          {!document.local ? (
+            <AiDocumentCheck
+              check={aiCheck}
+              awaiting={aiAwaiting}
+              audience="student"
+              onRecheck={onRecheck}
+              rechecking={rechecking}
+            />
+          ) : null}
           {canChange ? (
             <View style={styles.reqActions}>
               <View style={styles.flex}>

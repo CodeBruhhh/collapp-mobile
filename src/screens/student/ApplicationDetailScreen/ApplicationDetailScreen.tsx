@@ -8,11 +8,15 @@ import { Section } from '@/components/Section';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { StatusBadge } from '@/components/StatusBadge';
 import { applicationTimeline, StatusTimeline } from '@/components/StatusTimeline';
+import { useDocumentChecks, useRecheckDocument } from '@/features/ai/hooks';
 import { applicationRequirements } from '@/features/applications/api';
 import { useApplication } from '@/features/applications/hooks';
 import { mergeDocuments, useDocumentQueue } from '@/features/applications/offline';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
+import { useIsOnline } from '@/hooks/useIsOnline';
 import { useTheme } from '@/hooks/useTheme';
+import { notify } from '@/lib/feedback';
+import { getErrorMessage } from '@/lib/validation';
 import { RequirementUpload } from '@/screens/student/ApplyScreen/RequirementUpload';
 import { spacing } from '@/styles';
 
@@ -34,6 +38,9 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
   const application = useApplication(id);
   const queue = useDocumentQueue(id);
   const insets = useSafeAreaInsets();
+  const checks = useDocumentChecks(id, application.data?.documents ?? []);
+  const recheck = useRecheckDocument(id);
+  const isOnline = useIsOnline();
 
   if (application.isPending) return <LoadingState variant="detail" />;
   if (application.isError) {
@@ -105,6 +112,7 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
           const canReplace =
             !decided &&
             (doc?.local || doc?.review_status === 'resubmit' || doc?.review_status === 'rejected');
+          const server = doc && !doc.local ? doc.server : null;
           return (
             <RequirementUpload
               key={req.id}
@@ -112,6 +120,17 @@ export function ApplicationDetailScreen({ id }: { id: string }) {
               document={doc}
               locked={!canReplace}
               onUpload={(file) => queue.attach(req, file, doc)}
+              aiCheck={server ? checks.byDocument.get(server.id) : undefined}
+              aiAwaiting={server ? checks.isAwaiting(server) : false}
+              onRecheck={
+                server && !decided && isOnline
+                  ? () =>
+                      recheck
+                        .mutateAsync(server.id)
+                        .catch((e) => notify.error('AI check failed', getErrorMessage(e)))
+                  : undefined
+              }
+              rechecking={recheck.isPending && recheck.variables === server?.id}
             />
           );
         })}

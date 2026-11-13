@@ -4,10 +4,12 @@ import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { AiDocumentCheck } from '@/components/AiDocumentCheck';
 import { Button } from '@/components/Button';
 import { ImageViewer } from '@/components/ImageViewer';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TextField } from '@/components/TextField';
+import type { DocumentCheck } from '@/features/ai/api';
 import type { ApplicationDocument } from '@/features/applications/api';
 import {
   REVIEW_STATUS_LABELS,
@@ -27,10 +29,22 @@ type DocumentReviewCardProps = {
   document: ApplicationDocument;
   locked: boolean;
   onReview: (status: ReviewStatus, notes: string | null) => Promise<void>;
+  aiCheck?: DocumentCheck;
+  aiAwaiting?: boolean;
+  onRecheck?: () => void;
+  rechecking?: boolean;
 };
 
 /** SDD screen 22 — open a submitted file and approve, reject or request a resubmission. */
-export function DocumentReviewCard({ document, locked, onReview }: DocumentReviewCardProps) {
+export function DocumentReviewCard({
+  document,
+  locked,
+  onReview,
+  aiCheck,
+  aiAwaiting,
+  onRecheck,
+  rechecking,
+}: DocumentReviewCardProps) {
   const { colors } = useTheme();
   const styles = createScreenStyles(colors);
   const [noteMode, setNoteMode] = useState<'resubmit' | 'rejected' | null>(null);
@@ -93,6 +107,14 @@ export function DocumentReviewCard({ document, locked, onReview }: DocumentRevie
       {document.review_notes ? (
         <Text style={styles.meta}>Note: {document.review_notes}</Text>
       ) : null}
+
+      <AiDocumentCheck
+        check={aiCheck}
+        awaiting={aiAwaiting}
+        audience="rep"
+        onRecheck={onRecheck}
+        rechecking={rechecking}
+      />
 
       {isImage ? (
         <Pressable

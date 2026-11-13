@@ -28,7 +28,12 @@ export function notificationTarget(role: Role, type: string, raw: unknown): Href
   if (type === 'new_message' && data.thread_id) return threadRoute(role, data.thread_id);
   if (role === 'student') {
     if (type === 'deadline_reminder') return '/student/applications';
-    if ((type === 'application_status' || type === 'document_review') && data.application_id) {
+    if (
+      (type === 'application_status' ||
+        type === 'document_review' ||
+        type === 'document_ai_check') &&
+      data.application_id
+    ) {
       return { pathname: '/student/application/[id]', params: { id: data.application_id } };
     }
   }
@@ -42,6 +47,7 @@ export const NOTIFICATION_ICONS: Record<string, string> = {
   new_message: 'chatbubble-ellipses',
   application_status: 'school',
   document_review: 'document-attach',
+  document_ai_check: 'sparkles',
   deadline_reminder: 'alarm',
   new_application: 'person-add',
   broadcast: 'megaphone',

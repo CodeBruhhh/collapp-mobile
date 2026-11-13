@@ -14,6 +14,7 @@ import { StickyActionBar } from '@/components/StickyActionBar';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { useSync } from '@/context/SyncContext';
+import { useDocumentChecks, useRecheckDocument } from '@/features/ai/hooks';
 import { useOfflineDraft } from '@/features/applications/offline';
 import { requirementsFor } from '@/features/colleges/api';
 import { useCollege } from '@/features/colleges/hooks';
@@ -23,6 +24,7 @@ import { ask, notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
 
 import { createStyles } from './ApplyScreen.styles';
+import { EssayFeedback } from './EssayFeedback';
 import { RequirementUpload } from './RequirementUpload';
 
 const STEPS = ['Programs', 'Documents', 'Review & submit'] as const;
@@ -54,6 +56,14 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
   const [secondName, setSecondName] = useState<string | null>(null);
   const [essay, setEssay] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // AI checks run on files once they reach the server.
+  const serverDocs = offline.documents.flatMap((d) => (d.server && !d.local ? [d.server] : []));
+  const checks = useDocumentChecks(
+    offline.draft?.existsOnServer ? offline.draft.id : null,
+    serverDocs,
+  );
+  const recheck = useRecheckDocument(offline.draft?.id);
 
   if (college.isPending || offline.isLoading) return <LoadingState variant="detail" />;
   if (college.isError) return <ErrorState error={college.error} onRetry={college.refetch} />;
@@ -230,28 +240,49 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
               MB. You can do this offline.
             </Text>
             <View>
-              {documentReqs.map((req) => (
-                <RequirementUpload
-                  key={req.id}
-                  requirement={req}
-                  document={docFor(req.id)}
-                  onUpload={(file) => offline.attach(req, file, docFor(req.id))}
-                  onRemove={async () => {
-                    const doc = docFor(req.id);
-                    if (doc) await offline.removeDocument(doc);
-                  }}
-                />
-              ))}
+              {documentReqs.map((req) => {
+                const doc = docFor(req.id);
+                const server = doc && !doc.local ? doc.server : null;
+                return (
+                  <RequirementUpload
+                    key={req.id}
+                    requirement={req}
+                    document={doc}
+                    onUpload={(file) => offline.attach(req, file, doc)}
+                    onRemove={async () => {
+                      if (doc) await offline.removeDocument(doc);
+                    }}
+                    aiCheck={server ? checks.byDocument.get(server.id) : undefined}
+                    aiAwaiting={server ? checks.isAwaiting(server) : false}
+                    onRecheck={
+                      server && sync.isOnline
+                        ? () =>
+                            recheck
+                              .mutateAsync(server.id)
+                              .catch((e) => notify.error('AI check failed', getErrorMessage(e)))
+                        : undefined
+                    }
+                    rechecking={recheck.isPending && recheck.variables === server?.id}
+                  />
+                );
+              })}
             </View>
             {needsEssay ? (
-              <TextField
-                label="Essay"
-                hint={program?.essay_prompt ?? 'Tell the admissions team about yourself.'}
-                value={essayValue}
-                onChangeText={setEssay}
-                multiline
-                maxLength={10000}
-              />
+              <>
+                <TextField
+                  label="Essay"
+                  hint={program?.essay_prompt ?? 'Tell the admissions team about yourself.'}
+                  value={essayValue}
+                  onChangeText={setEssay}
+                  multiline
+                  maxLength={10000}
+                />
+                <EssayFeedback
+                  essay={essayValue}
+                  prompt={program?.essay_prompt ?? null}
+                  online={sync.isOnline}
+                />
+              </>
             ) : null}
           </View>
         ) : null}
