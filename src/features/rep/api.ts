@@ -98,7 +98,7 @@ export async function uploadPostImage(collegeId: string, file: LocalFile): Promi
 const APPLICANT_SELECT = `id, status, submitted_at, decided_at, updated_at,
   student:students(user_id, first_name, last_name),
   program:programs!applications_program_id_fkey(id, name),
-  documents(id, review_status),
+  documents(id, review_status, ai_check:document_ai_checks(verdict)),
   ai_score:ai_scores(fit_score)` as const;
 
 /** Submitted applications to the rep's college; drafts are never visible (RLS). */
@@ -154,6 +154,65 @@ export async function setApplicationStatus(
   },
 ) {
   const { error } = await supabase.from('applications').update(changes).eq('id', id);
+  if (error) throw error;
+}
+
+// Batch result release ------------------------------------------------------
+
+export type StagedDecision = Tables<'staged_decisions'>;
+
+/** Decisions held for the next release (never visible to students). */
+export async function listStagedDecisions(collegeId: string) {
+  const { data, error } = await supabase
+    .from('staged_decisions')
+    .select('*')
+    .eq('college_id', collegeId)
+    .order('staged_at');
+  if (error) throw error;
+  return data;
+}
+
+/** Hold a decision for the next release; validated like a direct decision. */
+export async function stageDecision(input: {
+  applicationId: string;
+  decision: 'accepted' | 'rejected';
+  finalProgramId: string | null;
+  message: string;
+}) {
+  const { error } = await supabase.rpc('stage_decision', {
+    p_application_id: input.applicationId,
+    p_decision: input.decision,
+    p_final_program_id: input.finalProgramId,
+    p_message: input.message,
+  });
+  if (error) throw error;
+}
+
+export async function unstageDecision(applicationId: string) {
+  const { error } = await supabase.rpc('unstage_decision', { p_application_id: applicationId });
+  if (error) throw error;
+}
+
+export type ReleaseResult = {
+  released: number;
+  failed: { application_id: string; error: string }[];
+};
+
+/** Send every held decision now (or only the given ones). */
+export async function releaseDecisions(applicationIds?: string[]): Promise<ReleaseResult> {
+  const { data, error } = await supabase.rpc(
+    'release_decisions',
+    applicationIds ? { p_application_ids: applicationIds } : {},
+  );
+  if (error) throw error;
+  return data as ReleaseResult;
+}
+
+/** Schedule the automatic release, or clear it with null. */
+export async function scheduleRelease(releaseAt: Date | null) {
+  const { error } = await supabase.rpc('schedule_decision_release', {
+    p_release_at: releaseAt ? releaseAt.toISOString() : null,
+  });
   if (error) throw error;
 }
 

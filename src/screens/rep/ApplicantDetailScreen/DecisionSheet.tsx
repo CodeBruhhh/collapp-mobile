@@ -7,6 +7,7 @@ import { ActionSheet } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { TextField } from '@/components/TextField';
+import { ToggleRow } from '@/components/ToggleRow';
 import { useTheme } from '@/hooks/useTheme';
 
 import { createDecisionStyles } from './DecisionSheet.styles';
@@ -23,10 +24,16 @@ type DecisionSheetProps = {
   /** Admitting needs every document approved; declining is always possible. */
   canAdmit: boolean;
   submitting: boolean;
+  /** Prefill when editing a held decision. */
+  initial?: { decision: Decision; programId: string | null; message: string } | null;
+  /** Start with "hold for batch release" switched on. */
+  defaultHold?: boolean;
   onSubmit: (input: {
     decision: Decision;
     programId: string | null;
     message: string;
+    /** Keep it for the next batch release instead of notifying the student now. */
+    hold: boolean;
   }) => Promise<void>;
 };
 
@@ -48,18 +55,21 @@ export function DecisionSheet({
   programs,
   canAdmit,
   submitting,
+  initial,
+  defaultHold,
   onSubmit,
 }: DecisionSheetProps) {
   const { colors } = useTheme();
   const styles = createDecisionStyles(colors);
-  const [decision, setDecision] = useState<Decision | null>(null);
+  const [decision, setDecision] = useState<Decision | null>(initial?.decision ?? null);
   const [programId, setProgramId] = useState<string | null>(
-    programs.length === 1 ? programs[0].id : null,
+    initial?.programId ?? (programs.length === 1 ? programs[0].id : null),
   );
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(initial?.message ?? '');
   // Only replace the text with a new template while the rep hasn't edited it.
-  const [edited, setEdited] = useState(false);
+  const [edited, setEdited] = useState(Boolean(initial));
   const [confirming, setConfirming] = useState(false);
+  const [hold, setHold] = useState(Boolean(defaultHold || initial));
 
   const programName = programs.find((p) => p.id === programId)?.name ?? programs[0]?.name ?? '';
 
@@ -86,6 +96,7 @@ export function DecisionSheet({
       decision: accepting ? 'accept' : 'reject',
       programId: accepting ? programId : null,
       message: message.trim(),
+      hold,
     });
     onClose();
   }
@@ -214,12 +225,23 @@ export function DecisionSheet({
             ) : (
               <Text style={styles.prompt}>Choose a decision to write the message.</Text>
             )}
+
+            {decision ? (
+              <ToggleRow
+                label="Hold for batch release"
+                description="The student hears nothing until you release results from the review queue, so every applicant gets their result at the same time."
+                value={hold}
+                onChange={setHold}
+              />
+            ) : null}
           </ScrollView>
 
           <View style={styles.footer}>
             <Button
-              variant={decision === 'reject' ? 'danger' : 'primary'}
-              label={decision === 'reject' ? 'Send decision' : 'Send admission'}
+              variant={decision === 'reject' && !hold ? 'danger' : 'primary'}
+              label={
+                hold ? 'Hold decision' : decision === 'reject' ? 'Send decision' : 'Send admission'
+              }
               onPress={() => decision && setConfirming(true)}
               loading={submitting}
               disabled={!ready}
@@ -231,11 +253,25 @@ export function DecisionSheet({
       <ActionSheet
         visible={confirming}
         onClose={() => setConfirming(false)}
-        eyebrow="Final decision"
-        title={accepting ? `Admit ${studentFirstName}?` : 'Decline this application?'}
-        message="The student is notified right away. This cannot be changed later."
+        eyebrow={hold ? 'Batch release' : 'Final decision'}
+        title={
+          hold
+            ? `Hold this ${accepting ? 'admission' : 'decision'}?`
+            : accepting
+              ? `Admit ${studentFirstName}?`
+              : 'Decline this application?'
+        }
+        message={
+          hold
+            ? 'The student is not notified yet. You can change or withdraw it until you release results.'
+            : 'The student is notified right away. This cannot be changed later.'
+        }
         actions={[
-          { label: accepting ? 'Admit' : 'Decline', destructive: !accepting, onPress: send },
+          {
+            label: hold ? 'Hold' : accepting ? 'Admit' : 'Decline',
+            destructive: !accepting && !hold,
+            onPress: send,
+          },
         ]}
       />
     </Modal>

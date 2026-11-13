@@ -10,11 +10,16 @@ import {
   getMyCollege,
   listApplicants,
   listPosts,
+  listStagedDecisions,
+  releaseDecisions,
   reviewDocument,
   savePost,
   saveProgram,
   saveRequirement,
+  scheduleRelease,
   setApplicationStatus,
+  stageDecision,
+  unstageDecision,
   updateCollege,
   uploadCollegeLogo,
 } from './api';
@@ -25,7 +30,35 @@ export const repKeys = {
   posts: (id: string) => ['rep', 'posts', id] as const,
   applicants: (id: string) => ['rep', 'applicants', id] as const,
   applicant: (id: string) => ['rep', 'applicant', id] as const,
+  staged: (id: string) => ['rep', 'staged', id] as const,
 };
+
+/** Decisions held for batch release, keyed by application id. */
+export function useStagedDecisions() {
+  const collegeId = useCollegeId();
+  const query = useQuery({
+    queryKey: repKeys.staged(collegeId),
+    queryFn: () => listStagedDecisions(collegeId),
+    enabled: Boolean(collegeId),
+  });
+  const byApplication = new Map((query.data ?? []).map((s) => [s.application_id, s]));
+  return { ...query, byApplication };
+}
+
+/** Hold, withdraw, release and schedule batch decisions. */
+export function useReleaseActions() {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: repKeys.all });
+  return {
+    stage: useMutation({ mutationFn: stageDecision, onSuccess: refresh }),
+    unstage: useMutation({ mutationFn: unstageDecision, onSuccess: refresh }),
+    release: useMutation({
+      mutationFn: (ids?: string[]) => releaseDecisions(ids),
+      onSettled: refresh,
+    }),
+    schedule: useMutation({ mutationFn: scheduleRelease, onSuccess: refresh }),
+  };
+}
 
 /** The signed-in rep's tenant id. */
 export function useCollegeId(): string {

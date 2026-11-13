@@ -20,11 +20,17 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { StickyActionBar } from '@/components/StickyActionBar';
 import { TickMeter } from '@/components/TickMeter';
-import { useScoreApplication } from '@/features/ai/hooks';
+import { useDocumentChecks, useRecheckDocument, useScoreApplication } from '@/features/ai/hooks';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
 import { useStartThread } from '@/features/messaging/hooks';
 import { firstOf, studentName } from '@/features/rep/api';
-import { useApplicant, useMyCollege, useRepActions } from '@/features/rep/hooks';
+import {
+  useApplicant,
+  useMyCollege,
+  useReleaseActions,
+  useRepActions,
+  useStagedDecisions,
+} from '@/features/rep/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
@@ -33,6 +39,7 @@ import { spacing } from '@/styles';
 import { createScreenStyles } from '@/screens/screenStyles';
 import { DecisionSheet } from './DecisionSheet';
 import { DocumentReviewCard } from './DocumentReviewCard';
+import { EssaySummary } from './EssaySummary';
 
 /** SDD screen 21 — applicant profile, advisory AI fit, document review and final decision. */
 export function ApplicantDetailScreen({ id }: { id: string }) {
@@ -46,6 +53,10 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
   const scoreApplication = useScoreApplication();
   const startThread = useStartThread();
   const [deciding, setDeciding] = useState(false);
+  const checks = useDocumentChecks(id, applicant.data?.documents ?? []);
+  const recheck = useRecheckDocument(id);
+  const staged = useStagedDecisions();
+  const release = useReleaseActions();
 
   if (applicant.isPending) return <LoadingState variant="detail" />;
   if (applicant.isError) {
@@ -64,6 +75,20 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
   );
   const score = firstOf(a.ai_score);
   const statusColor = applicationStatusColor(a.status, colors);
+  const held = decided ? undefined : staged.byApplication.get(a.id);
+  const heldProgram = programs.find((p) => p.id === held?.final_program_id)?.name;
+  // New decisions default to the batch once the college has started one.
+  const batchActive = (staged.data?.length ?? 0) > 0 || Boolean(college.data?.results_release_at);
+
+  async function releaseThisOne() {
+    try {
+      const result = await release.release.mutateAsync([a.id]);
+      if (result.failed.length) notify.error('Not released', result.failed[0].error);
+      else notify.success('Decision sent', 'The student has been notified.');
+    } catch (e) {
+      notify.error('Not released', getErrorMessage(e));
+    }
+  }
 
   async function openChat() {
     try {
@@ -136,6 +161,44 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
             </View>
           ) : null}
 
+          {held ? (
+            <View style={[styles.decision, { borderTopColor: colors.status.underReview }]}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>
+                {held.decision === 'accepted'
+                  ? `Admission held${heldProgram ? `: ${heldProgram}` : ''}`
+                  : 'Decline held'}
+              </Text>
+              <Text style={styles.meta}>
+                {college.data?.results_release_at
+                  ? `Goes out with the batch on ${new Date(college.data.results_release_at).toLocaleString()}.`
+                  : 'Not sent yet. The student is told when you release results.'}
+              </Text>
+              <Text style={styles.body}>{held.decision_message}</Text>
+              <View style={styles.actions}>
+                <View style={styles.action}>
+                  <Button
+                    variant="secondary"
+                    label="Send this one now"
+                    loading={release.release.isPending}
+                    onPress={releaseThisOne}
+                  />
+                </View>
+                <View style={styles.action}>
+                  <Button
+                    variant="link"
+                    label="Withdraw hold"
+                    loading={release.unstage.isPending}
+                    onPress={() =>
+                      release.unstage
+                        .mutateAsync(a.id)
+                        .catch((e) => notify.error('Could not withdraw', getErrorMessage(e)))
+                    }
+                  />
+                </View>
+              </View>
+            </View>
+          ) : null}
+
           <Section band title="AI fit score" meta="Advisory">
             {score ? (
               <>
@@ -198,6 +261,7 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
 
           {a.essay ? (
             <Section title="Essay">
+              <EssaySummary applicationId={a.id} />
               <Text style={[styles.body, styles.block]}>{a.essay}</Text>
             </Section>
           ) : null}
@@ -211,6 +275,17 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
                 onReview={(status, notes) =>
                   actions.reviewDocument.mutateAsync([doc.id, status, notes]).then(() => undefined)
                 }
+                aiCheck={checks.byDocument.get(doc.id)}
+                aiAwaiting={checks.isAwaiting(doc)}
+                onRecheck={
+                  decided
+                    ? undefined
+                    : () =>
+                        recheck
+                          .mutateAsync(doc.id)
+                          .catch((e) => notify.error('AI check failed', getErrorMessage(e)))
+                }
+                rechecking={recheck.isPending && recheck.variables === doc.id}
               />
             ))}
           </Section>
@@ -227,20 +302,45 @@ export function ApplicantDetailScreen({ id }: { id: string }) {
                 admitting
               </Text>
             ) : null}
-            <Button label="Make final decision" onPress={() => setDeciding(true)} />
+            <Button
+              label={held ? 'Change held decision' : 'Make final decision'}
+              onPress={() => setDeciding(true)}
+            />
           </View>
         </StickyActionBar>
       ) : null}
 
       <DecisionSheet
+        // Remount with the held decision's values whenever it changes.
+        key={held?.staged_at ?? 'new'}
         visible={deciding}
         onClose={() => setDeciding(false)}
         studentFirstName={s?.first_name || name}
         collegeName={college.data?.name ?? 'our college'}
         programs={programs}
         canAdmit={allApproved}
-        submitting={actions.setStatus.isPending}
-        onSubmit={async ({ decision, programId, message }) => {
+        submitting={actions.setStatus.isPending || release.stage.isPending}
+        initial={
+          held
+            ? {
+                decision: held.decision === 'accepted' ? 'accept' : 'reject',
+                programId: held.final_program_id,
+                message: held.decision_message,
+              }
+            : null
+        }
+        defaultHold={batchActive}
+        onSubmit={async ({ decision, programId, message, hold }) => {
+          if (hold) {
+            await release.stage.mutateAsync({
+              applicationId: a.id,
+              decision: decision === 'accept' ? 'accepted' : 'rejected',
+              finalProgramId: programId,
+              message,
+            });
+            notify.success('Decision held', 'It goes out when you release results.');
+            return;
+          }
           await actions.setStatus.mutateAsync({
             id: a.id,
             changes: {
