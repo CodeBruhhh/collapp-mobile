@@ -655,6 +655,84 @@ export type Database = {
         }
         Relationships: []
       }
+      post_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          author_id?: string
+          body: string
+          created_at?: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_reactions: {
+        Row: {
+          created_at: string
+          post_id: string
+          reaction: Database["public"]["Enums"]["post_reaction"]
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          reaction: Database["public"]["Enums"]["post_reaction"]
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          reaction?: Database["public"]["Enums"]["post_reaction"]
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_reactions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           author_id: string | null
@@ -1131,6 +1209,27 @@ export type Database = {
           unread_count: number
         }[]
       }
+      post_comments_list: {
+        Args: { p_post_id: string }
+        Returns: {
+          author_avatar_path: string
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          is_mine: boolean
+          post_id: string
+        }[]
+      }
+      post_engagement: {
+        Args: { p_post_ids: string[] }
+        Returns: {
+          comment_count: number
+          counts: Json
+          my_reaction: Database["public"]["Enums"]["post_reaction"]
+          post_id: string
+        }[]
+      }
       register_push_token: {
         Args: {
           p_platform: Database["public"]["Enums"]["device_platform"]
@@ -1237,6 +1336,7 @@ export type Database = {
         | "action_required"
         | "rejected"
       device_platform: "ios" | "android" | "web"
+      post_reaction: "like" | "love" | "care" | "haha" | "wow" | "sad"
       post_type: "news" | "event" | "scholarship" | "deadline"
       publish_status: "draft" | "published"
       requirement_kind: "document" | "essay"
@@ -1383,6 +1483,7 @@ export const Constants = {
         "rejected",
       ],
       device_platform: ["ios", "android", "web"],
+      post_reaction: ["like", "love", "care", "haha", "wow", "sad"],
       post_type: ["news", "event", "scholarship", "deadline"],
       publish_status: ["draft", "published"],
       requirement_kind: ["document", "essay"],

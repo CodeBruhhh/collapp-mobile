@@ -6,6 +6,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { FilterTabs } from '@/components/FilterTabs';
+import { FollowButton } from '@/components/FollowButton';
 import { Icon, type IconName } from '@/components/Icon';
 import { InfoRow } from '@/components/InfoRow';
 import { LedgerRow } from '@/components/LedgerRow';
@@ -16,7 +17,7 @@ import { StickyActionBar } from '@/components/StickyActionBar';
 import { useApplicationsWithLocal } from '@/features/applications/offline';
 import { daysUntil, deadlineLabel } from '@/features/applications/status';
 import { collegeLocation, requirementsFor } from '@/features/colleges/api';
-import { useCollege, useFollowedColleges, useToggleFollow } from '@/features/colleges/hooks';
+import { useCollege } from '@/features/colleges/hooks';
 import { useStartThread } from '@/features/messaging/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { notify } from '@/lib/feedback';
@@ -43,15 +44,13 @@ function Fact({ icon, label }: { icon: IconName; label: string }) {
   );
 }
 
-/** SDD screen 9 — college profile, programs and requirements, with Save and Apply. */
+/** SDD screen 9 — college profile, programs and requirements, with Follow and Apply. */
 export function CollegeDetailScreen({ id }: { id: string }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const [tab, setTab] = useState<Tab>('about');
 
   const college = useCollege(id);
-  const followed = useFollowedColleges();
-  const toggleFollow = useToggleFollow();
   const startThread = useStartThread();
   const applications = useApplicationsWithLocal();
 
@@ -81,7 +80,6 @@ export function CollegeDetailScreen({ id }: { id: string }) {
   }
 
   const c = college.data;
-  const isSaved = followed.data?.includes(c.id) ?? false;
   const existing = applications.data?.find((a) => a.college_id === c.id);
   const openPrograms = c.programs.filter((p) => p.is_open);
   const upcoming = openPrograms
@@ -89,14 +87,6 @@ export function CollegeDetailScreen({ id }: { id: string }) {
     .sort((a, b) => a.deadline!.localeCompare(b.deadline!))
     .slice(0, 3);
   const generalRequirements = requirementsFor(c, null).filter((r) => r.program_id === null);
-
-  async function handleSave() {
-    try {
-      await toggleFollow.mutateAsync({ collegeId: c.id, following: !isSaved });
-    } catch (e) {
-      notify.error('Could not update', getErrorMessage(e));
-    }
-  }
 
   // Formal inquiry to this college's representatives (SRS 3.6.5).
   async function handleMessage() {
@@ -124,19 +114,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
           top={
             <>
               {back}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={isSaved ? 'Remove from saved' : 'Save university'}
-                accessibilityState={{ selected: isSaved, busy: toggleFollow.isPending }}
-                disabled={toggleFollow.isPending}
-                onPress={handleSave}
-                style={styles.navButton}>
-                <Icon
-                  name={isSaved ? 'bookmark-filled' : 'bookmark'}
-                  size={22}
-                  color={colors.onPrimary}
-                />
-              </Pressable>
+              <FollowButton collegeId={c.id} collegeName={c.name} onAccent />
             </>
           }
           stats={[

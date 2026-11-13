@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 
 import { AiDocumentCheck } from '@/components/AiDocumentCheck';
 import { Button } from '@/components/Button';
+import { DocumentPreview } from '@/components/DocumentPreview';
 import { Icon } from '@/components/Icon';
 import { ScanPreview } from '@/components/ScanPreview';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -132,6 +133,7 @@ export function RequirementUpload({
             <Text style={styles.meta}>Uploads when you&apos;re online</Text>
           ) : null}
           {document.review_notes ? <Text style={styles.note}>{document.review_notes}</Text> : null}
+          <DocumentPreview document={document} />
           {!document.local ? (
             <AiDocumentCheck
               check={aiCheck}

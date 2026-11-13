@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useDeferredValue, useState } from 'react';
-import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { DeadlineMark } from '@/components/DeadlineMark';
@@ -21,7 +21,7 @@ import { createStyles } from './ExploreScreen.styles';
 const ALL_REGIONS = 'All regions';
 const REGION_OPTIONS = [ALL_REGIONS, ...PH_REGIONS.map((r) => r.region_name)];
 
-type Scope = 'all' | 'saved';
+type Scope = 'all' | 'following';
 
 /** Earliest open-program deadline that hasn't passed yet. */
 function nextDeadline(college: CollegeListItem): string | null {
@@ -34,7 +34,7 @@ function nextDeadline(college: CollegeListItem): string | null {
   );
 }
 
-/** SDD screen 7 — search and filter published colleges, or just the saved ones. */
+/** SDD screen 7 — search and filter published colleges, or just the followed ones. */
 export function ExploreScreen() {
   const { colors } = useTheme();
   const styles = createStyles(colors);
@@ -45,10 +45,10 @@ export function ExploreScreen() {
 
   const colleges = useColleges({ search: deferredSearch, region });
   const followed = useFollowedColleges();
-  const savedIds = new Set(followed.data ?? []);
+  const followedIds = new Set(followed.data ?? []);
 
   const all = colleges.data ?? [];
-  const visible = scope === 'saved' ? all.filter((c) => savedIds.has(c.id)) : all;
+  const visible = scope === 'following' ? all.filter((c) => followedIds.has(c.id)) : all;
   const filtering = Boolean(search.trim() || region);
 
   return (
@@ -76,13 +76,30 @@ export function ExploreScreen() {
             placeholder="Search universities"
             accessibilityLabel="Search universities"
           />
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => router.push('/student/feed')}
+            style={({ pressed }) => [styles.feedEntry, pressed && styles.feedEntryPressed]}>
+            <View style={styles.feedIcon}>
+              <Icon name="megaphone" size={20} color={colors.onPrimary} />
+            </View>
+            <View style={styles.feedText}>
+              <Text style={styles.feedTitle}>Campus feed</Text>
+              <Text style={styles.feedSubtitle}>
+                {followedIds.size
+                  ? `Updates from ${followedIds.size} ${followedIds.size === 1 ? 'university' : 'universities'} you follow`
+                  : 'News, events and scholarships'}
+              </Text>
+            </View>
+            <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+          </Pressable>
           <View style={styles.filters}>
             <FilterTabs<Scope>
               value={scope}
               onChange={setScope}
               options={[
                 { value: 'all', label: 'All' },
-                { value: 'saved', label: 'Saved', count: savedIds.size },
+                { value: 'following', label: 'Following', count: followedIds.size },
               ]}
             />
             <Select
@@ -105,11 +122,11 @@ export function ExploreScreen() {
           <LoadingState />
         ) : colleges.isError ? (
           <ErrorState error={colleges.error} onRetry={colleges.refetch} />
-        ) : scope === 'saved' && !filtering ? (
+        ) : scope === 'following' && !filtering ? (
           <EmptyState
-            icon="bookmark"
-            title="No saved universities"
-            body="Tap Save on a university to keep it here."
+            icon="school"
+            title="Not following anyone yet"
+            body="Tap Follow on a university to keep it here and see its posts in your feed."
             actionLabel="Browse all"
             onAction={() => setScope('all')}
           />
@@ -124,14 +141,14 @@ export function ExploreScreen() {
           subtitle={`${collegeLocation(item)} · ${item.programs.length} program${item.programs.length === 1 ? '' : 's'}`}
           leading={<CollegeLogo name={item.name} logoPath={item.logo_path} size={44} />}
           trailing={
-            savedIds.has(item.id) ? (
-              <Icon name="bookmark-filled" size={18} color={colors.primary} />
+            followedIds.has(item.id) ? (
+              <Text style={styles.followingMark}>Following</Text>
             ) : undefined
           }
           onPress={() =>
             router.push({ pathname: '/student/college/[id]', params: { id: item.id } })
           }
-          accessibilityLabel={`${item.name}, ${collegeLocation(item)}${savedIds.has(item.id) ? ', saved' : ''}`}>
+          accessibilityLabel={`${item.name}, ${collegeLocation(item)}${followedIds.has(item.id) ? ', following' : ''}`}>
           <View style={styles.deadline}>
             <DeadlineMark date={nextDeadline(item)} />
           </View>

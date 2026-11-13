@@ -1,0 +1,94 @@
+import { StyleSheet } from 'react-native';
+
+import { fonts, radius, rhythm, spacing, TOUCH_TARGET, type, type ThemeColors } from '@/styles';
+
+export const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: c.background },
+    flex: { flex: 1 },
+    list: { paddingTop: 12, paddingBottom: spacing.md },
+    post: { gap: spacing.sm },
+    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: rhythm.gutter },
+    college: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      minHeight: TOUCH_TARGET,
+    },
+    name: { ...type.title, color: c.text },
+    eyebrow: { ...type.overline, color: c.primary },
+    meta: { ...type.caption, fontSize: 12, lineHeight: 16, color: c.textMuted },
+    title: {
+      paddingHorizontal: rhythm.gutter,
+      fontFamily: fonts.serif,
+      fontSize: 24,
+      lineHeight: 30,
+      letterSpacing: -0.8,
+      color: c.text,
+    },
+    date: {
+      ...type.caption,
+      paddingHorizontal: rhythm.gutter,
+      fontFamily: fonts.medium,
+      color: c.primary,
+    },
+    image: { width: '100%', aspectRatio: 16 / 9, marginTop: spacing.xs },
+    body: {
+      ...type.body,
+      marginTop: spacing.xs,
+      paddingHorizontal: rhythm.gutter,
+      color: c.text,
+    },
+    heading: {
+      ...type.heading,
+      paddingTop: spacing.md,
+      paddingHorizontal: rhythm.gutter,
+      color: c.text,
+    },
+    comment: { paddingHorizontal: rhythm.gutter },
+    status: {
+      ...type.body,
+      paddingTop: spacing.sm,
+      paddingHorizontal: rhythm.gutter,
+      color: c.textMuted,
+    },
+    footer: {
+      backgroundColor: c.surface,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
+    },
+    notice: {
+      ...type.caption,
+      paddingTop: spacing.sm,
+      paddingHorizontal: rhythm.gutter,
+      color: c.textMuted,
+    },
+    composer: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 10,
+      paddingVertical: 12,
+      paddingHorizontal: rhythm.gutter,
+    },
+    input: {
+      flex: 1,
+      minHeight: TOUCH_TARGET,
+      maxHeight: 120,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: c.text,
+      fontFamily: fonts.regular,
+      fontSize: 16,
+      color: c.text,
+    },
+    send: {
+      width: TOUCH_TARGET,
+      height: TOUCH_TARGET,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: radius.md,
+      backgroundColor: c.primary,
+    },
+    sendDisabled: { opacity: 0.45 },
+  });

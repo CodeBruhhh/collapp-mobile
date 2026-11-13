@@ -10,7 +10,7 @@ import { MetricPanel } from '@/components/MetricPanel';
 import { MetricRows } from '@/components/MetricRow';
 import { Notice } from '@/components/Notice';
 import { PageHeading } from '@/components/PageHeading';
-import { PostCard } from '@/components/PostCard';
+import { PostPreviewRow } from '@/components/PostPreviewRow';
 import { Section } from '@/components/Section';
 import { SyncBanner } from '@/components/SyncBanner';
 import { useAuth } from '@/context/AuthContext';
@@ -20,12 +20,14 @@ import { useApplicationsWithLocal } from '@/features/applications/offline';
 import { daysUntil } from '@/features/applications/status';
 import { collegeLocation } from '@/features/colleges/api';
 import { useColleges } from '@/features/colleges/hooks';
-import { useFeed } from '@/features/feed/hooks';
+import { useEngagement, useFeed } from '@/features/feed/hooks';
 import { useTheme } from '@/hooks/useTheme';
 
 import { createStyles } from './HomeScreen.styles';
 
 const THIS_WEEK_DAYS = 7;
+/** The rest live in the Campus feed, so Home stays short. */
+const HOME_UPDATES = 4;
 
 /**
  * SDD screen 6 — greeting, application summary (web dashboard stat cards),
@@ -39,6 +41,8 @@ export function HomeScreen() {
   const colleges = useColleges({});
   const recommendations = useRecommendations();
   const feed = useFeed();
+  const updates = feed.data?.slice(0, HOME_UPDATES) ?? [];
+  const engagement = useEngagement(updates.map((p) => p.id));
   const platform = usePlatformSettings();
 
   const apps = applications.data ?? [];
@@ -215,9 +219,18 @@ export function HomeScreen() {
         )}
       </Section>
 
-      <Section title="Campus updates">
-        {feed.data?.length ? (
-          feed.data.slice(0, 15).map((post) => <PostCard key={post.id} post={post} />)
+      <Section
+        title="Campus updates"
+        trailing={{ label: 'See all', onPress: () => router.push('/student/feed') }}>
+        {updates.length ? (
+          updates.map((post, index) => (
+            <PostPreviewRow
+              key={post.id}
+              post={post}
+              first={index === 0}
+              engagement={engagement.data?.[post.id]}
+            />
+          ))
         ) : (
           <Text style={styles.status}>
             {feed.isPending
