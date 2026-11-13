@@ -6,6 +6,8 @@ import { LedgerRow } from '@/components/LedgerRow';
 import { PageHeading } from '@/components/PageHeading';
 import { StatusBadge } from '@/components/StatusBadge';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
+import { useEngagement } from '@/features/feed/hooks';
+import { plural, totalReactions } from '@/features/feed/reactions';
 import { POST_TYPE_LABELS } from '@/features/rep/posts';
 import { usePosts } from '@/features/rep/hooks';
 import { useTheme } from '@/hooks/useTheme';
@@ -13,12 +15,17 @@ import { useTheme } from '@/hooks/useTheme';
 import { createScreenStyles } from '@/screens/screenStyles';
 
 const openEditor = (id: string) => router.push({ pathname: '/rep/post/[id]', params: { id } });
+const openInsights = (id: string) =>
+  router.push({ pathname: '/rep/insights/[id]', params: { id } });
 
 /** Campus posts (SRS 3.1.2.3) — drafts and published items that feed student timelines. */
 export function PostsScreen() {
   const { colors } = useTheme();
   const styles = createScreenStyles(colors);
   const posts = usePosts();
+  const engagement = useEngagement(
+    (posts.data ?? []).filter((p) => p.status === 'published').map((p) => p.id),
+  );
 
   return (
     <View style={styles.root}>
@@ -56,26 +63,36 @@ export function PostsScreen() {
             />
           )
         }
-        renderItem={({ item, index }) => (
-          <LedgerRow
-            first={index === 0}
-            title={item.title}
-            subtitle={item.body}
-            onPress={() => openEditor(item.id)}>
-            <View style={styles.metaLine}>
-              <StatusBadge
-                label={item.status === 'published' ? 'Published' : 'Draft'}
-                color={item.status === 'published' ? colors.status.accepted : colors.status.draft}
-              />
-              <Text style={styles.meta}>
-                {POST_TYPE_LABELS[item.type]} ·{' '}
-                {item.published_at
-                  ? `Published ${new Date(item.published_at).toLocaleDateString()}`
-                  : `Edited ${new Date(item.updated_at).toLocaleDateString()}`}
-              </Text>
-            </View>
-          </LedgerRow>
-        )}
+        renderItem={({ item, index }) => {
+          const published = item.status === 'published';
+          const stats = engagement.data?.[item.id];
+          return (
+            <LedgerRow
+              first={index === 0}
+              title={item.title}
+              subtitle={item.body}
+              onPress={() => (published ? openInsights(item.id) : openEditor(item.id))}>
+              <View style={styles.metaLine}>
+                <StatusBadge
+                  label={published ? 'Published' : 'Draft'}
+                  color={published ? colors.status.accepted : colors.status.draft}
+                />
+                <Text style={styles.meta}>
+                  {POST_TYPE_LABELS[item.type]} ·{' '}
+                  {item.published_at
+                    ? `Published ${new Date(item.published_at).toLocaleDateString()}`
+                    : `Edited ${new Date(item.updated_at).toLocaleDateString()}`}
+                </Text>
+              </View>
+              {stats ? (
+                <Text style={styles.meta}>
+                  {plural(totalReactions(stats), 'reaction')} ·{' '}
+                  {plural(stats.commentCount, 'comment')}
+                </Text>
+              ) : null}
+            </LedgerRow>
+          );
+        }}
       />
     </View>
   );

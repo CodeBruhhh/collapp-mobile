@@ -20,12 +20,25 @@ type NotificationData = {
   type?: string;
   thread_id?: string;
   application_id?: string;
+  /** Added to push data only, not stored on the notification. */
+  notification_id?: string;
 };
+
+/** The notifications list, opening one broadcast in its pop-up. */
+function broadcastRoute(role: Role, id: string): Href {
+  const params = { open: id };
+  if (role === 'school_rep') return { pathname: '/rep/notifications', params };
+  if (role === 'admin') return { pathname: '/admin/notifications', params };
+  return { pathname: '/student/notifications', params };
+}
 
 /** Where tapping a notification (in-app or push) should take each role. */
 export function notificationTarget(role: Role, type: string, raw: unknown): Href | null {
   const data = (raw ?? {}) as NotificationData;
   if (type === 'new_message' && data.thread_id) return threadRoute(role, data.thread_id);
+  if (type === 'broadcast' && data.notification_id) {
+    return broadcastRoute(role, data.notification_id);
+  }
   if (role === 'student') {
     if (type === 'deadline_reminder') return '/student/applications';
     if ((type === 'application_status' || type === 'document_review') && data.application_id) {

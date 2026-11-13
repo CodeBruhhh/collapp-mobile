@@ -1,0 +1,1 @@
+export { PostInsightsScreen } from './PostInsightsScreen';

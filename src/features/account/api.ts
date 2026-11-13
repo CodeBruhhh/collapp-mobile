@@ -4,7 +4,7 @@ import { Directory } from 'expo-file-system';
 import { supabase } from '@/lib/supabase';
 import type { Role } from '@/types/roles';
 
-const EXPORT_FORMAT_VERSION = 1;
+const EXPORT_FORMAT_VERSION = 2;
 
 /** Throw on error, otherwise return the rows (keeps the export builder flat). */
 function rows<T>(result: { data: T | null; error: unknown }): T | null {
@@ -24,6 +24,8 @@ export async function buildDataExport(userId: string, role: Role) {
     student,
     applications,
     follows,
+    reactions,
+    comments,
     recommendations,
     messages,
     notifications,
@@ -60,6 +62,18 @@ export async function buildDataExport(userId: string, role: Role) {
       : Promise.resolve({ data: [], error: null }),
     isStudent
       ? supabase
+          .from('post_reactions')
+          .select('reaction, created_at, post:posts(title)')
+          .eq('student_id', userId)
+      : Promise.resolve({ data: [], error: null }),
+    isStudent
+      ? supabase
+          .from('post_comments')
+          .select('body, created_at, post:posts(title)')
+          .eq('author_id', userId)
+      : Promise.resolve({ data: [], error: null }),
+    isStudent
+      ? supabase
           .from('ai_recommendations')
           .select(
             'match_score, reasons, generated_at, college:colleges(name), program:programs(name)',
@@ -87,6 +101,8 @@ export async function buildDataExport(userId: string, role: Role) {
     academic_profile: rows(student),
     applications: rows(applications),
     saved_colleges: rows(follows),
+    post_reactions: rows(reactions),
+    post_comments: rows(comments),
     ai_recommendations: rows(recommendations),
     messages_sent: rows(messages),
     notifications: rows(notifications),

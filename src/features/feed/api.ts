@@ -1,10 +1,14 @@
 import { supabase } from '@/lib/supabase';
 
+import type { Engagement, Reaction } from './reactions';
+
+const POST_FIELDS = '*, college:colleges(id, name, logo_path)';
+
 /** Latest published campus posts (RLS hides drafts and unpublished colleges). */
 export async function listPublishedPosts(limit = 60) {
   const { data, error } = await supabase
     .from('posts')
-    .select('*, college:colleges(id, name, logo_path)')
+    .select(POST_FIELDS)
     .eq('status', 'published')
     .order('published_at', { ascending: false })
     .limit(limit);
@@ -12,6 +16,69 @@ export async function listPublishedPosts(limit = 60) {
   return data;
 }
 export type FeedPost = Awaited<ReturnType<typeof listPublishedPosts>>[number];
+
+/** One page of posts from the given colleges, newest first. */
+export async function listFollowingPosts(collegeIds: string[], page: number, pageSize: number) {
+  const from = page * pageSize;
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_FIELDS)
+    .eq('status', 'published')
+    .in('college_id', collegeIds)
+    .order('published_at', { ascending: false })
+    .range(from, from + pageSize - 1);
+  if (error) throw error;
+  return data;
+}
+
+export async function getPost(id: string) {
+  const { data, error } = await supabase.from('posts').select(POST_FIELDS).eq('id', id).single();
+  if (error) throw error;
+  return data;
+}
+
+/** Reaction totals, comment count and the caller's reaction, keyed by post id. */
+export async function getEngagement(postIds: string[]): Promise<Record<string, Engagement>> {
+  const { data, error } = await supabase.rpc('post_engagement', { p_post_ids: postIds });
+  if (error) throw error;
+  return Object.fromEntries(
+    data.map((row) => [
+      row.post_id,
+      {
+        counts: row.counts as Engagement['counts'],
+        commentCount: row.comment_count,
+        mine: row.my_reaction,
+      },
+    ]),
+  );
+}
+
+/** Set, change or (with null) remove the student's reaction to a post. */
+export async function setReaction(userId: string, postId: string, reaction: Reaction | null) {
+  const { error } = reaction
+    ? await supabase
+        .from('post_reactions')
+        .upsert({ post_id: postId, student_id: userId, reaction })
+    : await supabase.from('post_reactions').delete().eq('post_id', postId).eq('student_id', userId);
+  if (error) throw error;
+}
+
+export async function listComments(postId: string) {
+  const { data, error } = await supabase.rpc('post_comments_list', { p_post_id: postId });
+  if (error) throw error;
+  return data;
+}
+export type PostComment = Awaited<ReturnType<typeof listComments>>[number];
+
+export async function addComment(postId: string, body: string) {
+  const { error } = await supabase.from('post_comments').insert({ post_id: postId, body });
+  if (error) throw error;
+}
+
+export async function deleteComment(id: string) {
+  const { error } = await supabase.from('post_comments').delete().eq('id', id);
+  if (error) throw error;
+}
 
 type Affinity = {
   followed: Set<string>;
