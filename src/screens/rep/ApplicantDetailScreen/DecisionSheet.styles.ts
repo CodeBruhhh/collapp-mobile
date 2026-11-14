@@ -73,6 +73,9 @@ export const createDecisionStyles = (c: ThemeColors) =>
 
     reset: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start' },
     resetText: { fontSize: fontSize.sm, fontFamily: fonts.semibold, color: c.primary },
+    seatNote: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+    seatText: { flex: 1, fontSize: fontSize.sm, fontFamily: fonts.regular, color: c.textMuted },
+    seatOver: { color: c.danger, fontFamily: fonts.medium },
     prompt: {
       fontFamily: fonts.regular,
       fontSize: fontSize.sm,

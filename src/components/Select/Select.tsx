@@ -4,7 +4,9 @@ import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/Icon';
+import { OptionPill } from '@/components/OptionPill';
 import { useTheme } from '@/hooks/useTheme';
+import { KeyboardAvoidingView } from '@/lib/keyboard';
 
 import { createStyles } from './Select.styles';
 
@@ -18,6 +20,12 @@ type SelectProps = {
   disabled?: boolean;
   /** Hide the visible label when the value says enough (still read by screen readers). */
   hideLabel?: boolean;
+  /** Short muted text beside an option in the list, e.g. a count. */
+  optionHint?: (option: string) => string | undefined;
+  /** 'pill': a compact toolbar button (for filters) instead of a form field. */
+  variant?: 'field' | 'pill';
+  /** Pill only: highlight it because the choice narrows a list. */
+  active?: boolean;
 };
 
 /** Dropdown-style field that opens a searchable full-screen list. */
@@ -30,6 +38,9 @@ export function Select({
   error,
   disabled,
   hideLabel,
+  optionHint,
+  variant = 'field',
+  active,
 }: SelectProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
@@ -47,23 +58,34 @@ export function Select({
   }
 
   return (
-    <View style={styles.root}>
-      {hideLabel ? null : <Text style={styles.label}>{label}</Text>}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`${label}: ${value ?? 'not selected'}`}
-        accessibilityHint={error}
-        accessibilityState={{ disabled }}
-        disabled={disabled}
-        onPress={() => setOpen(true)}
-        style={[styles.field, error ? styles.fieldError : null, disabled && styles.disabled]}>
-        <Text style={[styles.value, !value && styles.placeholder]} numberOfLines={1}>
-          {value ?? placeholder}
-        </Text>
-        <Icon name="chevron-down" size={18} color={colors.textMuted} />
-      </Pressable>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
+    <View style={variant === 'pill' ? styles.pillRoot : styles.root}>
+      {variant === 'pill' ? (
+        <OptionPill
+          label={label}
+          value={value ?? placeholder}
+          onPress={() => setOpen(true)}
+          active={active}
+          disabled={disabled}
+        />
+      ) : (
+        <>
+          {hideLabel ? null : <Text style={styles.label}>{label}</Text>}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${label}: ${value ?? 'not selected'}`}
+            accessibilityHint={error}
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={() => setOpen(true)}
+            style={[styles.field, error ? styles.fieldError : null, disabled && styles.disabled]}>
+            <Text style={[styles.value, !value && styles.placeholder]} numberOfLines={1}>
+              {value ?? placeholder}
+            </Text>
+            <Icon name="chevron-down" size={18} color={colors.textMuted} />
+          </Pressable>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+        </>
+      )}
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
         <StatusBar style="auto" />
         <SafeAreaView style={styles.modal}>
@@ -90,22 +112,30 @@ export function Select({
               autoFocus
             />
           ) : null}
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item}
-            keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ selected: item === value }}
-                onPress={() => choose(item)}
-                style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}>
-                <Text style={styles.optionText}>{item}</Text>
-                {item === value ? <Icon name="checkmark" size={20} color={colors.primary} /> : null}
-              </Pressable>
-            )}
-            ListEmptyComponent={<Text style={styles.empty}>No matches</Text>}
-          />
+          {/* The search keyboard must not hide the end of the list. */}
+          <KeyboardAvoidingView style={styles.list} behavior="padding">
+            <FlatList
+              data={filtered}
+              keyExtractor={(item) => item}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: item === value }}
+                  onPress={() => choose(item)}
+                  style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}>
+                  <Text style={styles.optionText}>{item}</Text>
+                  {optionHint?.(item) ? (
+                    <Text style={styles.optionHint}>{optionHint(item)}</Text>
+                  ) : null}
+                  {item === value ? (
+                    <Icon name="checkmark" size={20} color={colors.primary} />
+                  ) : null}
+                </Pressable>
+              )}
+              ListEmptyComponent={<Text style={styles.empty}>No matches</Text>}
+            />
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
     </View>

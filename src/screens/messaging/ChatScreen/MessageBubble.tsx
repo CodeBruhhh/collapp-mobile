@@ -23,6 +23,20 @@ type Props = {
 
 const MIN_ASPECT = 0.6;
 const MAX_ASPECT = 1.8;
+const DEFAULT_ASPECT = 4 / 3;
+
+/**
+ * Photo shapes measured this session, by message id. The list unmounts bubbles
+ * that scroll far away; a returning bubble starts at its real size instead of
+ * opening at 4:3 and jumping.
+ */
+const knownAspects = new Map<string, number>();
+
+function aspectOf(width: number | undefined, height: number | undefined): number {
+  if (!width || !height) return DEFAULT_ASPECT;
+  // Rounded so tiny measuring differences can never change the size again.
+  return Math.round(Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, width / height)) * 100) / 100;
+}
 
 function fileKind(mime: string | null): string {
   if (mime === 'application/pdf') return 'PDF';
@@ -42,7 +56,9 @@ function PhotoAttachment({
 }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
-  const [aspect, setAspect] = useState(4 / 3);
+  // Unknown until the first load; the photo stays hidden until then so it is
+  // never drawn stretched into a placeholder box.
+  const [aspect, setAspect] = useState(() => knownAspects.get(message.id));
   // The sender's own copy shows instantly; fall back to the server if it is gone.
   const [localFailed, setLocalFailed] = useState(false);
   const showLocal = Boolean(message.localUri) && !localFailed;
@@ -53,6 +69,13 @@ function PhotoAttachment({
     !showLocal && viewable && !message.delivery,
   );
   const uri = showLocal ? message.localUri! : remote.data;
+  // Signed links change every few minutes. Caching by storage path means a new
+  // link reuses the downloaded photo instead of fetching and redrawing it.
+  const source = uri
+    ? showLocal || !message.attachment_path
+      ? { uri }
+      : { uri, cacheKey: `attachment:${message.attachment_path}` }
+    : null;
 
   if (message.scan_status === 'blocked') {
     return (
@@ -77,24 +100,31 @@ function PhotoAttachment({
       accessibilityLabel={`Photo ${message.attachment_name ?? ''}. Tap to view`}
       disabled={!uri}
       onPress={() => uri && onOpen(uri)}
-      style={[styles.photo, { width: PHOTO_WIDTH, height: PHOTO_WIDTH / aspect }]}>
-      {uri ? (
+      style={[
+        styles.photo,
+        { width: PHOTO_WIDTH, height: PHOTO_WIDTH / (aspect ?? DEFAULT_ASPECT) },
+      ]}>
+      {!source || aspect === undefined ? <ActivityIndicator color={colors.textMuted} /> : null}
+      {source ? (
         <Image
-          source={{ uri }}
-          style={styles.photoImage}
+          source={source}
+          style={[styles.photoImage, aspect === undefined && styles.photoHidden]}
           contentFit="cover"
-          transition={120}
+          cachePolicy="memory-disk"
           onLoad={(e) => {
-            const { width, height } = e.source;
-            if (width && height) {
-              setAspect(Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, width / height)));
-            }
+            // Measure once. Android reloads the photo for each new box size and can
+            // report slightly different dimensions each time; re-measuring then
+            // resized the box again, an endless flicker-and-reload loop.
+            const next = knownAspects.get(message.id) ?? aspectOf(e.source.width, e.source.height);
+            knownAspects.set(message.id, next);
+            setAspect(next);
           }}
-          onError={() => showLocal && setLocalFailed(true)}
+          onError={() => {
+            if (showLocal) setLocalFailed(true);
+            else setAspect((a) => a ?? DEFAULT_ASPECT);
+          }}
         />
-      ) : (
-        <ActivityIndicator color={colors.textMuted} />
-      )}
+      ) : null}
       {message.delivery === 'sending' ? (
         <View style={styles.photoOverlay}>
           <ActivityIndicator color={fixedColors.white} />

@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Masthead } from '@/components/Masthead';
 import { Wordmark } from '@/components/Wordmark';
 import { useTheme } from '@/hooks/useTheme';
+import { KeyboardAwareScrollView } from '@/lib/keyboard';
+import { KEYBOARD_GAP } from '@/styles';
 
 import { createAuthStyles } from './authStyles';
 
@@ -17,28 +19,29 @@ type AuthLayoutProps = {
   brand?: boolean;
 };
 
-/** Teal masthead over a scrolling form; the header scrolls away so the keyboard never traps it. */
+/**
+ * Teal masthead over a scrolling form. The header scrolls away, and the focused
+ * field is always scrolled above the keyboard on both platforms.
+ */
 export function AuthLayout({ children, title, subtitle, eyebrow, brand }: AuthLayoutProps) {
   const { colors } = useTheme();
   const styles = createAuthStyles(colors);
   const insets = useSafeAreaInsets();
 
   return (
-    <KeyboardAvoidingView
+    <KeyboardAwareScrollView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom }]}
-        keyboardShouldPersistTaps="handled">
-        <Masthead
-          tall={brand}
-          eyebrow={eyebrow}
-          title={title}
-          subtitle={subtitle}
-          brand={brand ? <Wordmark size={44} onAccent /> : undefined}
-        />
-        <View style={styles.body}>{children}</View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom }]}
+      bottomOffset={KEYBOARD_GAP}
+      keyboardShouldPersistTaps="handled">
+      <Masthead
+        tall={brand}
+        eyebrow={eyebrow}
+        title={title}
+        subtitle={subtitle}
+        brand={brand ? <Wordmark size={44} onAccent /> : undefined}
+      />
+      <View style={styles.body}>{children}</View>
+    </KeyboardAwareScrollView>
   );
 }

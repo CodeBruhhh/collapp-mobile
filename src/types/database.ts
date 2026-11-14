@@ -109,6 +109,7 @@ export type Database = {
       }
       applications: {
         Row: {
+          assigned_to: string | null
           college_id: string
           created_at: string
           decided_at: string | null
@@ -124,6 +125,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           college_id: string
           created_at?: string
           decided_at?: string | null
@@ -139,6 +141,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           college_id?: string
           created_at?: string
           decided_at?: string | null
@@ -242,6 +245,7 @@ export type Database = {
           province: string | null
           region: string | null
           results_release_at: string | null
+          theme: Json | null
           updated_at: string
           website: string | null
         }
@@ -257,6 +261,7 @@ export type Database = {
           province?: string | null
           region?: string | null
           results_release_at?: string | null
+          theme?: Json | null
           updated_at?: string
           website?: string | null
         }
@@ -272,6 +277,7 @@ export type Database = {
           province?: string | null
           region?: string | null
           results_release_at?: string | null
+          theme?: Json | null
           updated_at?: string
           website?: string | null
         }
@@ -535,6 +541,39 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      message_templates: {
+        Row: {
+          body: string
+          college_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          college_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          college_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       messages: {
         Row: {
@@ -1175,7 +1214,37 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      review_queue_items: {
+        Row: {
+          ai_flags: number
+          assigned_to: string | null
+          college_id: string
+          decided_at: string | null
+          documents_approved: number
+          documents_missing: number
+          documents_pending: number
+          documents_resubmit: number
+          documents_total: number
+          first_name: string | null
+          fit_score: number | null
+          held_decision: Database["public"]["Enums"]["application_status"] | null
+          id: string
+          is_flagged: boolean
+          is_missing: boolean
+          is_ready: boolean
+          is_waiting: boolean
+          last_name: string | null
+          program_id: string
+          program_name: string
+          second_program_id: string | null
+          status: Database["public"]["Enums"]["application_status"]
+          student_id: string
+          student_name: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_broadcast: {
@@ -1192,6 +1261,14 @@ export type Database = {
         }[]
       }
       admin_stats: { Args: never; Returns: Json }
+      assign_applications: {
+        Args: { p_application_ids: string[]; p_assignee: string | null }
+        Returns: number
+      }
+      college_reviewers: {
+        Args: never
+        Returns: { full_name: string; id: string }[]
+      }
       my_threads: {
         Args: never
         Returns: {
@@ -1265,8 +1342,26 @@ export type Database = {
         Args: { p_kind: string; p_limit: number; p_user: string }
         Returns: boolean
       }
+      program_seats: {
+        Args: never
+        Returns: {
+          admitted: number
+          held: number
+          program_id: string
+          slots: number | null
+        }[]
+      }
       release_decisions: {
         Args: { p_application_ids?: string[] }
+        Returns: Json
+      }
+      review_queue_counts: {
+        Args: {
+          p_assignee?: string | null
+          p_program_id?: string | null
+          p_search?: string | null
+          p_view?: string | null
+        }
         Returns: Json
       }
       schedule_decision_release: {

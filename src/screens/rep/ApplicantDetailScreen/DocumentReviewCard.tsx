@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { AiDocumentCheck } from '@/components/AiDocumentCheck';
 import { Button } from '@/components/Button';
@@ -16,6 +16,12 @@ import {
   reviewStatusColor,
   type ReviewStatus,
 } from '@/features/applications/status';
+import {
+  fillTemplate,
+  templatesFor,
+  type MessageTemplate,
+  type TemplateValues,
+} from '@/features/rep/templates';
 import { useTheme } from '@/hooks/useTheme';
 import { notify } from '@/lib/feedback';
 import { signedUrl } from '@/lib/storage';
@@ -33,6 +39,10 @@ type DocumentReviewCardProps = {
   aiAwaiting?: boolean;
   onRecheck?: () => void;
   rechecking?: boolean;
+  /** Saved templates; resubmission ones are offered when writing a request. */
+  templates?: MessageTemplate[];
+  /** Student, program and college for filling templates (the document is added here). */
+  templateValues?: TemplateValues;
 };
 
 /** SDD screen 22 — open a submitted file and approve, reject or request a resubmission. */
@@ -44,6 +54,8 @@ export function DocumentReviewCard({
   aiAwaiting,
   onRecheck,
   rechecking,
+  templates = [],
+  templateValues = {},
 }: DocumentReviewCardProps) {
   const { colors } = useTheme();
   const styles = createScreenStyles(colors);
@@ -163,6 +175,32 @@ export function DocumentReviewCard({
 
       {noteMode ? (
         <View style={styles.section}>
+          {noteMode === 'resubmit' ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.templateChips}
+              accessibilityLabel="Request templates">
+              {templatesFor(templates, 'resubmit').map((t) => (
+                <Pressable
+                  key={t.id ?? t.title}
+                  accessibilityRole="button"
+                  accessibilityHint="Fills in the request"
+                  onPress={() =>
+                    setNote(
+                      fillTemplate(t.body, { ...templateValues, document: document.label }).slice(
+                        0,
+                        1000,
+                      ),
+                    )
+                  }
+                  style={({ pressed }) => [styles.templateChip, pressed && styles.pressedChip]}>
+                  <Text style={styles.templateChipText}>{t.title}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : null}
           <TextField
             label={noteMode === 'resubmit' ? 'What should the student fix?' : 'Reason (optional)'}
             value={note}

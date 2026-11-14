@@ -128,6 +128,13 @@ export function AccountsScreen() {
             },
           ]
         : []),
+      {
+        label: 'Add representative',
+        hint: 'Create another rep account for this college',
+        onPress: () => {
+          router.push({ pathname: '/admin/college/[id]/rep', params: { id: c.id } });
+        },
+      },
     ];
   }
 

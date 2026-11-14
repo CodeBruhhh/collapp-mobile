@@ -117,6 +117,24 @@ export async function createCollege(input: CreateCollegeInput) {
   return data!;
 }
 
+/** Adds another representative to an existing college (Edge Function, service role). */
+export async function createRep(input: {
+  collegeId: string;
+  rep: { fullName: string; email: string; password: string };
+}) {
+  const { data, error } = await supabase.functions.invoke<{ repId: string }>('admin-create-rep', {
+    body: input,
+  });
+  if (error) {
+    if (error instanceof FunctionsHttpError) {
+      const payload = await error.context.json().catch(() => null);
+      throw new Error(payload?.error ?? error.message);
+    }
+    throw error;
+  }
+  return data!;
+}
+
 // ---------------------------------------------------------------- compliance
 
 export type AuditEntry = Pick<

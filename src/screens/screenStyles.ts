@@ -45,6 +45,22 @@ export const createScreenStyles = (c: ThemeColors) =>
     },
     docPreviewImage: { width: '100%', height: '100%' },
     postImage: { width: '100%', aspectRatio: 16 / 9, borderRadius: radius.md },
+    /** A college's three page colors, side by side. */
+    swatches: { flexDirection: 'row', gap: 3 },
+    swatch: {
+      width: 14,
+      height: 36,
+      borderRadius: radius.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+    },
+    /** Square preview of a post's image at the start of a ledger row. */
+    postThumb: {
+      width: 64,
+      height: 64,
+      borderRadius: radius.md,
+      backgroundColor: c.surfaceMuted,
+    },
     headerIcon: {
       width: TOUCH_TARGET,
       height: TOUCH_TARGET,
@@ -52,6 +68,8 @@ export const createScreenStyles = (c: ThemeColors) =>
       justifyContent: 'center',
     },
     headerBlock: { gap: spacing.sm },
+    /** Who is reviewing an applicant, under its name. */
+    reviewer: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm },
     reason: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
     footerHint: {
       fontFamily: fonts.regular,
@@ -90,6 +108,25 @@ export const createScreenStyles = (c: ThemeColors) =>
       borderBottomColor: c.border,
     },
     stickyColumn: { flex: 1, gap: spacing.sm },
+    /** Quick-fill choices above a message field (saved templates). */
+    templateChips: { gap: spacing.sm },
+    templateChip: {
+      justifyContent: 'center',
+      minHeight: 32,
+      paddingHorizontal: spacing.md - 4,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    pressedChip: { backgroundColor: c.surfaceMuted },
+    templateChipText: { fontFamily: fonts.medium, fontSize: fontSize.sm, color: c.text },
+    templateHint: { paddingBottom: spacing.sm },
+    templatePreview: {
+      padding: spacing.md - 4,
+      borderRadius: radius.md,
+      backgroundColor: c.surfaceMuted,
+    },
     /** Ledger lists: rows sit flush, the rules separate them. */
     listContent: { padding: rhythm.gutter, paddingBottom: spacing.xl },
     listHeader: { gap: spacing.md, paddingBottom: spacing.md },

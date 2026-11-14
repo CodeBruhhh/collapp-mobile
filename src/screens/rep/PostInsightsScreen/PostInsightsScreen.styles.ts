@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { fonts, rhythm, spacing, type, type ThemeColors } from '@/styles';
+import { fonts, radius, rhythm, spacing, type, type ThemeColors } from '@/styles';
 
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -16,6 +16,13 @@ export const createStyles = (c: ThemeColors) =>
       letterSpacing: -0.8,
       color: c.text,
     },
+    imageFrame: {
+      marginTop: spacing.md,
+      overflow: 'hidden',
+      borderRadius: radius.md,
+      backgroundColor: c.surfaceMuted,
+    },
+    image: { width: '100%', aspectRatio: 16 / 9 },
     figures: {
       flexDirection: 'row',
       gap: rhythm.section,

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 import { AiDocumentCheck } from '@/components/AiDocumentCheck';
 import { Button } from '@/components/Button';
@@ -14,11 +14,18 @@ import type { Requirement } from '@/features/colleges/api';
 import { useTheme } from '@/hooks/useTheme';
 import { ask, notify } from '@/lib/feedback';
 import { pickDocumentFile, pickPhoto } from '@/lib/pickers';
-import { scanDocument } from '@/lib/scanner';
+import { MAX_SCAN_PAGES, scanPages } from '@/lib/scanner';
 import type { LocalFile } from '@/lib/storage';
 import { getErrorMessage } from '@/lib/validation';
 
 import { createStyles } from './ApplyScreen.styles';
+
+/**
+ * iOS can't present the scanner while the review sheet is still sliding away;
+ * wait out its close animation first.
+ */
+const afterSheetCloses = (action: () => void) =>
+  setTimeout(action, Platform.OS === 'ios' ? 400 : 0);
 
 type RequirementUploadProps = {
   requirement: Requirement;
@@ -48,7 +55,7 @@ export function RequirementUpload({
 }: RequirementUploadProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
-  const [scan, setScan] = useState<LocalFile | null>(null);
+  const [pages, setPages] = useState<LocalFile[] | null>(null);
   const [busy, setBusy] = useState(false);
   const canChange = !locked && document?.review_status !== 'approved';
 
@@ -63,13 +70,33 @@ export function RequirementUpload({
     }
   }
 
-  async function startScan() {
+  /** Scan one or more pages; `existing` pages stay in front of the new ones. */
+  async function startScan(existing: LocalFile[] = []) {
     try {
-      const file = await scanDocument(`${requirement.label}.jpg`);
-      if (file) setScan(file);
+      const result = await scanPages(MAX_SCAN_PAGES - existing.length, `${requirement.label}.jpg`);
+      if (!result) {
+        // Cancelling "add page" keeps the pages already scanned.
+        if (existing.length) setPages(existing);
+        return;
+      }
+      setPages([...existing, ...result.pages]);
+      if (result.dropped) {
+        notify.info(
+          `Up to ${MAX_SCAN_PAGES} pages`,
+          `${result.dropped} extra page${result.dropped === 1 ? ' was' : 's were'} left out.`,
+        );
+      }
     } catch (e) {
+      if (existing.length) setPages(existing);
       notify.error('Scanner unavailable', getErrorMessage(e));
     }
+  }
+
+  /** The scanner opens full screen, so the review sheet steps aside meanwhile. */
+  function addPages() {
+    const existing = pages ?? [];
+    setPages(null);
+    afterSheetCloses(() => startScan(existing));
   }
 
   async function choose(source: 'file' | 'library') {
@@ -86,7 +113,7 @@ export function RequirementUpload({
     ask(`Replace ${requirement.label}`, undefined, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Choose file', onPress: () => choose('file') },
-      { text: 'Scan', onPress: startScan },
+      { text: 'Scan', onPress: () => startScan() },
     ]);
   }
 
@@ -183,7 +210,7 @@ export function RequirementUpload({
       ) : (
         <View style={styles.reqActions}>
           <View style={styles.flex}>
-            <Button label="Scan" onPress={startScan} loading={busy} />
+            <Button label="Scan" onPress={() => startScan()} loading={busy} />
           </View>
           <View style={styles.flex}>
             <Button variant="secondary" label="Attach" onPress={promptAttach} disabled={busy} />
@@ -192,15 +219,17 @@ export function RequirementUpload({
       )}
 
       <ScanPreview
-        file={scan}
+        pages={pages}
         title={requirement.label}
+        onChange={setPages}
+        onAddPages={pages && pages.length < MAX_SCAN_PAGES ? addPages : undefined}
         onRetake={() => {
-          setScan(null);
-          startScan();
+          setPages(null);
+          afterSheetCloses(() => startScan());
         }}
-        onCancel={() => setScan(null)}
+        onCancel={() => setPages(null)}
         onConfirm={(file) => {
-          setScan(null);
+          setPages(null);
           save(file);
         }}
       />

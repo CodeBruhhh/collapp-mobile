@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { DeadlineMark } from '@/components/DeadlineMark';
@@ -21,7 +21,9 @@ import { useCollege } from '@/features/colleges/hooks';
 import { fetchStudentProfile } from '@/features/profile/api';
 import { useTheme } from '@/hooks/useTheme';
 import { ask, notify } from '@/lib/feedback';
+import { KeyboardAwareScrollView } from '@/lib/keyboard';
 import { getErrorMessage } from '@/lib/validation';
+import { KEYBOARD_GAP } from '@/styles';
 
 import { createStyles } from './ApplyScreen.styles';
 import { EssayFeedback } from './EssayFeedback';
@@ -166,7 +168,10 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
   return (
     <View style={styles.root}>
       <Stack.Screen options={{ title: 'Application' }} />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.content}
+        bottomOffset={KEYBOARD_GAP}
+        keyboardShouldPersistTaps="handled">
         <Stepper steps={STEPS} current={step} named />
 
         <View style={styles.heading}>
@@ -236,8 +241,8 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
               Supporting documents
             </Text>
             <Text style={styles.meta}>
-              Scan with your camera or attach a PDF/photo (up to 5 MB). Scans are compressed under 2
-              MB. You can do this offline.
+              Scan with your camera or attach a PDF/photo (up to 5 MB). A scan can have several
+              pages; they are combined into one PDF. You can do this offline.
             </Text>
             <View>
               {documentReqs.map((req) => {
@@ -337,7 +342,7 @@ export function ApplyScreen({ collegeId }: { collegeId: string }) {
             <Button variant="link" label="Delete draft" onPress={handleDelete} />
           </View>
         ) : null}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <StickyActionBar>
         {step > 0 ? (

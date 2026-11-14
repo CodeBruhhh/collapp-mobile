@@ -24,7 +24,10 @@ type MastheadProps = {
   tall?: boolean;
 };
 
-/** The teal notched header for a screen with no navigation bar above it. */
+/**
+ * The teal notched header for a screen with no navigation bar above it. On a
+ * college page it takes the college's colours and gains a stripe.
+ */
 export function Masthead({
   title,
   subtitle,
@@ -35,7 +38,7 @@ export function Masthead({
   stats,
   tall,
 }: MastheadProps) {
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, brand: college } = useTheme();
   const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
 
@@ -65,6 +68,13 @@ export function Masthead({
               <Text style={styles.statLabel}>{s.label}</Text>
             </View>
           ))}
+        </View>
+      ) : null}
+      {college ? (
+        // A college page: its secondary and accent run along the bottom edge.
+        <View style={styles.stripe} accessible={false}>
+          <View style={[styles.stripeMain, { backgroundColor: college.stripe[0] }]} />
+          <View style={[styles.stripeEnd, { backgroundColor: college.stripe[1] }]} />
         </View>
       ) : null}
       <View style={styles.notch} />

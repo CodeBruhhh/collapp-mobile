@@ -96,9 +96,23 @@ export function useThread(threadId: string) {
 
 export function useMessages(threadId: string) {
   const userId = useUserId();
+  const queryClient = useQueryClient();
+  const key = messagingKeys.messages(userId, threadId);
   return useQuery<ChatMessage[]>({
-    queryKey: messagingKeys.messages(userId, threadId),
-    queryFn: () => listMessages(threadId),
+    queryKey: key,
+    queryFn: async () => {
+      const fresh = await listMessages(threadId);
+      // Keep the sender's own copy of photos they sent. Without it every refetch
+      // (read receipts, reconnects) swapped the photo for a spinner and a download.
+      const localUris = new Map(
+        (queryClient.getQueryData<ChatMessage[]>(key) ?? [])
+          .filter((m) => m.localUri)
+          .map((m) => [m.id, m.localUri]),
+      );
+      return localUris.size
+        ? fresh.map((m) => (localUris.has(m.id) ? { ...m, localUri: localUris.get(m.id) } : m))
+        : fresh;
+    },
     enabled: Boolean(userId && threadId),
   });
 }
@@ -134,9 +148,14 @@ export function useSendMessage(threadId: string) {
       queryClient.setQueryData<ChatMessage[]>(key, (old) => upsertMessage(old ?? [], optimistic));
     },
     onError: (_error, input) => setDelivery(input.id, 'failed'),
-    onSuccess: (saved) =>
+    onSuccess: (saved, input) =>
       queryClient.setQueryData<ChatMessage[]>(key, (old) =>
-        upsertMessage(old ?? [], { ...saved, delivery: undefined }),
+        upsertMessage(old ?? [], {
+          ...saved,
+          delivery: undefined,
+          // A refetch during the upload may have dropped the optimistic copy.
+          localUri: input.attachment?.uri,
+        }),
       ),
     onSettled: () => queryClient.invalidateQueries({ queryKey: messagingKeys.threads(userId) }),
   });

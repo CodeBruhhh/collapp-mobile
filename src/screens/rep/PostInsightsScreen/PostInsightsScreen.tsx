@@ -1,9 +1,12 @@
+import { Image } from 'expo-image';
 import { router, Stack } from 'expo-router';
-import { FlatList, Text, View } from 'react-native';
+import { useState } from 'react';
+import { FlatList, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { CommentRow } from '@/components/CommentRow';
 import { Icon } from '@/components/Icon';
+import { ImageViewer } from '@/components/ImageViewer';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { StickyActionBar } from '@/components/StickyActionBar';
 import { useComments, useDeleteComment, useEngagement } from '@/features/feed/hooks';
@@ -12,6 +15,7 @@ import { usePosts } from '@/features/rep/hooks';
 import { POST_TYPE_LABELS } from '@/features/rep/posts';
 import { useTheme } from '@/hooks/useTheme';
 import { ask, notify } from '@/lib/feedback';
+import { publicUrl } from '@/lib/storage';
 import { timeAgo } from '@/lib/time';
 import { getErrorMessage } from '@/lib/validation';
 
@@ -25,6 +29,7 @@ export function PostInsightsScreen({ id }: { id: string }) {
   const engagement = useEngagement([id]);
   const comments = useComments(id);
   const deleteComment = useDeleteComment(id);
+  const [viewing, setViewing] = useState(false);
 
   if (posts.isPending) return <LoadingState variant="detail" />;
   if (posts.isError) return <ErrorState error={posts.error} onRetry={posts.refetch} />;
@@ -32,6 +37,7 @@ export function PostInsightsScreen({ id }: { id: string }) {
   if (!post) return <ErrorState error={new Error('Post not found.')} />;
 
   const stats = engagement.data?.[id] ?? NO_ENGAGEMENT;
+  const image = publicUrl('college-media', post.media_path);
 
   function confirmDelete(commentId: string, author: string) {
     ask('Delete this comment?', `Students will no longer see ${author}'s comment.`, [
@@ -67,6 +73,20 @@ export function PostInsightsScreen({ id }: { id: string }) {
             <Text accessibilityRole="header" style={styles.title}>
               {post.title}
             </Text>
+            {image ? (
+              <Pressable
+                accessibilityRole="imagebutton"
+                accessibilityLabel={`Image for ${post.title}. Tap to view`}
+                onPress={() => setViewing(true)}
+                style={styles.imageFrame}>
+                <Image
+                  source={{ uri: image }}
+                  style={styles.image}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                />
+              </Pressable>
+            ) : null}
             <View style={styles.figures}>
               <View accessible>
                 <Text style={styles.figure}>{totalReactions(stats)}</Text>
@@ -120,6 +140,11 @@ export function PostInsightsScreen({ id }: { id: string }) {
           />
         </View>
       </StickyActionBar>
+      <ImageViewer
+        uri={viewing ? image : null}
+        title={post.title}
+        onClose={() => setViewing(false)}
+      />
     </View>
   );
 }

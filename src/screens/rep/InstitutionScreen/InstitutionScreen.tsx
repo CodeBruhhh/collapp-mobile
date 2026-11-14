@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { CollegeLogo } from '@/components/CollegeLogo';
@@ -16,10 +16,15 @@ import { deadlineLabel } from '@/features/applications/status';
 import type { RepCollege } from '@/features/rep/api';
 import { useMyCollege, useRepActions } from '@/features/rep/hooks';
 import { institutionSchema } from '@/features/rep/schemas';
+import { themeFromLogo } from '@/features/theme/logo';
+import { parseCollegeTheme } from '@/features/theme/schema';
 import { useTheme } from '@/hooks/useTheme';
 import { notify } from '@/lib/feedback';
+import { KeyboardAwareScrollView } from '@/lib/keyboard';
 import { pickPhoto } from '@/lib/pickers';
+import type { LocalFile } from '@/lib/storage';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
+import { KEYBOARD_GAP } from '@/styles';
 
 import { createScreenStyles } from '@/screens/screenStyles';
 
@@ -53,6 +58,7 @@ function InstitutionForm({ college }: { college: RepCollege }) {
     (value: (typeof form)[K]) =>
       setForm((f) => ({ ...f, [key]: value }));
 
+  const theme = parseCollegeTheme(college.theme);
   const isPublished = college.profile_status === 'published';
   const openPrograms = college.programs.filter((p) => p.is_open).length;
   const canPublish = openPrograms > 0 && college.requirements.length > 0;
@@ -88,18 +94,34 @@ function InstitutionForm({ college }: { college: RepCollege }) {
   }
 
   async function changeLogo() {
+    let file: LocalFile | null;
     try {
-      const file = await pickPhoto('library');
-      if (file) await actions.uploadLogo.mutateAsync([college, file]);
+      file = await pickPhoto('library');
+      if (!file) return;
+      await actions.uploadLogo.mutateAsync([college, file]);
     } catch (e) {
       notify.error('Upload failed', getErrorMessage(e));
+      return;
+    }
+    // Page colors follow the logo until a rep customizes them.
+    if (theme?.source === 'custom') return;
+    try {
+      const picked = await themeFromLogo(file.uri);
+      await actions.updateCollege.mutateAsync({ id: college.id, changes: { theme: picked } });
+      notify.success(
+        'Page colors updated',
+        'They now match your new logo. Adjust them under Page theme.',
+      );
+    } catch (e) {
+      notify.info('Logo saved', `Your page colors were not changed. ${getErrorMessage(e)}`);
     }
   }
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={styles.root}
       contentContainerStyle={styles.page}
+      bottomOffset={KEYBOARD_GAP}
       keyboardShouldPersistTaps="handled">
       <View style={styles.overview}>
         <PageHeading
@@ -130,6 +152,32 @@ function InstitutionForm({ college }: { college: RepCollege }) {
           value={isPublished}
           onChange={togglePublished}
           disabled={actions.updateCollege.isPending}
+        />
+      </Section>
+
+      <Section title="Page theme">
+        <LedgerRow
+          title={theme ? 'Your colors' : 'CollApp colors'}
+          subtitle={
+            !theme
+              ? college.logo_path
+                ? 'Pick colors from your logo for your page'
+                : 'Upload a logo to pick colors from it'
+              : theme.source === 'custom'
+                ? 'Customized by your team'
+                : 'Picked from your logo'
+          }
+          leading={
+            <View style={styles.swatches} accessible={false}>
+              {(theme
+                ? [theme.primary, theme.secondary, theme.accent]
+                : [colors.primary, colors.status.submitted, colors.status.underReview]
+              ).map((hex, i) => (
+                <View key={i} style={[styles.swatch, { backgroundColor: hex }]} />
+              ))}
+            </View>
+          }
+          onPress={() => router.push('/rep/theme')}
         />
       </Section>
 
@@ -215,6 +263,14 @@ function InstitutionForm({ college }: { college: RepCollege }) {
           onPress={() => router.push('/rep/requirements')}
         />
       </Section>
-    </ScrollView>
+
+      <Section title="Reviewing">
+        <LedgerRow
+          title="Message templates"
+          subtitle="Saved wording for admissions, declines and resubmission requests"
+          onPress={() => router.push('/rep/templates')}
+        />
+      </Section>
+    </KeyboardAwareScrollView>
   );
 }

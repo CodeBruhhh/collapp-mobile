@@ -1,9 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
+import { useState, type ReactNode } from 'react';
+import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/useTheme';
+import { KeyboardAwareScrollView, KeyboardStickyView } from '@/lib/keyboard';
+import { KEYBOARD_GAP } from '@/styles';
 
 import { createStyles } from './FormScreen.styles';
 
@@ -17,10 +18,16 @@ type FormScreenProps = {
   inTab?: boolean;
 };
 
-/** Keyboard-aware, scrollable container for form screens. */
+/**
+ * Scrollable container for form screens. The focused field is always scrolled
+ * clear of the keyboard, and the footer rides on top of the keyboard so the
+ * primary action stays reachable while typing.
+ */
 export function FormScreen({ children, footer, underHeader, inTab }: FormScreenProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const insets = useSafeAreaInsets();
+  const [footerHeight, setFooterHeight] = useState(0);
   const edges: Edge[] = ['left', 'right'];
   if (!underHeader) edges.push('top');
   if (!footer && !inTab) edges.push('bottom');
@@ -28,14 +35,22 @@ export function FormScreen({ children, footer, underHeader, inTab }: FormScreenP
   return (
     <SafeAreaView style={styles.root} edges={edges}>
       {underHeader ? null : <StatusBar style="auto" />}
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {children}
-        </ScrollView>
-        {footer}
-      </KeyboardAvoidingView>
+        contentContainerStyle={styles.content}
+        // The footer covers the space just above the keyboard; keep fields above it.
+        bottomOffset={KEYBOARD_GAP + footerHeight}
+        keyboardShouldPersistTaps="handled">
+        {children}
+      </KeyboardAwareScrollView>
+      {footer ? (
+        <KeyboardStickyView
+          // The footer's own safe-area padding tucks behind the keyboard.
+          offset={{ opened: insets.bottom }}
+          onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height - insets.bottom)}>
+          {footer}
+        </KeyboardStickyView>
+      ) : null}
     </SafeAreaView>
   );
 }

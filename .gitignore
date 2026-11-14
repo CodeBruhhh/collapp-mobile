@@ -51,3 +51,6 @@ skills-lock.json
 
 # supabase cli cache
 supabase/.temp/
+
+# service-role key for the demo seed script (never commit)
+.env.seed

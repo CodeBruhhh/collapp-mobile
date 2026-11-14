@@ -1,6 +1,7 @@
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionSheet } from '@/components/ActionSheet';
@@ -8,19 +9,34 @@ import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { TextField } from '@/components/TextField';
 import { ToggleRow } from '@/components/ToggleRow';
+import {
+  fillTemplate,
+  templatesFor,
+  type MessageTemplate,
+  type TemplateKind,
+} from '@/features/rep/templates';
 import { useTheme } from '@/hooks/useTheme';
+import { KeyboardAvoidingView } from '@/lib/keyboard';
 
 import { createDecisionStyles } from './DecisionSheet.styles';
 
 export type Decision = 'accept' | 'reject';
 type Program = { id: string; name: string };
 
+/** Seats for a program: its limit (null = none) and admissions already sent or held. */
+export type SeatInfo = { slots: number | null; taken: number };
+
 type DecisionSheetProps = {
   visible: boolean;
   onClose: () => void;
   studentFirstName: string;
+  studentFullName: string;
   collegeName: string;
   programs: Program[];
+  /** The college's saved templates (all kinds); built-in ones are added here. */
+  templates: MessageTemplate[];
+  /** Seats per program, to warn before admitting past a program's limit. */
+  seatsFor?: (programId: string) => SeatInfo | undefined;
   /** Admitting needs every document approved; declining is always possible. */
   canAdmit: boolean;
   submitting: boolean;
@@ -39,11 +55,20 @@ type DecisionSheetProps = {
 
 const MESSAGE_MAX = 2000;
 
-/** Starting text for each decision; the representative edits it before sending. */
-function template(decision: Decision, name: string, program: string, college: string): string {
-  return decision === 'accept'
-    ? `Congratulations, ${name}! We are pleased to offer you admission to ${program} at ${college}. We will send the next steps for enrollment soon.`
-    : `Thank you for applying to ${college}, ${name}. After careful review, we are unable to offer you admission at this time. We wish you every success in your studies.`;
+const KIND: Record<Decision, TemplateKind> = { accept: 'admit', reject: 'decline' };
+
+/** "42 of 50 seats taken", and whether one more admission goes past the limit. */
+function seatNote(
+  seats: SeatInfo | undefined,
+): { text: string; short: string; over: boolean } | null {
+  if (!seats || seats.slots === null) return null;
+  const over = seats.taken >= seats.slots;
+  const taken = `${seats.taken} of ${seats.slots} seats taken`;
+  return {
+    text: over ? `Full: ${taken}. Admitting goes over the limit.` : taken,
+    short: over ? 'Full' : taken,
+    over,
+  };
 }
 
 /** SDD screen 21 — the final admission decision, in a sheet that stays above the keyboard. */
@@ -51,8 +76,11 @@ export function DecisionSheet({
   visible,
   onClose,
   studentFirstName,
+  studentFullName,
   collegeName,
   programs,
+  templates,
+  seatsFor,
   canAdmit,
   submitting,
   initial,
@@ -69,21 +97,39 @@ export function DecisionSheet({
   // Only replace the text with a new template while the rep hasn't edited it.
   const [edited, setEdited] = useState(Boolean(initial));
   const [confirming, setConfirming] = useState(false);
+  const [picking, setPicking] = useState(false);
+  // The template in use; refilled (e.g. for another program) until the rep edits the text.
+  const [chosen, setChosen] = useState<MessageTemplate | null>(null);
   const [hold, setHold] = useState(Boolean(defaultHold || initial));
 
   const programName = programs.find((p) => p.id === programId)?.name ?? programs[0]?.name ?? '';
+  const seats = decision === 'accept' && programId ? seatNote(seatsFor?.(programId)) : null;
+
+  function fill(t: MessageTemplate, program: string) {
+    return fillTemplate(t.body, {
+      first_name: studentFirstName,
+      full_name: studentFullName,
+      program,
+      college: collegeName,
+    });
+  }
+
+  function applyTemplate(t: MessageTemplate, program = programName) {
+    setChosen(t);
+    setMessage(fill(t, program));
+    setEdited(false);
+  }
 
   function choose(next: Decision) {
     setDecision(next);
-    if (!edited) setMessage(template(next, studentFirstName, programName, collegeName));
+    // The college's own first template for this decision, else CollApp's.
+    if (!edited) applyTemplate(templatesFor(templates, KIND[next])[0]);
   }
 
   function chooseProgram(id: string) {
     setProgramId(id);
     const name = programs.find((p) => p.id === id)?.name ?? '';
-    if (decision === 'accept' && !edited) {
-      setMessage(template('accept', studentFirstName, name, collegeName));
-    }
+    if (decision === 'accept' && !edited && chosen) setMessage(fill(chosen, name));
   }
 
   const ready =
@@ -186,12 +232,28 @@ export function DecisionSheet({
                       <View style={styles.flex}>
                         <Text style={styles.programName}>{p.name}</Text>
                         <Text style={styles.optionHint}>
-                          {i === 0 ? 'First choice' : 'Second choice'}
+                          {[
+                            i === 0 ? 'First choice' : 'Second choice',
+                            seatNote(seatsFor?.(p.id))?.short,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
                         </Text>
                       </View>
                     </Pressable>
                   );
                 })}
+              </View>
+            ) : null}
+
+            {seats ? (
+              <View style={styles.seatNote}>
+                <Icon
+                  name={seats.over ? 'alert-circle' : 'people'}
+                  size={16}
+                  color={seats.over ? colors.danger : colors.textMuted}
+                />
+                <Text style={[styles.seatText, seats.over && styles.seatOver]}>{seats.text}</Text>
               </View>
             ) : null}
 
@@ -208,19 +270,17 @@ export function DecisionSheet({
                   maxLength={MESSAGE_MAX}
                   hint={`${message.length}/${MESSAGE_MAX}`}
                 />
-                {edited ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => {
-                      setMessage(template(decision, studentFirstName, programName, collegeName));
-                      setEdited(false);
-                    }}
-                    hitSlop={8}
-                    style={styles.reset}>
-                    <Icon name="refresh" size={14} color={colors.primary} />
-                    <Text style={styles.resetText}>Use template</Text>
-                  </Pressable>
-                ) : null}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityHint="Replaces the message with a saved template"
+                  onPress={() => setPicking(true)}
+                  hitSlop={8}
+                  style={styles.reset}>
+                  <Icon name="document-text" size={14} color={colors.primary} />
+                  <Text style={styles.resetText}>
+                    {chosen && !edited ? `Template: ${chosen.title}` : 'Use a template'}
+                  </Text>
+                </Pressable>
               </View>
             ) : (
               <Text style={styles.prompt}>Choose a decision to write the message.</Text>
@@ -261,11 +321,14 @@ export function DecisionSheet({
               ? `Admit ${studentFirstName}?`
               : 'Decline this application?'
         }
-        message={
+        message={[
+          seats?.over ? `${programName} is full. This admission goes over its seat limit.` : null,
           hold
             ? 'The student is not notified yet. You can change or withdraw it until you release results.'
-            : 'The student is notified right away. This cannot be changed later.'
-        }
+            : 'The student is notified right away. This cannot be changed later.',
+        ]
+          .filter(Boolean)
+          .join('\n\n')}
         actions={[
           {
             label: hold ? 'Hold' : accepting ? 'Admit' : 'Decline',
@@ -274,6 +337,33 @@ export function DecisionSheet({
           },
         ]}
       />
+      <ActionSheet
+        visible={picking}
+        onClose={() => setPicking(false)}
+        eyebrow="Message templates"
+        title={decision === 'reject' ? 'Decline message' : 'Admission message'}
+        message="Names and the program are filled in for this student."
+        actions={[
+          ...(decision ? templatesFor(templates, KIND[decision]) : []).map((t) => ({
+            label: t.builtIn ? `${t.title} (CollApp)` : t.title,
+            hint: preview(fill(t, programName)),
+            onPress: () => applyTemplate(t),
+          })),
+          {
+            label: 'Manage templates',
+            hint: "Add or edit your college's saved messages",
+            onPress: () => {
+              onClose();
+              router.push('/rep/templates');
+            },
+          },
+        ]}
+      />
     </Modal>
   );
+}
+
+/** The opening of a message, for a list of choices. */
+function preview(text: string): string {
+  return text.length > 90 ? `${text.slice(0, 90).trimEnd()}...` : text;
 }

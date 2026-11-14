@@ -5,6 +5,9 @@ type ScannerModule = typeof import('react-native-document-scanner-plugin').defau
 
 let scanner: ScannerModule | null | undefined;
 
+/** Most pages one requirement's scan may have; they are combined into one PDF. */
+export const MAX_SCAN_PAGES = 10;
+
 /**
  * Load the native scanner lazily: dev builds made before it was added don't
  * contain it, and a top-level import would crash the whole app.
@@ -26,24 +29,42 @@ export function isScannerAvailable(): boolean {
   return getScanner() !== null;
 }
 
+export type ScanResult = {
+  pages: LocalFile[];
+  /** Pages beyond `maxPages` that were left out (iOS has no in-scanner limit). */
+  dropped: number;
+};
+
 /**
  * SRS 3.1.1.3 — open the native document scanner (ML Kit on Android, VisionKit
  * on iOS) which handles edge detection, perspective correction, auto-crop and
- * enhancement filters. The result is re-encoded under the 2 MB upload target.
- * Falls back to a plain camera photo when the scanner isn't in this build.
- * Returns null when the user cancels.
+ * enhancement filters. Several pages can be scanned in one go; each is
+ * re-encoded under the 2 MB upload target. Falls back to a single camera photo
+ * when the scanner isn't in this build. Returns null when the user cancels.
  */
-export async function scanDocument(name = 'scan.jpg'): Promise<LocalFile | null> {
+export async function scanPages(
+  maxPages = MAX_SCAN_PAGES,
+  name = 'scan.jpg',
+): Promise<ScanResult | null> {
   const native = getScanner();
-  if (!native) return pickPhoto('camera');
+  if (!native) {
+    const photo = await pickPhoto('camera');
+    return photo ? { pages: [photo], dropped: 0 } : null;
+  }
 
   const { scannedImages, status } = await native.scanDocument({
-    maxNumDocuments: 1,
+    maxNumDocuments: maxPages,
     croppedImageQuality: 100,
   });
   if (status === 'cancel' || !scannedImages?.length) return null;
-  const uri = scannedImages[0].startsWith('file://')
-    ? scannedImages[0]
-    : `file://${scannedImages[0]}`;
-  return compressImage(uri, name);
+
+  const base = name.replace(/\.[^.]+$/, '');
+  const kept = scannedImages.slice(0, maxPages);
+  const pages: LocalFile[] = [];
+  // One at a time: full-resolution pages decoded together can exhaust memory.
+  for (const [i, path] of kept.entries()) {
+    const uri = path.startsWith('file://') ? path : `file://${path}`;
+    pages.push(await compressImage(uri, kept.length > 1 ? `${base} p${i + 1}.jpg` : name));
+  }
+  return { pages, dropped: scannedImages.length - kept.length };
 }

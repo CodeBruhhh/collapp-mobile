@@ -23,3 +23,9 @@ export const TOUCH_TARGET = 44;
 
 /** Comfortable height for primary buttons and text fields. */
 export const CONTROL_HEIGHT = 48;
+
+/**
+ * Space kept between the focused field and the keyboard, so the hint or error
+ * line under the field stays visible while typing.
+ */
+export const KEYBOARD_GAP = 48;

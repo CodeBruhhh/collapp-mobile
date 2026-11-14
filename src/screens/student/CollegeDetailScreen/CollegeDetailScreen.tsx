@@ -14,11 +14,13 @@ import { Masthead } from '@/components/Masthead';
 import { EmptyState, ErrorState, LoadingState } from '@/components/StateView';
 import { StatusBadge } from '@/components/StatusBadge';
 import { StickyActionBar } from '@/components/StickyActionBar';
+import { BrandTheme } from '@/context/BrandThemeContext';
 import { useApplicationsWithLocal } from '@/features/applications/offline';
 import { daysUntil, deadlineLabel } from '@/features/applications/status';
 import { collegeLocation, requirementsFor } from '@/features/colleges/api';
 import { useCollege } from '@/features/colleges/hooks';
 import { useStartThread } from '@/features/messaging/hooks';
+import { parseCollegeTheme } from '@/features/theme/schema';
 import { useTheme } from '@/hooks/useTheme';
 import { notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
@@ -34,19 +36,31 @@ const peso = new Intl.NumberFormat('en-PH', {
 
 /** One compact fact (icon + short value) for a program card. */
 function Fact({ icon, label }: { icon: IconName; label: string }) {
-  const { colors } = useTheme();
+  const { colors, brand } = useTheme();
   const styles = createStyles(colors);
   return (
     <View style={styles.fact}>
-      <Icon name={icon} size={14} color={colors.textMuted} />
+      <Icon name={icon} size={14} color={brand?.accent ?? colors.textMuted} />
       <Text style={styles.factText}>{label}</Text>
     </View>
   );
 }
 
-/** SDD screen 9 — college profile, programs and requirements, with Follow and Apply. */
+/**
+ * SDD screen 9 — college profile, programs and requirements, with Follow and
+ * Apply. The page wears the college's own colours once they have loaded.
+ */
 export function CollegeDetailScreen({ id }: { id: string }) {
-  const { colors } = useTheme();
+  const college = useCollege(id);
+  return (
+    <BrandTheme brand={parseCollegeTheme(college.data?.theme)}>
+      <CollegeDetail id={id} />
+    </BrandTheme>
+  );
+}
+
+function CollegeDetail({ id }: { id: string }) {
+  const { colors, brand } = useTheme();
   const styles = createStyles(colors);
   const [tab, setTab] = useState<Tab>('about');
 
@@ -214,7 +228,7 @@ export function CollegeDetailScreen({ id }: { id: string }) {
                     <Icon
                       name={r.kind === 'essay' ? 'create' : 'document-text'}
                       size={18}
-                      color={colors.primary}
+                      color={brand?.accent ?? colors.primary}
                     />
                   }
                   trailing={!r.is_required ? <Text style={styles.optional}>Optional</Text> : null}

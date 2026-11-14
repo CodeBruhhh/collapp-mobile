@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 
@@ -11,6 +12,7 @@ import { plural, totalReactions } from '@/features/feed/reactions';
 import { POST_TYPE_LABELS } from '@/features/rep/posts';
 import { usePosts } from '@/features/rep/hooks';
 import { useTheme } from '@/hooks/useTheme';
+import { publicUrl } from '@/lib/storage';
 
 import { createScreenStyles } from '@/screens/screenStyles';
 
@@ -66,11 +68,23 @@ export function PostsScreen() {
         renderItem={({ item, index }) => {
           const published = item.status === 'published';
           const stats = engagement.data?.[item.id];
+          const image = publicUrl('college-media', item.media_path);
           return (
             <LedgerRow
               first={index === 0}
               title={item.title}
               subtitle={item.body}
+              leading={
+                image ? (
+                  <Image
+                    source={{ uri: image }}
+                    style={styles.postThumb}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    accessible={false}
+                  />
+                ) : undefined
+              }
               onPress={() => (published ? openInsights(item.id) : openEditor(item.id))}>
               <View style={styles.metaLine}>
                 <StatusBadge

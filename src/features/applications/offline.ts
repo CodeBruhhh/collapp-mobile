@@ -92,6 +92,7 @@ export function useApplicationsWithLocal() {
           decided_at: null,
           decision_message: null,
           final_program_id: null,
+          assigned_to: null,
           created_at: d.local_updated_at,
           updated_at: d.local_updated_at,
           college: {

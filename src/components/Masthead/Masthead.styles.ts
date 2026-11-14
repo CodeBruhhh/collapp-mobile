@@ -40,7 +40,10 @@ export const createStyles = (c: ThemeColors) =>
     },
     statValue: { fontFamily: fonts.serif, fontSize: 22, lineHeight: 28, color: c.onPrimary },
     statLabel: { ...type.caption, fontSize: 12, color: c.onPrimary },
-    // Cut corner, in the page color behind it.
+    stripe: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 6, flexDirection: 'row' },
+    stripeMain: { flex: 2 },
+    stripeEnd: { flex: 1 },
+    // Cut corner, in the page color behind it (drawn over the stripe's end).
     notch: {
       position: 'absolute',
       right: 0,

@@ -1,4 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { useAuth } from '@/context/AuthContext';
 
@@ -8,7 +14,6 @@ import {
   deleteRequirement,
   getApplicant,
   getMyCollege,
-  listApplicants,
   listPosts,
   listStagedDecisions,
   releaseDecisions,
@@ -23,12 +28,26 @@ import {
   updateCollege,
   uploadCollegeLogo,
 } from './api';
+import {
+  assignApplications,
+  fetchProgramSeats,
+  fetchQueueCounts,
+  fetchQueuePage,
+  fetchReviewers,
+  type QueueFilters,
+} from './queue';
+import { deleteTemplate, listTemplates, saveTemplate } from './templates';
 
 export const repKeys = {
   all: ['rep'] as const,
   college: (id: string) => ['rep', 'college', id] as const,
   posts: (id: string) => ['rep', 'posts', id] as const,
-  applicants: (id: string) => ['rep', 'applicants', id] as const,
+  queue: (id: string, filters: QueueFilters) => ['rep', 'queue', id, filters] as const,
+  queueCounts: (id: string, filters: Partial<QueueFilters>) =>
+    ['rep', 'queue-counts', id, filters] as const,
+  seats: (id: string) => ['rep', 'seats', id] as const,
+  reviewers: (id: string) => ['rep', 'reviewers', id] as const,
+  templates: (id: string) => ['rep', 'templates', id] as const,
   applicant: (id: string) => ['rep', 'applicant', id] as const,
   staged: (id: string) => ['rep', 'staged', id] as const,
 };
@@ -83,13 +102,94 @@ export function usePosts() {
   });
 }
 
-export function useApplicants() {
+/**
+ * The review queue, a page at a time; the database filters, sorts and counts.
+ * Changing filters keeps the old rows on screen until the new ones arrive.
+ */
+export function useReviewQueue(filters: QueueFilters, { enabled = true } = {}) {
+  const collegeId = useCollegeId();
+  const userId = useAuth().session?.user.id ?? '';
+  return useInfiniteQuery({
+    queryKey: repKeys.queue(collegeId, filters),
+    queryFn: ({ pageParam }) => fetchQueuePage(collegeId, userId, filters, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (last, pages) => {
+      if (filters.shortlist) return undefined;
+      const loaded = pages.reduce((n, p) => n + p.rows.length, 0);
+      return last.rows.length && loaded < last.total ? loaded : undefined;
+    },
+    placeholderData: keepPreviousData,
+    enabled: enabled && Boolean(collegeId && userId),
+  });
+}
+
+/** Status-tab and quick-view counts for the queue's current filters. */
+export function useQueueCounts(
+  filters: Pick<QueueFilters, 'programId' | 'assignee' | 'search' | 'view'>,
+) {
   const collegeId = useCollegeId();
   return useQuery({
-    queryKey: repKeys.applicants(collegeId),
-    queryFn: () => listApplicants(collegeId),
+    queryKey: repKeys.queueCounts(collegeId, filters),
+    queryFn: () => fetchQueueCounts(filters),
+    placeholderData: keepPreviousData,
     enabled: Boolean(collegeId),
   });
+}
+
+/** Admitted and held admissions per program, against its slots. */
+export function useProgramSeats() {
+  const collegeId = useCollegeId();
+  return useQuery({
+    queryKey: repKeys.seats(collegeId),
+    queryFn: fetchProgramSeats,
+    enabled: Boolean(collegeId),
+    // A Map doesn't survive JSON persistence.
+    meta: { persist: false },
+  });
+}
+
+/** The college's active representatives, for assigning reviews. */
+export function useReviewers() {
+  const collegeId = useCollegeId();
+  return useQuery({
+    queryKey: repKeys.reviewers(collegeId),
+    queryFn: fetchReviewers,
+    enabled: Boolean(collegeId),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useAssignApplications() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (a: { ids: string[]; assignee: string | null }) =>
+      assignApplications(a.ids, a.assignee),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: repKeys.all }),
+  });
+}
+
+/** Saved message templates shared by the college's representatives. */
+export function useTemplates() {
+  const collegeId = useCollegeId();
+  return useQuery({
+    queryKey: repKeys.templates(collegeId),
+    queryFn: () => listTemplates(collegeId),
+    enabled: Boolean(collegeId),
+  });
+}
+
+export function useTemplateActions() {
+  const queryClient = useQueryClient();
+  const collegeId = useCollegeId();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: repKeys.templates(collegeId) });
+  return {
+    save: useMutation({
+      mutationFn: (t: Omit<Parameters<typeof saveTemplate>[0], 'collegeId'>) =>
+        saveTemplate({ ...t, collegeId }),
+      onSuccess: refresh,
+    }),
+    remove: useMutation({ mutationFn: deleteTemplate, onSuccess: refresh }),
+  };
 }
 
 export function useApplicant(id: string | undefined) {

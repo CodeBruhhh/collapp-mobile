@@ -13,28 +13,46 @@ import {
 /** Scans and photos are shrunk to stay under the 2 MB upload target (SRS 3.4). */
 const TARGET_IMAGE_BYTES = 2 * 1024 * 1024;
 
-/** Re-encode a photo as JPEG, lowering size/quality until it fits the target. */
-export async function compressImage(uri: string, name = 'photo.jpg'): Promise<LocalFile> {
+/**
+ * Re-encode a photo as JPEG, lowering size/quality until it fits `targetBytes`.
+ * Photos already narrower than a step keep their size: upscaling only adds
+ * bytes and memory.
+ */
+export async function compressImage(
+  uri: string,
+  name = 'photo.jpg',
+  targetBytes = TARGET_IMAGE_BYTES,
+): Promise<LocalFile> {
   const attempts = [
     { width: 2000, compress: 0.8 },
     { width: 1600, compress: 0.7 },
     { width: 1280, compress: 0.6 },
+    // Only reached for tight budgets, e.g. many pages sharing one PDF.
+    { width: 1024, compress: 0.55 },
+    { width: 900, compress: 0.5 },
   ];
-  let result: LocalFile | null = null;
-  for (const { width, compress } of attempts) {
-    const context = ImageManipulator.manipulate(uri);
-    context.resize({ width });
-    const rendered = await context.renderAsync();
-    const saved = await rendered.saveAsync({ compress, format: SaveFormat.JPEG });
-    result = {
-      uri: saved.uri,
-      name: name.replace(/\.[^.]+$/, '') + '.jpg',
-      mimeType: 'image/jpeg',
-      size: new File(saved.uri).size,
-    };
-    if (result.size <= TARGET_IMAGE_BYTES) break;
+  // Decode once; every attempt starts from this copy.
+  const original = await ImageManipulator.manipulate(uri).renderAsync();
+  try {
+    let result: LocalFile | null = null;
+    for (const { width, compress } of attempts) {
+      const context = ImageManipulator.manipulate(original);
+      if (original.width > width) context.resize({ width });
+      const rendered = await context.renderAsync();
+      const saved = await rendered.saveAsync({ compress, format: SaveFormat.JPEG });
+      rendered.release();
+      result = {
+        uri: saved.uri,
+        name: name.replace(/\.[^.]+$/, '') + '.jpg',
+        mimeType: 'image/jpeg',
+        size: new File(saved.uri).size,
+      };
+      if (result.size <= targetBytes) break;
+    }
+    return result!;
+  } finally {
+    original.release();
   }
-  return result!;
 }
 
 /** Let the user pick a PDF or image from files. Returns null when cancelled. */

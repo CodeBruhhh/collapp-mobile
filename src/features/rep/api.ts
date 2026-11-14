@@ -95,25 +95,6 @@ export async function uploadPostImage(collegeId: string, file: LocalFile): Promi
   return uploadFile('college-media', objectPath(`${collegeId}/posts`, file.mimeType), file);
 }
 
-const APPLICANT_SELECT = `id, status, submitted_at, decided_at, updated_at,
-  student:students(user_id, first_name, last_name),
-  program:programs!applications_program_id_fkey(id, name),
-  documents(id, review_status, ai_check:document_ai_checks(verdict)),
-  ai_score:ai_scores(fit_score)` as const;
-
-/** Submitted applications to the rep's college; drafts are never visible (RLS). */
-export async function listApplicants(collegeId: string) {
-  const { data, error } = await supabase
-    .from('applications')
-    .select(APPLICANT_SELECT)
-    .eq('college_id', collegeId)
-    .neq('status', 'draft')
-    .order('submitted_at', { ascending: false });
-  if (error) throw error;
-  return data;
-}
-export type Applicant = Awaited<ReturnType<typeof listApplicants>>[number];
-
 export async function getApplicant(id: string) {
   const { data, error } = await supabase
     .from('applications')
@@ -159,18 +140,17 @@ export async function setApplicationStatus(
 
 // Batch result release ------------------------------------------------------
 
-export type StagedDecision = Tables<'staged_decisions'>;
-
-/** Decisions held for the next release (never visible to students). */
+/** Decisions held for the next release (never visible to students), with the student's name. */
 export async function listStagedDecisions(collegeId: string) {
   const { data, error } = await supabase
     .from('staged_decisions')
-    .select('*')
+    .select('*, application:applications(student:students(first_name, last_name))')
     .eq('college_id', collegeId)
     .order('staged_at');
   if (error) throw error;
   return data;
 }
+export type StagedDecision = Awaited<ReturnType<typeof listStagedDecisions>>[number];
 
 /** Hold a decision for the next release; validated like a direct decision. */
 export async function stageDecision(input: {
@@ -216,17 +196,8 @@ export async function scheduleRelease(releaseAt: Date | null) {
   if (error) throw error;
 }
 
-/** Applicant filters ported from the web rep dashboard. */
+/** The queue's status tabs (ported from the web rep dashboard). */
 export type ApplicantFilter = 'all' | 'new' | 'review' | 'resubmission' | 'accepted' | 'rejected';
-
-export const APPLICANT_FILTERS: Record<ApplicantFilter, (a: Applicant) => boolean> = {
-  all: () => true,
-  new: (a) => a.status === 'submitted',
-  review: (a) => a.status === 'under_review',
-  resubmission: (a) => a.status === 'action_required',
-  accepted: (a) => a.status === 'accepted',
-  rejected: (a) => a.status === 'rejected',
-};
 
 /** ai_scores is one-to-one; PostgREST may return it as an object or a one-item array. */
 export function firstOf<T>(value: T | T[] | null | undefined): T | null {

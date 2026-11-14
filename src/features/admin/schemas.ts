@@ -7,6 +7,17 @@ const optional = (max: number) =>
     .max(max)
     .transform((v) => (v === '' ? undefined : v));
 
+/** A representative's account fields, shared by both admin forms. */
+const repFields = {
+  repName: z.string().trim().min(2, "Enter the representative's full name").max(200),
+  repEmail: z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address')),
+  repPassword: z
+    .string()
+    .min(8, 'Use at least 8 characters')
+    .regex(/[A-Za-z]/, 'Include at least one letter')
+    .regex(/[0-9]/, 'Include at least one number'),
+};
+
 /** Mirrors supabase/functions/admin-create-college (ported from the web addCollegeSchema). */
 export const createCollegeSchema = z.object({
   name: z.string().trim().min(3, 'Enter the college name').max(200),
@@ -19,11 +30,8 @@ export const createCollegeSchema = z.object({
   region: optional(100),
   province: optional(100),
   city: optional(100),
-  repName: z.string().trim().min(2, "Enter the representative's full name").max(200),
-  repEmail: z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address')),
-  repPassword: z
-    .string()
-    .min(8, 'Use at least 8 characters')
-    .regex(/[A-Za-z]/, 'Include at least one letter')
-    .regex(/[0-9]/, 'Include at least one number'),
+  ...repFields,
 });
+
+/** Mirrors supabase/functions/admin-create-rep. */
+export const createRepSchema = z.object(repFields);

@@ -12,8 +12,8 @@ import { Section } from '@/components/Section';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import { APPLICATION_STATUS_LABELS, applicationStatusColor } from '@/features/applications/status';
-import { APPLICANT_FILTERS, studentName } from '@/features/rep/api';
-import { useApplicants, useMyCollege } from '@/features/rep/hooks';
+import { useMyCollege, useQueueCounts, useReviewQueue } from '@/features/rep/hooks';
+import { DEFAULT_QUEUE_FILTERS } from '@/features/rep/queue';
 import { useTheme } from '@/hooks/useTheme';
 
 import { createScreenStyles } from '@/screens/screenStyles';
@@ -23,14 +23,17 @@ export function DashboardScreen() {
   const { colors } = useTheme();
   const styles = createScreenStyles(colors);
   const college = useMyCollege();
-  const applicants = useApplicants();
+  // Counted by the database; only the newest page is loaded for "Recent applicants".
+  const counts = useQueueCounts({ programId: null, assignee: null, search: '', view: null });
+  const applicants = useReviewQueue(DEFAULT_QUEUE_FILTERS);
 
   if (college.isPending) return <LoadingState variant="detail" />;
   if (college.isError) return <ErrorState error={college.error} onRetry={college.refetch} />;
 
   const c = college.data;
-  const list = applicants.data ?? [];
-  const newCount = list.filter(APPLICANT_FILTERS.new).length;
+  const recent = applicants.data?.pages[0]?.rows.slice(0, 5) ?? [];
+  const status = counts.data?.status;
+  const newCount = status?.new ?? 0;
   const isDraft = c.profile_status === 'draft';
 
   return (
@@ -41,9 +44,10 @@ export function DashboardScreen() {
         <RefreshControl
           tintColor={colors.primary}
           colors={[colors.primary]}
-          refreshing={college.isRefetching || applicants.isRefetching}
+          refreshing={college.isRefetching || counts.isRefetching}
           onRefresh={() => {
             college.refetch();
+            counts.refetch();
             applicants.refetch();
           }}
         />
@@ -66,9 +70,9 @@ export function DashboardScreen() {
           <MetricPanel label="New applicants" value={newCount} icon="people" />
           <MetricRows
             metrics={[
-              { label: 'Applicants', value: list.length },
-              { label: 'In review', value: list.filter(APPLICANT_FILTERS.review).length },
-              { label: 'Accepted', value: list.filter(APPLICANT_FILTERS.accepted).length },
+              { label: 'Applicants', value: status?.all ?? 0 },
+              { label: 'In review', value: status?.review ?? 0 },
+              { label: 'Accepted', value: status?.accepted ?? 0 },
             ]}
           />
         </View>
@@ -98,14 +102,14 @@ export function DashboardScreen() {
       </Section>
 
       <Section title="Recent applicants">
-        {list.length === 0 ? (
+        {recent.length === 0 ? (
           <Text style={styles.meta}>No applications yet.</Text>
         ) : (
-          list.slice(0, 5).map((a) => (
+          recent.map((a) => (
             <LedgerRow
               key={a.id}
-              title={studentName(a.student)}
-              subtitle={a.program?.name}
+              title={a.student_name || 'Student'}
+              subtitle={a.program_name}
               onPress={() =>
                 router.push({ pathname: '/rep/applicant/[id]', params: { id: a.id } })
               }>

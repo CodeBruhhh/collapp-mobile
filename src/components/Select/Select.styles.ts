@@ -13,6 +13,7 @@ import {
 export const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     root: { gap: spacing.xs },
+    pillRoot: { flexShrink: 1 },
     label: { fontSize: fontSize.sm, fontFamily: fonts.medium, color: c.text },
     field: {
       flexDirection: 'row',
@@ -68,6 +69,8 @@ export const createStyles = (c: ThemeColors) =>
     },
     optionPressed: { backgroundColor: c.surface },
     optionText: { flex: 1, fontFamily: fonts.regular, fontSize: fontSize.md, color: c.text },
+    optionHint: { fontFamily: fonts.regular, fontSize: fontSize.sm, color: c.textMuted },
+    list: { flex: 1 },
     empty: {
       padding: spacing.md,
       fontFamily: fonts.regular,

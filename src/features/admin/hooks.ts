@@ -4,6 +4,7 @@ import type { Enums } from '@/types/database';
 
 import {
   createCollege,
+  createRep,
   fetchAdminStats,
   fetchPlatformSettings,
   fetchRlsOverview,
@@ -88,11 +89,12 @@ export function useAdminActions() {
     onSettled: refresh,
   });
   const addCollege = useMutation({ mutationFn: createCollege, onSettled: refresh });
+  const addRep = useMutation({ mutationFn: createRep, onSettled: refresh });
   const broadcast = useMutation({
     mutationFn: ([title, body, audience]: [string, string, Audience]) =>
       sendBroadcast(title, body, audience),
     onSettled: refresh,
   });
 
-  return { savePlatformSettings, userStatus, collegeStatus, addCollege, broadcast };
+  return { savePlatformSettings, userStatus, collegeStatus, addCollege, addRep, broadcast };
 }

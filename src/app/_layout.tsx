@@ -14,6 +14,7 @@ import { PreferencesProvider } from '@/context/PreferencesContext';
 import { SyncProvider } from '@/context/SyncContext';
 import { usePlatformSettings } from '@/features/admin/hooks';
 import { useTheme } from '@/hooks/useTheme';
+import { KeyboardProvider } from '@/lib/keyboard';
 import {
   PERSIST_MAX_AGE,
   queryClient,
@@ -78,24 +79,28 @@ export default function RootLayout() {
   });
 
   return (
-    <PreferencesProvider>
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{
-          persister: queryPersister,
-          maxAge: PERSIST_MAX_AGE,
-          dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
-        }}>
-        <AuthProvider>
-          <SyncProvider>
-            <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-              <StatusBar style={isDark ? 'dark' : 'light'} />
-              <RootNavigator fontsReady={fontsLoaded || Boolean(fontError)} />
-              <FeedbackHost />
-            </ThemeProvider>
-          </SyncProvider>
-        </AuthProvider>
-      </PersistQueryClientProvider>
-    </PreferencesProvider>
+    // Android draws edge-to-edge, so the window never resizes for the keyboard;
+    // keyboard-aware views (forms, sticky footers) read its position from here.
+    <KeyboardProvider>
+      <PreferencesProvider>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister: queryPersister,
+            maxAge: PERSIST_MAX_AGE,
+            dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
+          }}>
+          <AuthProvider>
+            <SyncProvider>
+              <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+                <StatusBar style={isDark ? 'dark' : 'light'} />
+                <RootNavigator fontsReady={fontsLoaded || Boolean(fontError)} />
+                <FeedbackHost />
+              </ThemeProvider>
+            </SyncProvider>
+          </AuthProvider>
+        </PersistQueryClientProvider>
+      </PreferencesProvider>
+    </KeyboardProvider>
   );
 }

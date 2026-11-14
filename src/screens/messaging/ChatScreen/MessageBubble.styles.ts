@@ -57,6 +57,7 @@ export const createStyles = (c: ThemeColors) =>
       backgroundColor: c.surfaceMuted,
     },
     photoImage: { ...StyleSheet.absoluteFill },
+    photoHidden: { opacity: 0 },
     photoOverlay: {
       ...StyleSheet.absoluteFill,
       alignItems: 'center',

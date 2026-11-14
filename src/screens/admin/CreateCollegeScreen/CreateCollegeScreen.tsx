@@ -1,4 +1,3 @@
-import * as Crypto from 'expo-crypto';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Share, Text, View } from 'react-native';
@@ -12,6 +11,7 @@ import { StickyActionBar } from '@/components/StickyActionBar';
 import { TextField } from '@/components/TextField';
 import { getCities, getProvinces, PH_REGIONS } from '@/data/ph-address';
 import { useAdminActions } from '@/features/admin/hooks';
+import { generatePassword, signInMessage } from '@/features/admin/password';
 import { createCollegeSchema } from '@/features/admin/schemas';
 import { useTheme } from '@/hooks/useTheme';
 import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
@@ -19,14 +19,6 @@ import { getErrorMessage, validate, type FieldErrors } from '@/lib/validation';
 import { createScreenStyles } from '@/screens/screenStyles';
 
 const REGION_NAMES = PH_REGIONS.map((r) => r.region_name);
-const PASSWORD_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-
-/** A readable temporary password with letters and digits (meets the password rules). */
-function generatePassword(): string {
-  const bytes = Crypto.getRandomBytes(14);
-  const body = Array.from(bytes, (b) => PASSWORD_CHARS[b % PASSWORD_CHARS.length]).join('');
-  return `${body.slice(0, 7)}-${body.slice(7)}${(bytes[0] % 8) + 2}`;
-}
 
 type Form = {
   name: string;
@@ -213,7 +205,7 @@ export function CreateCollegeScreen() {
               hint: 'Opens your share sheet',
               onPress: () =>
                 Share.share({
-                  message: `Your CollApp representative account for ${created.name}\nEmail: ${created.email}\nTemporary password: ${created.password}\nPlease change it after signing in (Settings › Change password).`,
+                  message: signInMessage(created.name, created.email, created.password),
                 }),
             },
           ]}
