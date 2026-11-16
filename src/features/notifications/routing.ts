@@ -53,6 +53,8 @@ export function notificationTarget(role: Role, type: string, raw: unknown): Href
   if (role === 'school_rep' && type === 'new_application' && data.application_id) {
     return { pathname: '/rep/applicant/[id]', params: { id: data.application_id } };
   }
+  if (role === 'school_rep' && type === 'post_taken_down') return '/rep/posts';
+  if (role === 'admin' && type === 'content_report') return '/admin/moderation';
   return null;
 }
 
@@ -64,4 +66,6 @@ export const NOTIFICATION_ICONS: Record<string, string> = {
   deadline_reminder: 'alarm',
   new_application: 'person-add',
   broadcast: 'megaphone',
+  content_report: 'alert-circle',
+  post_taken_down: 'alert-circle',
 };

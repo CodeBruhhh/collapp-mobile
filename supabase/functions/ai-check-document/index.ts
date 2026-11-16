@@ -8,13 +8,17 @@
 // Deployed with verify_jwt off; both paths are authenticated below.
 import { encodeBase64 } from 'jsr:@std/encoding@1/base64';
 
+import {
+  AI_LIMIT_MESSAGE,
+  AI_PAUSED_MESSAGE,
+  aiEnabled,
+  refundQuota,
+  useQuota,
+  type AiKind,
+} from '../_shared/aiSettings.ts';
 import { clip, clipList, GeminiError, generateJson } from '../_shared/gemini.ts';
 import { adminClient, corsHeaders, getCaller, json, type Caller } from '../_shared/http.ts';
 import { isFromDatabase } from '../_shared/webhook.ts';
-
-/** Daily checks per person: manual re-checks, and automatic checks of their uploads. */
-const MANUAL_LIMIT = 30;
-const AUTO_LIMIT = 40;
 
 type Verdict = 'pass' | 'review' | 'fail';
 type CheckResult = {
@@ -145,27 +149,43 @@ Deno.serve(async (req) => {
       app.status !== 'draft');
   if (!allowed) return json({ error: 'Not allowed' }, 403);
 
-  const quotaUser = caller?.id ?? doc.owner_id;
-  const { data: withinQuota } = await admin.rpc('consume_ai_quota', {
-    p_user: quotaUser,
-    p_kind: caller ? 'document_check' : 'document_check_auto',
-    p_limit: caller ? MANUAL_LIMIT : AUTO_LIMIT,
-  });
-
-  // Make sure there is a row to report on (files uploaded before this feature have none).
   const { data: existing } = await admin
     .from('document_ai_checks')
-    .select('attempts, source_path')
+    .select('attempts, source_path, quota_charged')
     .eq('document_id', doc.id)
     .maybeSingle();
-  const attempts =
-    existing && existing.source_path === doc.storage_path ? existing.attempts + 1 : 1;
+  const sameFile = existing?.source_path === doc.storage_path;
+  const enabled = await aiEnabled(admin);
+
+  // "Check again": refused before touching the stored result, so the last good
+  // check stays visible when AI is paused or the person is out of re-checks.
+  // Counted against whoever asked, by their role's limit (admins are unlimited).
+  if (caller && !enabled) return json({ error: AI_PAUSED_MESSAGE }, 503);
+  let charged: { user: string; kind: AiKind } | null = null;
+  if (caller) {
+    const quota = await useQuota(admin, caller.id, 'document_check');
+    if (!quota.allowed) return json({ error: AI_LIMIT_MESSAGE, quota }, 429);
+    charged = { user: caller.id, kind: 'document_check' };
+  }
+
+  // Automatic check of an upload: charged to the student once per file, so the
+  // retry job and admin retries never use up their allowance.
+  const alreadyCharged = sameFile && existing?.quota_charged === true;
+  let autoRefused = false;
+  if (!caller && enabled && !alreadyCharged) {
+    const quota = await useQuota(admin, doc.owner_id, 'document_check_auto');
+    if (quota.allowed) charged = { user: doc.owner_id, kind: 'document_check_auto' };
+    else autoRefused = true;
+  }
+
+  // Make sure there is a row to report on (files uploaded before this feature have none).
   await admin.from('document_ai_checks').upsert({
     document_id: doc.id,
     application_id: app.id,
     status: 'pending',
     source_path: doc.storage_path,
-    attempts,
+    attempts: sameFile ? (existing?.attempts ?? 0) + 1 : 1,
+    quota_charged: alreadyCharged || charged?.kind === 'document_check_auto',
     error: null,
     updated_at: new Date().toISOString(),
   });
@@ -178,9 +198,20 @@ Deno.serve(async (req) => {
       .eq('document_id', doc.id)
       .eq('source_path', doc.storage_path);
 
-  if (withinQuota === false) {
-    await save({ status: 'skipped', error: 'Daily AI check limit reached. Try again tomorrow.' });
-    return json({ error: 'Daily AI check limit reached. Try again tomorrow.' }, 429);
+  // The AI call did not produce a result: give the use back.
+  const refund = async () => {
+    if (!charged) return;
+    await refundQuota(admin, charged.user, charged.kind);
+    if (charged.kind === 'document_check_auto') await save({ quota_charged: false });
+  };
+
+  if (!enabled) {
+    await save({ status: 'skipped', error: AI_PAUSED_MESSAGE });
+    return json({ error: AI_PAUSED_MESSAGE }, 503);
+  }
+  if (autoRefused) {
+    await save({ status: 'skipped', error: AI_LIMIT_MESSAGE });
+    return json({ error: AI_LIMIT_MESSAGE }, 429);
   }
 
   const [{ data: student }, file] = await Promise.all([
@@ -192,6 +223,7 @@ Deno.serve(async (req) => {
     admin.storage.from('documents').download(doc.storage_path),
   ]);
   if (file.error || !file.data) {
+    await refund();
     await save({ status: 'failed', error: 'Could not read the uploaded file.' });
     return json({ error: 'Could not read the uploaded file' }, 500);
   }
@@ -270,6 +302,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     const err = e instanceof GeminiError ? e : new GeminiError(String(e), true);
     console.error('document check failed', doc.id, err.message);
+    await refund();
     await save({ status: err.retryable ? 'failed' : 'skipped', error: clip(err.message, 500) });
     return json({ error: err.message }, err.retryable ? 503 : 422);
   }

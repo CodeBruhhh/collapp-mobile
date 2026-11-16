@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 import {
+  fetchMyAiUsage,
   getEssayFeedback,
   getEssayReview,
   listDocumentChecks,
@@ -12,6 +13,7 @@ import {
   refreshRecommendations,
   regenerateEssayReview,
   scoreApplication,
+  type AiKind,
 } from './api';
 
 const STALE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
@@ -22,7 +24,40 @@ export const aiKeys = {
   recommendations: (userId: string) => ['ai', 'recommendations', userId] as const,
   documentChecks: (applicationId: string) => ['ai', 'document-checks', applicationId] as const,
   essayReview: (applicationId: string) => ['ai', 'essay-review', applicationId] as const,
+  usage: () => ['ai', 'usage'] as const,
 };
+
+/** The signed-in person's AI uses and limits for today (refreshed after each AI action). */
+export function useMyAiUsage() {
+  const { session } = useAuth();
+  return useQuery({
+    queryKey: aiKeys.usage(),
+    queryFn: fetchMyAiUsage,
+    enabled: Boolean(session),
+    staleTime: 30_000,
+  });
+}
+
+/**
+ * One limit for the current person: how many are left, and whether it is used up.
+ * `limit` null means unlimited (administrators) or not loaded yet.
+ */
+export function useAiAllowance(kind: AiKind) {
+  const usage = useMyAiUsage();
+  const item = usage.data?.items.find((i) => i.kind === kind);
+  const limit = item?.limit ?? null;
+  const used = item?.used ?? 0;
+  const left = limit === null ? null : Math.max(0, limit - used);
+  return {
+    item,
+    used,
+    limit,
+    left,
+    exhausted: left === 0,
+    paused: usage.data?.enabled === false,
+    resetsAt: usage.data?.resets_at ?? null,
+  };
+}
 
 export function useRefreshRecommendations() {
   const { session } = useAuth();
@@ -106,15 +141,19 @@ export function useRecheckDocument(applicationId: string | null | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: recheckDocument,
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: aiKeys.documentChecks(applicationId ?? '') }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: aiKeys.documentChecks(applicationId ?? '') });
+      queryClient.invalidateQueries({ queryKey: aiKeys.usage() });
+    },
   });
 }
 
 export function useEssayFeedback() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (a: { essay: string; prompt: string | null }) =>
       getEssayFeedback(a.essay, a.prompt),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: aiKeys.usage() }),
   });
 }
 
@@ -131,7 +170,10 @@ export function useRegenerateEssayReview(applicationId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => regenerateEssayReview(applicationId),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: aiKeys.essayReview(applicationId) }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: aiKeys.essayReview(applicationId) });
+      queryClient.invalidateQueries({ queryKey: aiKeys.usage() });
+    },
   });
 }
 

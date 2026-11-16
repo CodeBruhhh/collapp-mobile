@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { CollegeColorsToggle } from '@/components/CollegeColorsToggle';
 import { CollegeLogo } from '@/components/CollegeLogo';
 import { LedgerRow } from '@/components/LedgerRow';
 import { PageHeading } from '@/components/PageHeading';
@@ -179,6 +180,7 @@ function InstitutionForm({ college }: { college: RepCollege }) {
           }
           onPress={() => router.push('/rep/theme')}
         />
+        <CollegeColorsToggle />
       </Section>
 
       <Section title="Profile">

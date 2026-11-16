@@ -245,6 +245,7 @@ export type Database = {
           province: string | null
           region: string | null
           results_release_at: string | null
+          suspended_at: string | null
           theme: Json | null
           updated_at: string
           website: string | null
@@ -261,6 +262,7 @@ export type Database = {
           province?: string | null
           region?: string | null
           results_release_at?: string | null
+          suspended_at?: string | null
           theme?: Json | null
           updated_at?: string
           website?: string | null
@@ -277,6 +279,7 @@ export type Database = {
           province?: string | null
           region?: string | null
           results_release_at?: string | null
+          suspended_at?: string | null
           theme?: Json | null
           updated_at?: string
           website?: string | null
@@ -299,6 +302,7 @@ export type Database = {
           matches_requirement: boolean | null
           model: string | null
           name_match: string | null
+          quota_charged: boolean
           relevant: boolean | null
           source_path: string | null
           status: Database["public"]["Enums"]["ai_job_status"]
@@ -321,6 +325,7 @@ export type Database = {
           matches_requirement?: boolean | null
           model?: string | null
           name_match?: string | null
+          quota_charged?: boolean
           relevant?: boolean | null
           source_path?: string | null
           status?: Database["public"]["Enums"]["ai_job_status"]
@@ -343,6 +348,7 @@ export type Database = {
           matches_requirement?: boolean | null
           model?: string | null
           name_match?: string | null
+          quota_charged?: boolean
           relevant?: boolean | null
           source_path?: string | null
           status?: Database["public"]["Enums"]["ai_job_status"]
@@ -672,6 +678,8 @@ export type Database = {
       }
       platform_settings: {
         Row: {
+          ai_enabled: boolean
+          ai_limits: Json
           applications_open: boolean
           featured_college_ids: string[]
           id: boolean
@@ -679,6 +687,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_enabled?: boolean
+          ai_limits?: Json
           applications_open?: boolean
           featured_college_ids?: string[]
           id?: boolean
@@ -686,6 +696,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_enabled?: boolean
+          ai_limits?: Json
           applications_open?: boolean
           featured_college_ids?: string[]
           id?: boolean
@@ -783,6 +795,8 @@ export type Database = {
           media_path: string | null
           published_at: string | null
           status: Database["public"]["Enums"]["publish_status"]
+          taken_down_at: string | null
+          takedown_reason: string | null
           title: string
           type: Database["public"]["Enums"]["post_type"]
           updated_at: string
@@ -797,6 +811,8 @@ export type Database = {
           media_path?: string | null
           published_at?: string | null
           status?: Database["public"]["Enums"]["publish_status"]
+          taken_down_at?: string | null
+          takedown_reason?: string | null
           title: string
           type?: Database["public"]["Enums"]["post_type"]
           updated_at?: string
@@ -811,6 +827,8 @@ export type Database = {
           media_path?: string | null
           published_at?: string | null
           status?: Database["public"]["Enums"]["publish_status"]
+          taken_down_at?: string | null
+          takedown_reason?: string | null
           title?: string
           type?: Database["public"]["Enums"]["post_type"]
           updated_at?: string
@@ -1247,6 +1265,31 @@ export type Database = {
       }
     }
     Functions: {
+      admin_ai_overview: { Args: never; Returns: Json }
+      admin_moderate: {
+        Args: {
+          p_action: string
+          p_comment: string | null
+          p_note?: string | null
+          p_post: string
+        }
+        Returns: number
+      }
+      admin_moderation_queue: { Args: { p_status?: string }; Returns: Json }
+      admin_retry_ai_jobs: { Args: never; Returns: number }
+      my_ai_usage: { Args: never; Returns: Json }
+      admin_set_college_suspended: {
+        Args: { p_college: string; p_suspended: boolean }
+        Returns: number
+      }
+      admin_set_user_role: {
+        Args: {
+          p_college?: string | null
+          p_role: Database["public"]["Enums"]["user_role"]
+          p_user: string
+        }
+        Returns: undefined
+      }
       admin_broadcast: {
         Args: { p_audience?: string; p_body: string; p_title: string }
         Returns: number
@@ -1297,6 +1340,15 @@ export type Database = {
           is_mine: boolean
           post_id: string
         }[]
+      }
+      report_content: {
+        Args: {
+          p_comment?: string | null
+          p_details?: string | null
+          p_post: string
+          p_reason?: string
+        }
+        Returns: undefined
       }
       post_engagement: {
         Args: { p_post_ids: string[] }

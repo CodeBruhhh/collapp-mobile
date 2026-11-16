@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Switch, Text, View } from 'react-native';
 
@@ -66,14 +66,42 @@ export function AnalyticsScreen() {
     setMaintenanceSheet(true);
   }
 
-  const operations = [
-    { label: 'Messages in the last 7 days', value: s.messages_last_7_days },
+  const openReports = s.open_reports ?? 0;
+  const operations: {
+    label: string;
+    hint?: string;
+    value: number;
+    accent?: boolean;
+    href?: Href;
+  }[] = [
+    {
+      label: 'Reported posts and comments',
+      hint: 'Waiting for review in Moderation',
+      value: openReports,
+      accent: openReports > 0,
+      href: '/admin/moderation',
+    },
+    {
+      label: 'AI uses today',
+      hint: 'Usage, failures and limits in AI usage',
+      value: s.ai_uses_today ?? 0,
+      href: '/admin/ai',
+    },
     {
       label: 'Blocked attachments',
+      hint: 'Files the scan rejected, in Compliance',
       value: s.blocked_attachments,
       accent: s.blocked_attachments > 0,
+      href: '/admin/compliance',
     },
-    { label: 'Draft colleges', hint: 'Not visible to students', value: s.colleges.draft },
+    { label: 'Messages in the last 7 days', value: s.messages_last_7_days },
+    {
+      label: 'Draft colleges',
+      hint: s.colleges.suspended
+        ? `Not visible to students · ${s.colleges.suspended} suspended`
+        : 'Not visible to students',
+      value: s.colleges.draft,
+    },
   ];
 
   const controls = settings.data && [
@@ -171,21 +199,36 @@ export function AnalyticsScreen() {
         <Text accessibilityRole="header" style={styles.sectionTitle}>
           Operations
         </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityHint="Opens compliance"
-          onPress={() => router.push('/admin/compliance')}
-          style={({ pressed }) => pressed && styles.pressed}>
-          {operations.map((op) => (
-            <View key={op.label} style={[styles.opRow, styles.ruled]}>
-              <View style={styles.opText}>
-                <Text style={styles.opLabel}>{op.label}</Text>
-                {op.hint ? <Text style={styles.opHint}>{op.hint}</Text> : null}
+        <View>
+          {operations.map((op) => {
+            const row = (
+              <>
+                <View style={styles.opText}>
+                  <Text style={styles.opLabel}>{op.label}</Text>
+                  {op.hint ? <Text style={styles.opHint}>{op.hint}</Text> : null}
+                </View>
+                <Text style={[styles.opValue, op.accent && { color: c.primary }]}>{op.value}</Text>
+                {op.href ? <Icon name="chevron-forward" size={16} color={c.textMuted} /> : null}
+              </>
+            );
+            const href = op.href;
+            return href ? (
+              <Pressable
+                key={op.label}
+                accessibilityRole="button"
+                accessibilityLabel={`${op.label}: ${op.value}`}
+                accessibilityHint={op.hint}
+                onPress={() => router.push(href)}
+                style={({ pressed }) => [styles.opRow, styles.ruled, pressed && styles.pressed]}>
+                {row}
+              </Pressable>
+            ) : (
+              <View key={op.label} style={[styles.opRow, styles.ruled]}>
+                {row}
               </View>
-              <Text style={[styles.opValue, op.accent && { color: c.primary }]}>{op.value}</Text>
-            </View>
-          ))}
-        </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       <View

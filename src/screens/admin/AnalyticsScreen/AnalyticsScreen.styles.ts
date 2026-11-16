@@ -67,6 +67,9 @@ export const createAnalyticsStyles = (c: ThemeColors) =>
     opValue: { fontSize: 22, fontFamily: fonts.medium, color: c.text },
     pressed: { opacity: 0.6 },
 
+    // AI limits form (AI monitor)
+    limitGroup: { gap: spacing.sm, paddingTop: spacing.sm },
+
     // Platform controls
     setting: { paddingVertical: 20, gap: 10 },
     settingRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { AiUsageMeter } from '@/components/AiUsageMeter';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import type { EssayFeedback as Feedback, PromptFit } from '@/features/ai/api';
-import { useEssayFeedback } from '@/features/ai/hooks';
+import { useAiAllowance, useEssayFeedback } from '@/features/ai/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
@@ -30,6 +31,7 @@ export function EssayFeedback({ essay, prompt, online }: EssayFeedbackProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const feedback = useEssayFeedback();
+  const allowance = useAiAllowance('essay_feedback');
   const [reviewed, setReviewed] = useState<{ essay: string; result: Feedback } | null>(null);
 
   const words = essay.trim().split(/\s+/).filter(Boolean).length;
@@ -60,8 +62,9 @@ export function EssayFeedback({ essay, prompt, online }: EssayFeedbackProps) {
         label={reviewed ? 'Get new AI feedback' : 'Get AI feedback'}
         onPress={run}
         loading={feedback.isPending}
-        disabled={words < MIN_WORDS || !online}
+        disabled={words < MIN_WORDS || !online || allowance.exhausted || allowance.paused}
       />
+      {online ? <AiUsageMeter kind="essay_feedback" /> : null}
       {words < MIN_WORDS ? (
         <Text style={styles.hint}>
           Write at least {MIN_WORDS} words for AI feedback ({words} so far).

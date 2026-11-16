@@ -20,6 +20,7 @@ import { FollowButton } from '@/components/FollowButton';
 import { Icon } from '@/components/Icon';
 import { ImageViewer } from '@/components/ImageViewer';
 import { ReactionBar } from '@/components/ReactionBar';
+import { ReportSheet } from '@/components/ReportSheet';
 import { ErrorState, LoadingState } from '@/components/StateView';
 import {
   useAddComment,
@@ -63,6 +64,9 @@ export function PostDetailScreen({ id, focusComment }: PostDetailScreenProps) {
   const input = useRef<TextInput>(null);
   const [body, setBody] = useState('');
   const [viewing, setViewing] = useState(false);
+  const [reporting, setReporting] = useState<{ postId: string; commentId: string | null } | null>(
+    null,
+  );
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {
@@ -175,6 +179,15 @@ export function PostDetailScreen({ id, focusComment }: PostDetailScreenProps) {
               engagement={engagement.data?.[p.id] ?? NO_ENGAGEMENT}
               onComment={() => input.current?.focus()}
             />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Report this post"
+              hitSlop={8}
+              disabled={!online}
+              onPress={() => setReporting({ postId: p.id, commentId: null })}
+              style={styles.report}>
+              <Text style={styles.reportText}>Report post</Text>
+            </Pressable>
             <Text accessibilityRole="header" style={styles.heading}>
               Comments
             </Text>
@@ -196,6 +209,11 @@ export function PostDetailScreen({ id, focusComment }: PostDetailScreenProps) {
             <CommentRow
               comment={item}
               onDelete={item.is_mine ? () => confirmDelete(item.id) : undefined}
+              onReport={
+                !item.is_mine && online
+                  ? () => setReporting({ postId: p.id, commentId: item.id })
+                  : undefined
+              }
             />
           </View>
         )}
@@ -231,6 +249,7 @@ export function PostDetailScreen({ id, focusComment }: PostDetailScreenProps) {
       </SafeAreaView>
 
       <ImageViewer uri={viewing ? image : null} title={p.title} onClose={() => setViewing(false)} />
+      <ReportSheet target={reporting} onClose={() => setReporting(null)} />
     </KeyboardAvoidingView>
   );
 }

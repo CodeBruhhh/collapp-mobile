@@ -47,6 +47,13 @@ export const createStyles = (c: ThemeColors) =>
       color: c.text,
     },
     comment: { paddingHorizontal: rhythm.gutter },
+    report: {
+      alignSelf: 'flex-end',
+      minHeight: TOUCH_TARGET,
+      justifyContent: 'center',
+      paddingHorizontal: rhythm.gutter,
+    },
+    reportText: { ...type.caption, color: c.textMuted, textDecorationLine: 'underline' },
     status: {
       ...type.body,
       paddingTop: spacing.sm,

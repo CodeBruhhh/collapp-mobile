@@ -29,6 +29,7 @@ export const createStyles = (c: ThemeColors) =>
       gap: spacing.sm,
       flexWrap: 'wrap',
     },
+    stack: { gap: spacing.sm },
     bullet: { marginTop: 5 },
     disclaimer: { ...type.caption, fontSize: 11, color: c.textMuted, flex: 1 },
     links: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

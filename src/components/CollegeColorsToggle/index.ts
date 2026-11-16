@@ -1,0 +1,1 @@
+export { CollegeColorsToggle } from './CollegeColorsToggle';

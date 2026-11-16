@@ -17,13 +17,31 @@ import { createScreenStyles } from '@/screens/screenStyles';
 
 type Section = 'audit' | 'blocked' | 'rls';
 type AuditFilter =
-  'all' | 'application.' | 'profile.' | 'college.' | 'platform.' | 'message.' | 'notification.';
+  | 'all'
+  | 'application.'
+  | 'profile.'
+  | 'college.'
+  | 'platform.'
+  | 'moderation.'
+  | 'ai.'
+  | 'message.'
+  | 'notification.';
 
 const ACTION_LABELS: Record<string, string> = {
   'application.status_changed': 'Application status changed',
   'profile.access_changed': 'Account access changed',
+  'profile.admin_created': 'Administrator added',
   'college.created': 'College created',
+  'college.rep_added': 'Representative added',
   'college.status_changed': 'College publish status changed',
+  'college.suspended': 'College suspended',
+  'college.reinstated': 'College reinstated',
+  'moderation.dismiss': 'Reports dismissed',
+  'moderation.remove_comment': 'Comment removed',
+  'moderation.suspend_author': 'Comment removed, author suspended',
+  'moderation.take_down_post': 'Post taken down',
+  'moderation.restore_post': 'Post restored',
+  'ai.jobs_retried': 'AI checks retried',
   'platform.settings_changed': 'Platform settings changed',
   'message.attachment_blocked': 'Attachment blocked',
   'notification.broadcast': 'Broadcast sent',
@@ -47,7 +65,25 @@ function describe(entry: AuditEntry): string {
         .join(', ');
     }
     case 'college.created':
+    case 'college.rep_added':
       return `Representative: ${String(m.rep_email ?? '')}`;
+    case 'profile.admin_created':
+      return String(m.admin_email ?? '');
+    case 'college.suspended':
+    case 'college.reinstated': {
+      const reps = Array.isArray(m.rep_ids) ? m.rep_ids.length : 0;
+      return `${String(m.name ?? 'College')}: ${reps} ${reps === 1 ? 'representative' : 'representatives'} ${entry.action === 'college.suspended' ? 'suspended' : 'reactivated'}`;
+    }
+    case 'moderation.dismiss':
+    case 'moderation.remove_comment':
+    case 'moderation.suspend_author':
+    case 'moderation.take_down_post':
+    case 'moderation.restore_post':
+      return [`"${String(m.post_title ?? 'Post')}"`, m.note ? String(m.note) : null]
+        .filter(Boolean)
+        .join(' · ');
+    case 'ai.jobs_retried':
+      return `${String(m.count ?? 0)} queued`;
     case 'message.attachment_blocked':
       return `${String(m.name ?? 'file')}: ${String(m.reason ?? '')}`;
     case 'notification.broadcast':
@@ -58,7 +94,9 @@ function describe(entry: AuditEntry): string {
         .map(([k, v]) =>
           k === 'featured_college_ids'
             ? 'featured colleges updated'
-            : `${k.replace(/_/g, ' ')} ${String((v as unknown[])[0])} → ${String((v as unknown[])[1])}`,
+            : k === 'ai_limits'
+              ? 'AI daily limits updated'
+              : `${k.replace(/_/g, ' ')} ${String((v as unknown[])[0])} → ${String((v as unknown[])[1])}`,
         )
         .join(', ');
     default:
@@ -102,6 +140,8 @@ export function ComplianceScreen() {
             { value: 'profile.', label: 'Accounts' },
             { value: 'college.', label: 'Colleges' },
             { value: 'platform.', label: 'Platform' },
+            { value: 'moderation.', label: 'Moderation' },
+            { value: 'ai.', label: 'AI' },
             { value: 'message.', label: 'Messages' },
             { value: 'notification.', label: 'Broadcasts' },
           ]}

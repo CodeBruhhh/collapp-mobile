@@ -9,6 +9,11 @@ export function generatePassword(): string {
   return `${body.slice(0, 7)}-${body.slice(7)}${(bytes[0] % 8) + 2}`;
 }
 
+/** Sign-in details an admin shares with a new administrator. */
+export function adminSignInMessage(email: string, password: string): string {
+  return `Your CollApp administrator account\nEmail: ${email}\nTemporary password: ${password}\nPlease change it after signing in (Settings › Change password).`;
+}
+
 /** Sign-in details an admin shares with a new representative. */
 export function signInMessage(collegeName: string, email: string, password: string): string {
   return `Your CollApp representative account for ${collegeName}\nEmail: ${email}\nTemporary password: ${password}\nPlease change it after signing in (Settings › Change password).`;

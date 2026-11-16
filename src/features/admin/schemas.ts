@@ -35,3 +35,17 @@ export const createCollegeSchema = z.object({
 
 /** Mirrors supabase/functions/admin-create-rep. */
 export const createRepSchema = z.object(repFields);
+
+/** Mirrors supabase/functions/admin-create-admin. */
+export const createAdminSchema = z.object({
+  name: z.string().trim().min(2, "Enter the administrator's full name").max(200),
+  email: repFields.repEmail,
+  password: repFields.repPassword,
+});
+
+/** One daily AI limit: a whole number from 0 (off) to 1000. */
+export const aiLimitSchema = z.coerce
+  .number({ error: 'Enter a number' })
+  .int('Use a whole number')
+  .min(0, 'Use 0 or more')
+  .max(1000, 'Use 1000 or less');

@@ -87,10 +87,14 @@ export function PostsScreen() {
               }
               onPress={() => (published ? openInsights(item.id) : openEditor(item.id))}>
               <View style={styles.metaLine}>
-                <StatusBadge
-                  label={published ? 'Published' : 'Draft'}
-                  color={published ? colors.status.accepted : colors.status.draft}
-                />
+                {item.taken_down_at ? (
+                  <StatusBadge label="Removed by CollApp" color={colors.danger} />
+                ) : (
+                  <StatusBadge
+                    label={published ? 'Published' : 'Draft'}
+                    color={published ? colors.status.accepted : colors.status.draft}
+                  />
+                )}
                 <Text style={styles.meta}>
                   {POST_TYPE_LABELS[item.type]} ·{' '}
                   {item.published_at
@@ -98,6 +102,13 @@ export function PostsScreen() {
                     : `Edited ${new Date(item.updated_at).toLocaleDateString()}`}
                 </Text>
               </View>
+              {item.taken_down_at ? (
+                <Text style={styles.meta}>
+                  {item.takedown_reason
+                    ? `${item.takedown_reason}. It can't be republished; contact a CollApp administrator.`
+                    : "It can't be republished; contact a CollApp administrator."}
+                </Text>
+              ) : null}
               {stats ? (
                 <Text style={styles.meta}>
                   {plural(totalReactions(stats), 'reaction')} ·{' '}

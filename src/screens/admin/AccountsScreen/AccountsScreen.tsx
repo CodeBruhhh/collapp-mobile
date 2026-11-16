@@ -52,7 +52,7 @@ export function AccountsScreen() {
   const users = useUsers(search);
   const colleges = useAllColleges();
   const settings = usePlatformSettings();
-  const { userStatus, collegeStatus, savePlatformSettings } = useAdminActions();
+  const { userStatus, collegeStatus, collegeSuspended, savePlatformSettings } = useAdminActions();
 
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [selectedCollege, setSelectedCollege] = useState<AdminCollege | null>(null);
@@ -64,34 +64,56 @@ export function AccountsScreen() {
   function userActions(u: AdminUser): SheetAction[] {
     if (isMe(u)) return [];
     const name = u.full_name || u.email;
-    return u.status === 'active'
-      ? [
-          {
-            label: 'Suspend account',
-            hint: 'Signs them out and blocks access until reactivated',
-            destructive: true,
-            onPress: () => userStatus.mutateAsync([u.id, 'suspended']),
-            confirm: {
-              title: `Suspend ${name}?`,
-              message:
-                'They are signed out and lose access to all data immediately. You can reactivate them later.',
+    const access: SheetAction = {
+      label: 'Change role or college',
+      hint:
+        u.role === 'school_rep'
+          ? 'Make them a student or administrator, or move them to another college'
+          : 'Make them a representative or administrator',
+      onPress: () => {
+        setSelectedUser(null);
+        router.push({ pathname: '/admin/user/[id]', params: { id: u.id } });
+      },
+    };
+    const status: SheetAction[] =
+      u.status === 'active'
+        ? [
+            {
               label: 'Suspend account',
+              hint: 'Signs them out and blocks access until reactivated',
+              destructive: true,
+              onPress: () => userStatus.mutateAsync([u.id, 'suspended']),
+              confirm: {
+                title: `Suspend ${name}?`,
+                message:
+                  'They are signed out and lose access to all data immediately. You can reactivate them later.',
+                label: 'Suspend account',
+              },
             },
-          },
-        ]
-      : [
-          {
-            label: 'Reactivate account',
-            hint: 'They can sign in and use CollApp again',
-            onPress: () => userStatus.mutateAsync([u.id, 'active']),
-          },
-        ];
+          ]
+        : [
+            {
+              label: 'Reactivate account',
+              hint: 'They can sign in and use CollApp again',
+              onPress: () => userStatus.mutateAsync([u.id, 'active']),
+            },
+          ];
+    return [access, ...status];
   }
 
   function collegeActions(c: AdminCollege): SheetAction[] {
     const isFeatured = featured.includes(c.id);
     const published = c.profile_status === 'published';
     const featureFull = !isFeatured && featured.length >= MAX_FEATURED;
+    if (c.suspended_at) {
+      return [
+        {
+          label: 'Reinstate college',
+          hint: 'Reactivates the representatives the suspension signed out; publish it again afterwards',
+          onPress: () => collegeSuspended.mutateAsync([c.id, false]),
+        },
+      ];
+    }
     return [
       published
         ? {
@@ -135,6 +157,25 @@ export function AccountsScreen() {
           router.push({ pathname: '/admin/college/[id]/rep', params: { id: c.id } });
         },
       },
+      {
+        label: 'Suspend college',
+        hint: 'Hides it from students and signs out all of its representatives',
+        destructive: true,
+        onPress: () =>
+          collegeSuspended.mutateAsync([c.id, true]).then(() => {
+            if (isFeatured) {
+              return savePlatformSettings.mutateAsync({
+                featured_college_ids: featured.filter((id) => id !== c.id),
+              });
+            }
+          }),
+        confirm: {
+          title: `Suspend ${c.name}?`,
+          message:
+            'It is unpublished right away and every active representative is suspended. Applications and data are kept. You can reinstate it later.',
+          label: 'Suspend college',
+        },
+      },
     ];
   }
 
@@ -175,9 +216,11 @@ export function AccountsScreen() {
           <InfoRow
             label="Visibility"
             value={
-              selectedCollege.profile_status === 'published'
-                ? 'Published'
-                : 'Draft · hidden from students'
+              selectedCollege.suspended_at
+                ? 'Suspended · hidden from students'
+                : selectedCollege.profile_status === 'published'
+                  ? 'Published'
+                  : 'Draft · hidden from students'
             }
           />
           <InfoRow
@@ -212,6 +255,11 @@ export function AccountsScreen() {
       />
       {section === 'users' ? (
         <>
+          <Button
+            variant="secondary"
+            label="Add administrator"
+            onPress={() => router.push('/admin/new-admin')}
+          />
           <SearchField
             value={draftSearch}
             onChangeText={setDraftSearch}
@@ -331,13 +379,17 @@ export function AccountsScreen() {
               subtitle={collegeLocation(item)}
               leading={<CollegeLogo name={item.name} logoPath={item.logo_path} size={40} />}
               onPress={() => setSelectedCollege(item)}
-              accessibilityLabel={`${item.name}, ${published ? 'published' : 'draft'}${isFeatured ? ', featured' : ''}`}
+              accessibilityLabel={`${item.name}, ${item.suspended_at ? 'suspended' : published ? 'published' : 'draft'}${isFeatured ? ', featured' : ''}`}
               trailing={
                 <View style={styles.badges}>
-                  <StatusBadge
-                    label={published ? 'Published' : 'Draft'}
-                    color={published ? colors.status.accepted : colors.status.draft}
-                  />
+                  {item.suspended_at ? (
+                    <StatusBadge label="Suspended" color={colors.danger} />
+                  ) : (
+                    <StatusBadge
+                      label={published ? 'Published' : 'Draft'}
+                      color={published ? colors.status.accepted : colors.status.draft}
+                    />
+                  )}
                   {isFeatured ? <StatusBadge label="Featured" color={colors.primary} /> : null}
                 </View>
               }

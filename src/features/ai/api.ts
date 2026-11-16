@@ -145,3 +145,24 @@ export async function getEssayReview(applicationId: string): Promise<EssayReview
 export function regenerateEssayReview(applicationId: string) {
   return invoke<{ ok: boolean }>('ai-essay', { applicationId });
 }
+
+// Daily AI limits ------------------------------------------------------------------
+
+/** Quota kinds counted per person per day; admins set the limits per role. */
+export type AiKind = 'document_check_auto' | 'document_check' | 'essay_feedback' | 'essay_summary';
+
+export type AiUsageItem = { kind: AiKind; used: number; limit: number | null };
+
+/** The signed-in person's own AI uses today (my_ai_usage). Admins get no items. */
+export type AiUsage = {
+  enabled: boolean;
+  resets_at: string;
+  role: 'student' | 'school_rep' | 'admin' | null;
+  items: AiUsageItem[];
+};
+
+export async function fetchMyAiUsage(): Promise<AiUsage> {
+  const { data, error } = await supabase.rpc('my_ai_usage');
+  if (error) throw error;
+  return data as unknown as AiUsage;
+}

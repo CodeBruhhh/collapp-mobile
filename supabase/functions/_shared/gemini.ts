@@ -7,6 +7,9 @@
 //   GEMINI_MODEL            optional — default gemini-3.5-flash-lite (free tier)
 //   GEMINI_FALLBACK_MODEL   optional — tried when the first model is rate-limited
 //                            or unavailable; default gemini-2.5-flash-lite
+// If Google reports a model as missing (404) or off-limits (403) — e.g. it was
+// retired — the client lists the models this key can use and tries the best
+// available Flash model, so a renamed model never breaks AI checks.
 
 const API = 'https://generativelanguage.googleapis.com/v1beta/models';
 const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
@@ -20,10 +23,18 @@ export class GeminiError extends Error {
   readonly retryable: boolean;
   /** The next model may still work (rate limit, outage, or this model was retired). */
   readonly tryNextModel: boolean;
-  constructor(message: string, retryable: boolean, tryNextModel = retryable) {
+  /** Google said this model does not exist or this key cannot use it (404/403). */
+  readonly modelUnavailable: boolean;
+  constructor(
+    message: string,
+    retryable: boolean,
+    tryNextModel = retryable,
+    modelUnavailable = false,
+  ) {
     super(message);
     this.retryable = retryable;
     this.tryNextModel = tryNextModel;
+    this.modelUnavailable = modelUnavailable;
   }
 }
 
@@ -58,15 +69,20 @@ async function callModel<T>(model: string, key: string, body: Record<string, unk
     const retryable = res.status === 429 || res.status >= 500;
     // 402 = this model needs billing on the key's project; 403/404 = no access or
     // retired model. Another model (e.g. a free-tier one) may still work.
-    const tryNext = retryable || [402, 403, 404].includes(res.status);
+    const unavailable = res.status === 403 || res.status === 404;
+    const tryNext = retryable || unavailable || res.status === 402;
+    // Plain wording: this text is shown to students and reps. Details stay in the log.
     throw new GeminiError(
       res.status === 429
-        ? 'The AI service is busy. Try again later.'
-        : res.status === 402
-          ? `AI needs billing for ${model}${googleMessage ? `: ${googleMessage}` : ''}`.slice(0, 300)
-          : `AI service error (${res.status})${googleMessage ? `: ${googleMessage}` : ''}`.slice(0, 300),
+        ? 'The AI service is busy right now.'
+        : res.status === 402 || unavailable
+          ? 'AI checks are unavailable right now. An administrator needs to check the AI setup.'
+          : res.status >= 500
+            ? 'The AI service had a temporary problem.'
+            : `The AI service could not process this request (${res.status}).`,
       retryable,
       tryNext,
+      unavailable,
     );
   }
 
@@ -86,6 +102,50 @@ async function callModel<T>(model: string, key: string, body: Record<string, unk
   } catch {
     throw new GeminiError('The AI response was not valid JSON.', true);
   }
+}
+
+/** Models this key can use, best first; looked up once per function instance. */
+let discoveredModels: Promise<string[]> | null = null;
+
+function discoverModels(key: string): Promise<string[]> {
+  discoveredModels ??= (async () => {
+    try {
+      const res = await fetch(`${API}?pageSize=200`, {
+        headers: { 'x-goog-api-key': key },
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) {
+        console.error('gemini list models failed', res.status);
+        discoveredModels = null; // try again on the next request
+        return [];
+      }
+      const data = await res.json();
+      const version = (name: string) => Number(/gemini-(\d+(?:\.\d+)?)/.exec(name)?.[1] ?? 0);
+      const names: string[] = (data?.models ?? [])
+        .filter((m: { supportedGenerationMethods?: string[] }) =>
+          m.supportedGenerationMethods?.includes('generateContent'),
+        )
+        .map((m: { name: string }) => String(m.name).replace(/^models\//, ''))
+        // Stable Flash models only: they read PDFs and images and suit the free tier.
+        .filter(
+          (n: string) =>
+            /^gemini-[\d.]+-flash/.test(n) &&
+            !/(preview|exp|tts|image|live|audio|thinking|latest|-\d{3}$)/.test(n),
+        );
+      // Flash-Lite first (higher free quota), then newest version first.
+      names.sort(
+        (a, b) =>
+          Number(b.includes('lite')) - Number(a.includes('lite')) || version(b) - version(a),
+      );
+      console.log('gemini models available', names.join(', '));
+      return names;
+    } catch (e) {
+      console.error('gemini list models failed', (e as Error).message);
+      discoveredModels = null;
+      return [];
+    }
+  })();
+  return discoveredModels;
 }
 
 /**
@@ -112,12 +172,37 @@ export async function generateJson<T>(input: {
   };
 
   let lastError: GeminiError | null = null;
-  for (const model of models()) {
+  let modelMissing = false;
+  const tried = new Set<string>();
+  /** One model; returns the result, or records why it failed and returns null. */
+  const attempt = async (model: string): Promise<{ data: T; model: string } | null> => {
+    tried.add(model);
     try {
       return { data: await callModel<T>(model, key, body), model };
     } catch (e) {
-      lastError = e instanceof GeminiError ? e : new GeminiError(String(e), true);
-      if (!lastError.tryNextModel) break;
+      const err = e instanceof GeminiError ? e : new GeminiError(String(e), true);
+      lastError = err;
+      modelMissing ||= err.modelUnavailable;
+      return null;
+    }
+  };
+  const keepTrying = () => (lastError as GeminiError | null)?.tryNextModel !== false;
+
+  for (const model of models()) {
+    const result = await attempt(model);
+    if (result) return result;
+    if (!keepTrying()) break;
+  }
+
+  // A configured model is gone or off-limits: use what this key can actually call.
+  if (modelMissing) {
+    for (const model of (await discoverModels(key)).filter((m) => !tried.has(m)).slice(0, 2)) {
+      const result = await attempt(model);
+      if (result) {
+        console.warn(`gemini: configured model unavailable, used ${model}; update GEMINI_MODEL`);
+        return result;
+      }
+      if (!keepTrying()) break;
     }
   }
   throw lastError ?? new GeminiError('AI request failed', true);

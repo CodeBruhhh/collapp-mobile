@@ -3,9 +3,11 @@ import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
+import { AiUsageList } from '@/components/AiUsageMeter';
 import { ActionRow } from '@/components/ActionRow';
 import { ActionSheet } from '@/components/ActionSheet';
 import { Button } from '@/components/Button';
+import { CollegeColorsToggle } from '@/components/CollegeColorsToggle';
 import { FilterChips, type ChipOption } from '@/components/FilterChips';
 import { Section } from '@/components/Section';
 import { ErrorState, LoadingState } from '@/components/StateView';
@@ -117,6 +119,7 @@ export function AccountSettingsSections({ role }: { role: Role }) {
     <>
       <Section title="Appearance" band>
         <FilterChips options={THEME_OPTIONS} selected={themeMode} onSelect={setThemeMode} />
+        {role === 'school_rep' ? <CollegeColorsToggle /> : null}
       </Section>
 
       <Section title="Notifications">
@@ -149,6 +152,12 @@ export function AccountSettingsSections({ role }: { role: Role }) {
           </>
         )}
       </Section>
+
+      {role !== 'admin' ? (
+        <Section title="AI usage today">
+          <AiUsageList />
+        </Section>
+      ) : null}
 
       <Section title="Security">
         <ToggleRow

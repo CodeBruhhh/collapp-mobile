@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { AiUsageMeter } from '@/components/AiUsageMeter';
 import { Icon } from '@/components/Icon';
 import type { DocumentCheck, DocumentCheckVerdict } from '@/features/ai/api';
+import { useAiAllowance } from '@/features/ai/hooks';
 import { useTheme } from '@/hooks/useTheme';
 
 import { createStyles } from './AiDocumentCheck.styles';
@@ -44,21 +46,37 @@ export function AiDocumentCheck({
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const [showDetails, setShowDetails] = useState(false);
+  // Re-checks count against the person's daily limit; block the link when it is used up.
+  const allowance = useAiAllowance('document_check');
+  const blocked = allowance.exhausted || allowance.paused;
 
   const recheck = onRecheck ? (
-    <Pressable accessibilityRole="button" hitSlop={10} disabled={rechecking} onPress={onRecheck}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: rechecking || blocked, busy: rechecking }}
+      hitSlop={10}
+      disabled={rechecking || blocked}
+      onPress={onRecheck}>
       {rechecking ? (
         <ActivityIndicator size="small" color={colors.primary} />
       ) : (
-        <Text style={styles.link}>{check ? 'Check again' : 'Check with AI'}</Text>
+        <Text style={[styles.link, blocked && { color: colors.textMuted }]}>
+          {check ? 'Check again' : 'Check with AI'}
+        </Text>
       )}
     </Pressable>
   ) : null;
+  const meter = onRecheck ? <AiUsageMeter kind="document_check" /> : null;
 
   if (!check || check.status === 'pending') {
     if (!check && !awaiting) {
       // Uploaded before AI checks existed: offer a manual run.
-      return recheck ? <View style={styles.footer}>{recheck}</View> : null;
+      return recheck ? (
+        <View style={styles.stack}>
+          <View style={styles.footer}>{recheck}</View>
+          {meter}
+        </View>
+      ) : null;
     }
     return (
       <View
@@ -83,6 +101,7 @@ export function AiDocumentCheck({
           </Text>
         </View>
         {recheck ? <View style={styles.footer}>{recheck}</View> : null}
+        {meter}
       </View>
     );
   }
@@ -156,6 +175,7 @@ export function AiDocumentCheck({
           {recheck}
         </View>
       </View>
+      {meter}
     </View>
   );
 }

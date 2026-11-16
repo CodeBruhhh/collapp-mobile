@@ -4,11 +4,17 @@
 //  - Reviewers: { applicationId } (rep/admin) or the database on submission
 //    (webhook secret) stores a neutral summary in essay_ai_reviews.
 // Advisory only. Deployed with verify_jwt off; both paths are authenticated below.
+import {
+  AI_LIMIT_MESSAGE,
+  AI_PAUSED_MESSAGE,
+  aiEnabled,
+  refundQuota,
+  useQuota,
+} from '../_shared/aiSettings.ts';
 import { clip, clipList, GeminiError, generateJson, sha256 } from '../_shared/gemini.ts';
 import { adminClient, corsHeaders, getCaller, json, type Caller } from '../_shared/http.ts';
 import { isFromDatabase } from '../_shared/webhook.ts';
 
-const STUDENT_DAILY_LIMIT = 15;
 const MIN_WORDS = 30;
 const MAX_CHARS = 10_000;
 
@@ -114,27 +120,26 @@ Deno.serve(async (req) => {
   const caller: Caller | null = fromDatabase ? null : await getCaller(req, admin);
   if (!fromDatabase && !caller) return json({ error: 'Not signed in' }, 401);
   const body = await req.json().catch(() => null);
+  // Admins can pause AI from the AI monitor; limits are per role (use_ai_quota).
+  const enabled = await aiEnabled(admin);
 
   // Student drafting feedback: returned directly, never stored.
   if (caller?.role === 'student') {
+    if (!enabled) return json({ error: AI_PAUSED_MESSAGE }, 503);
     const essay = typeof body?.essay === 'string' ? body.essay : '';
     const prompt = typeof body?.prompt === 'string' ? body.prompt.slice(0, 2000) : null;
     if (wordCount(essay) < MIN_WORDS) {
       return json({ error: `Write at least ${MIN_WORDS} words to get feedback.` }, 400);
     }
     if (essay.length > MAX_CHARS) return json({ error: 'The essay is too long.' }, 400);
-    const { data: ok } = await admin.rpc('consume_ai_quota', {
-      p_user: caller.id,
-      p_kind: 'essay_feedback',
-      p_limit: STUDENT_DAILY_LIMIT,
-    });
-    if (ok === false) {
-      return json({ error: 'You have used today’s AI feedback. Try again tomorrow.' }, 429);
-    }
+    const quota = await useQuota(admin, caller.id, 'essay_feedback');
+    if (!quota.allowed) return json({ error: AI_LIMIT_MESSAGE, quota }, 429);
     try {
       return json(await review(essay, prompt));
     } catch (e) {
       const err = failure(e);
+      // No feedback came back, so it does not count.
+      await refundQuota(admin, caller.id, 'essay_feedback');
       return json({ error: err.message }, err.retryable ? 503 : 422);
     }
   }
@@ -172,6 +177,25 @@ Deno.serve(async (req) => {
     return json({ ok: true, cached: true });
   }
 
+  // A rep asking for a summary is counted against their role's limit; the
+  // automatic summary on submission is free. Refused requests keep the old summary.
+  if (caller && !enabled) return json({ error: AI_PAUSED_MESSAGE }, 503);
+  const charged = caller?.role === 'school_rep';
+  if (charged) {
+    const quota = await useQuota(admin, caller.id, 'essay_summary');
+    if (!quota.allowed) return json({ error: AI_LIMIT_MESSAGE, quota }, 429);
+  }
+
+  if (!enabled) {
+    await admin.from('essay_ai_reviews').upsert({
+      application_id: app.id,
+      status: 'skipped',
+      error: AI_PAUSED_MESSAGE,
+      updated_at: new Date().toISOString(),
+    });
+    return json({ error: AI_PAUSED_MESSAGE }, 503);
+  }
+
   await admin.from('essay_ai_reviews').upsert({
     application_id: app.id,
     status: 'pending',
@@ -205,6 +229,7 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   } catch (e) {
     const err = failure(e);
+    if (charged && caller) await refundQuota(admin, caller.id, 'essay_summary');
     await admin
       .from('essay_ai_reviews')
       .update({

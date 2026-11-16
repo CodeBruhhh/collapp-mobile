@@ -13,10 +13,12 @@ type CommentRowProps = {
   /** Removes the comment; `icon` shows a trash button instead of a Delete link. */
   onDelete?: () => void;
   icon?: boolean;
+  /** Sends someone else's comment to the admins (students only). */
+  onReport?: () => void;
 };
 
 /** One ruled comment, shared by the student's post view and the rep's insights. */
-export function CommentRow({ comment, onDelete, icon }: CommentRowProps) {
+export function CommentRow({ comment, onDelete, icon, onReport }: CommentRowProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
@@ -37,6 +39,16 @@ export function CommentRow({ comment, onDelete, icon }: CommentRowProps) {
             onPress={onDelete}
             style={styles.delete}>
             <Text style={styles.deleteText}>Delete</Text>
+          </Pressable>
+        ) : null}
+        {onReport ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Report comment by ${comment.author_name}`}
+            hitSlop={8}
+            onPress={onReport}
+            style={styles.delete}>
+            <Text style={styles.deleteText}>Report</Text>
           </Pressable>
         ) : null}
       </View>

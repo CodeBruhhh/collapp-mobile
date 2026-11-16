@@ -1,9 +1,10 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
+import { AiUsageMeter } from '@/components/AiUsageMeter';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import type { PromptFit } from '@/features/ai/api';
-import { useEssayReview, useRegenerateEssayReview } from '@/features/ai/hooks';
+import { useAiAllowance, useEssayReview, useRegenerateEssayReview } from '@/features/ai/hooks';
 import { useTheme } from '@/hooks/useTheme';
 import { notify } from '@/lib/feedback';
 import { getErrorMessage } from '@/lib/validation';
@@ -22,6 +23,9 @@ export function EssaySummary({ applicationId }: { applicationId: string }) {
   const styles = createStyles(colors);
   const review = useEssayReview(applicationId);
   const regenerate = useRegenerateEssayReview(applicationId);
+  // Summaries a rep asks for count against their daily limit.
+  const allowance = useAiAllowance('essay_summary');
+  const blocked = allowance.exhausted || allowance.paused;
   const r = review.data;
 
   const run = () =>
@@ -45,7 +49,12 @@ export function EssaySummary({ applicationId }: { applicationId: string }) {
               : (r?.error ?? 'No AI summary for this essay yet.')}
           </Text>
         </View>
-        {!pending ? <Button variant="link" label="Summarize with AI" onPress={run} /> : null}
+        {!pending ? (
+          <>
+            <Button variant="link" label="Summarize with AI" onPress={run} disabled={blocked} />
+            <AiUsageMeter kind="essay_summary" />
+          </>
+        ) : null}
       </View>
     );
   }
@@ -78,8 +87,15 @@ export function EssaySummary({ applicationId }: { applicationId: string }) {
         <Text style={[styles.disclaimer, styles.flex]}>
           Advisory AI summary, may be wrong. Read the full essay below.
         </Text>
-        <Button variant="link" label="Regenerate" onPress={run} loading={regenerate.isPending} />
+        <Button
+          variant="link"
+          label="Regenerate"
+          onPress={run}
+          loading={regenerate.isPending}
+          disabled={blocked}
+        />
       </View>
+      <AiUsageMeter kind="essay_summary" />
     </View>
   );
 }
